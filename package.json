@@ -37,7 +37,9 @@
     "prepublishOnly": "node ./script/transform-package/remove-postinstall.js && npm run dist",
     "postpublish": "node ./script/transform-package/restore-postinstall.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "rimraf": "3.0.0"
+  },
   "devDependencies": {
     "@babel/plugin-transform-react-jsx": "7.7.4",
     "@jsenv/assert": "1.1.1",
