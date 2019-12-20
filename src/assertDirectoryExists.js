@@ -1,34 +1,35 @@
 import { stat } from "fs"
+import { statsToType } from "./internal/statsToType.js"
 import { assertAndNormalizeDirectoryUrl } from "./assertAndNormalizeDirectoryUrl.js"
 import { urlToFilePath } from "./urlToFilePath.js"
 
 export const assertDirectoryExists = async (value) => {
-  const directoryUrl = assertAndNormalizeDirectoryUrl(value)
+  // .slice(0, -1) is to remove the trailing slash
+  // otherwise node.js will throw ENOTDIR and the error message
+  // will know it's not a directory but not what is here instead
+  const directoryUrl = assertAndNormalizeDirectoryUrl(value).slice(0, -1)
   const directoryPath = urlToFilePath(directoryUrl)
-  const filesystemEntry = await pathToFilesystemEntry(directoryPath)
-
-  if (!filesystemEntry) {
-    throw new Error(`directory not found at ${directoryPath}`)
-  }
-
-  const { type } = filesystemEntry
-  if (type !== "folder") {
-    throw new Error(`directory expected at ${directoryPath} but found ${type}`)
-  }
-}
-
-const pathToFilesystemEntry = (path) =>
-  new Promise((resolve, reject) => {
-    stat(path, (error, stats) => {
+  const { NOT_FOUND, NOT_A_DIRECTORY, type } = await new Promise((resolve, reject) => {
+    stat(directoryPath, (error, stats) => {
       if (error) {
-        if (error.code === "ENOENT") resolve(null)
-        else reject(error)
+        if (error.code === "ENOENT") {
+          resolve({ NOT_FOUND: true })
+        } else {
+          reject(error)
+        }
+      } else if (stats.isDirectory()) {
+        resolve({})
       } else {
-        resolve({
-          // eslint-disable-next-line no-nested-ternary
-          type: stats.isFile() ? "file" : stats.isDirectory() ? "folder" : "other",
-          stats,
-        })
+        resolve({ NOT_A_DIRECTORY: true, type: statsToType(stats) })
       }
     })
   })
+
+  if (NOT_FOUND) {
+    throw new Error(`directory not found at ${directoryPath}`)
+  }
+
+  if (NOT_A_DIRECTORY) {
+    throw new Error(`directory expected at ${directoryPath} and found ${type} instead`)
+  }
+}
