@@ -41,6 +41,20 @@ Set of functions often needed when using Node.js.
 
 Many jsenv packages needs the same helper functions. This package exports and document them.
 
+This repository exists mostly to work with files relative to a directory with an approach that works on windows and linux filesystems as shown in the code example below.
+
+```js
+import { readFileSync } from "fs"
+import { resolveUrl, urlToFilePath, assertAndNormalizeDirectoryUrl } from "@jsenv/util"
+
+const directoryUrl = assertAndNormalizeDirectoryUrl(__dirname)
+const packageFileUrl = resolveUrl("package.json", directoryUrl)
+const packageFilePath = urlToFilePath(packageFileUrl)
+const packageFileBuffer = readFileSync(packageFilePath)
+```
+
+With times more functions were added, all util are documented in the next part.
+
 ## Url utils
 
 The functions dedicated to manipulate urls are regrouped in this part.
