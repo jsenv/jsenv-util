@@ -2,6 +2,7 @@ export { assertAndNormalizeDirectoryUrl } from "./src/assertAndNormalizeDirector
 export { assertAndNormalizeFileUrl } from "./src/assertAndNormalizeFileUrl.js"
 export { assertDirectoryExists } from "./src/assertDirectoryExists.js"
 export { assertFileExists } from "./src/assertFileExists.js"
+export { bufferToEtag } from "./src/bufferToEtag.js"
 export { cleanDirectory } from "./src/cleanDirectory.js"
 export { createDirectory } from "./src/createDirectory.js"
 export { createFileDirectories } from "./src/createFileDirectories.js"
