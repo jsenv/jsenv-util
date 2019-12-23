@@ -1,11 +1,11 @@
 import { stat } from "fs"
 import { statsToType } from "./internal/statsToType.js"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
-import { urlToFilePath } from "./urlToFilePath.js"
+import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 
 export const assertFileExists = async (value) => {
   const fileUrl = assertAndNormalizeFileUrl(value)
-  const filePath = urlToFilePath(fileUrl)
+  const filePath = urlToFileSystemPath(fileUrl)
   const { NOT_FOUND, NOT_A_FILE, type } = await new Promise((resolve, reject) => {
     stat(filePath, (error, stats) => {
       if (error) {

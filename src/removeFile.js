@@ -1,10 +1,10 @@
 import { unlink } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
-import { urlToFilePath } from "./urlToFilePath.js"
+import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 
 export const removeFile = (value) => {
   const fileUrl = assertAndNormalizeFileUrl(value)
-  const filePath = urlToFilePath(fileUrl)
+  const filePath = urlToFileSystemPath(fileUrl)
   return new Promise((resolve, reject) => {
     unlink(filePath, (error) => {
       if (error) {

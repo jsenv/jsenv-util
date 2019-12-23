@@ -1,12 +1,12 @@
 import { assert } from "@jsenv/assert"
-import { assertFileExists, urlToFilePath } from "../../index.js"
+import { assertFileExists, urlToFileSystemPath } from "../../index.js"
 
 const whateverFileUrl = import.meta.resolve("./whatever.js")
 try {
   await assertFileExists(whateverFileUrl)
   throw new Error("should throw")
 } catch (actual) {
-  const expected = new Error(`file not found at ${urlToFilePath(whateverFileUrl)}`)
+  const expected = new Error(`file not found at ${urlToFileSystemPath(whateverFileUrl)}`)
   assert({ actual, expected })
 }
 
@@ -16,7 +16,7 @@ try {
   throw new Error("should throw")
 } catch (actual) {
   const expected = new Error(
-    `file expected at ${urlToFilePath(directoryUrl)} and found directory instead`,
+    `file expected at ${urlToFileSystemPath(directoryUrl)} and found directory instead`,
   )
   assert({ actual, expected })
 }

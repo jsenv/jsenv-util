@@ -1,14 +1,14 @@
 import { stat } from "fs"
 import { statsToType } from "./internal/statsToType.js"
 import { assertAndNormalizeDirectoryUrl } from "./assertAndNormalizeDirectoryUrl.js"
-import { urlToFilePath } from "./urlToFilePath.js"
+import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 
 export const assertDirectoryExists = async (value) => {
   // .slice(0, -1) is to remove the trailing slash
   // otherwise node.js will throw ENOTDIR and the error message
   // will know it's not a directory but not what is here instead
   const directoryUrl = assertAndNormalizeDirectoryUrl(value).slice(0, -1)
-  const directoryPath = urlToFilePath(directoryUrl)
+  const directoryPath = urlToFileSystemPath(directoryUrl)
   const { NOT_FOUND, NOT_A_DIRECTORY, type } = await new Promise((resolve, reject) => {
     stat(directoryPath, (error, stats) => {
       if (error) {
