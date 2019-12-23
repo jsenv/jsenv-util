@@ -7,8 +7,10 @@ import { fileSystemPathToUrl } from "../index.js"
   assert({ actual, expected })
 }
 
-{
-  const actual = fileSystemPathToUrl("file:///Users/file.js")
-  const expected = "file:///Users/file.js"
+try {
+  fileSystemPathToUrl("file:///Users/file.js")
+  throw new Error("should throw")
+} catch (actual) {
+  const expected = new Error(`received an invalid value for fileSystemPath: file:///Users/file.js`)
   assert({ actual, expected })
 }

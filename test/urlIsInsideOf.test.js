@@ -5,7 +5,7 @@ import { urlIsInsideOf } from "../index.js"
 {
   const actual = urlIsInsideOf(
     "http://example.com/directory/file.js",
-    "http://example.com/directory/",
+    "http://example.fr/directory/",
   )
   const expected = false
   assert({ actual, expected })
