@@ -10,18 +10,11 @@ Set of functions often needed when using Node.js.
 # Table of contents
 
 - [Presentation](#Presentation)
-- [Url utils](#Url-utils)
+- [Why prefer url string?](#Why-prefer-url-string)
+- [Why prefer url over filesystem path?](#Why-prefer-url-over-filesystem-path)
+- [API]
   - [assertAndNormalizeDirectoryUrl](#assertAndNormalizeDirectoryUrl)
   - [assertAndNormalizeFileUrl](#assertAndNormalizeFileUrl)
-  - [filePathToUrl](#filePathToUrl)
-  - [resolveDirectoryUrl](#resolveDirectoryUrl)
-  - [resolveUrl](#resolveUrl)
-  - [urlToFilePath](#urlToFilePath)
-  - [urlToRelativePath](#urlToRelativePath)
-  - [urlToRelativeUrl](#urlToRelativeUrl)
-  - [urlHasScheme](#urlHasScheme)
-  - [urlsHaveSameOrigin](#urlsHaveSameOrigin)
-- [Filesystem utils](#Filesystem-utils)
   - [assertDirectoryExists](#assertDirectoryExists)
   - [assertFileExists](#assertFileExists)
   - [bufferToEtag](#bufferToEtag)
@@ -29,10 +22,17 @@ Set of functions often needed when using Node.js.
   - [createDirectory](#createDirectory)
   - [createFileDirectories](#createFileDirectories)
   - [fileExists](#fileExists)
+  - [fileSystemPathToUrl](#fileSystemPathToUrl)
+  - [isFileSystemPath](#isFileSystemPath)
   - [moveFile](#moveFile)
   - [readFileContent](#readFileContent)
   - [readFileStat](#readFileStat)
   - [removeDirectory](#removeDirectory)
+  - [removeFile](#removeFile)
+  - [resolveDirectoryUrl](#resolveDirectoryUrl)
+  - [resolveUrl](#resolveUrl)
+  - [urlToFileSystemPath](#urlToFileSystemPath)
+  - [urlToRelativeUrl](#urlToRelativeUrl)
   - [writeFileContent](#writeFileContent)
   - [writeFileModificationDate](#writeFileModificationDate)
 - [Installation](#Installation)
@@ -55,9 +55,33 @@ const packageFileBuffer = readFileSync(packageFilePath)
 
 With times more functions were added, all util are documented in the next part.
 
-## Url utils
+## Why prefer url string ?
 
-The functions dedicated to manipulate urls are regrouped in this part.
+```js
+const urlString = "file:///directory/file.js"
+const urlObject = new URL("file:///directory/file.js")
+```
+
+In this package functions working with urls prefer to receive url string or return url string and not url object.
+
+This is a deliberate choice because over time it appeared that an url string is easier to work with in general than an url object. It is probably because a string is a well known primitive while an url object is a more complex structure.
+
+For jsenv, choosing to work with strings simplified the codebase.
+
+## Why prefer url over filesystem path ?
+
+```js
+const url = "file:///directory/file.js"
+const filesystemPath = "/directory/file.js"
+```
+
+In this package functions working with files prefer to receive an url string instead of a filesystem path.
+
+This allows function to manipulate a value that is the same across operating systems. Because on windows a filesystem path looks like `C:\\directory\\file.js` while linux/mac equivalent looks like `/directory/file.js`. Also url are standard. A standard is more robust and knowledge acquired on a standard is reusable.
+
+## API
+
+The functions exported by this package are documented in this part.
 
 ### assertAndNormalizeDirectoryUrl
 
@@ -86,6 +110,91 @@ assertAndNormalizeFileUrl("/directory/file.js")
 ```
 
 This function is great to make a function accept various values as file url and normalize it to a standard file url like `file:///directory/file.js`. Jsenv uses it for every function having a file url parameter.
+
+### filePathToUrl
+
+> `filePathToUrl` is a function returning a filesystem path from an url string.
+
+Implemented in [src/filePathToUrl.js](./src/filePathToUrl.js), you can use it as shown below.
+
+```js
+import { filePathToUrl } from "@jsenv/util"
+
+filePathToUrl("/directory/file.js")
+```
+
+This function is equivalent to pathToFileURL from Node.js but returns string instead of url objects.
+
+— see [pathToFileURL documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/url.html#url_url_pathtofileurl_path)
+
+### resolveDirectoryUrl
+
+> `resolveDirectoryUrl` is a function resolving a relative url to an absolute directory url string.
+
+Implemented in [src/resolveDirectoryUrl.js](./src/resolveDirectoryUrl.js), you can use it as shown below.
+
+```js
+import { resolveDirectoryUrl } from "@jsenv/util"
+
+resolveDirectoryUrl("src", "file:///directory")
+```
+
+This function applies url resolution and ensure the returned url ends with a slash. Enforcing the trailing slash indicates explicitely that the url is a directory. `file:///directory/whatever/` shows `whatever` is a directory while `file:///directory/whatever` is ambiguous. This specificity helps url resolution against a directory as shown in the code below.
+
+```js
+const urlA = new URL("file.js", "file:///directory/")
+const urlB = new URL("file.js", "file:///directory")
+
+urlA.href // file:///directory/file.js
+urlB.href // file:///file.js
+```
+
+### resolveUrl
+
+> `resolveUrl` is a function resolving a relative url to an absolute url string.
+
+Implemented in [src/resolveUrl.js](./src/resolveUrl.js), you can use it as shown below.
+
+```js
+import { resolveUrl } from "@jsenv/util"
+
+resolveUrl("file.js", "file:///directory/")
+```
+
+As explained before jsenv prefer to work with url string. When it comes to url resolution it implies to write code like `String(new URL(relativeUrl, url))`. But it makes `relativeUrl` and `url` values less readable in the middle of `String(new URL())`. `resolveUrl` exists just to increase code readability.
+
+### urlToFilePath
+
+> `urlToFilePath` is a function returning a filesystem path from an url.
+
+Implemented in [src/urlToFilePath.js](./src/urlToFilePath.js), you can use it as shown below.
+
+```js
+import { urlToFilePath } from "@jsenv/util"
+
+urlToFilePath("file:///directory/file.js")
+```
+
+This function is equivalent to pathToFileURL from Node.js but returns string instead of url objects.
+
+— see [pathToFileURL documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/url.html#url_url_pathtofileurl_path)
+
+### urlToRelativeUrl
+
+> `urlToRelativeUrl` is a function receiving two absolute urls and returning the first url relative to the second one.
+
+Implemented in [src/urlToRelativeUrl.js](./src/urlToRelativeUrl.js), you can use it as shown below.
+
+```js
+import { urlToRelativeUrl } from "@jsenv/util"
+
+urlToRelativeUrl("file:///directory/file.js", "file:///directory/")
+urlToRelativeUrl("http://example.com/directory/file.js", "http://example.com/directory/")
+```
+
+This function is the url equivalent to path.relative from Node.js.
+
+— see [path.relative documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/path.html#path_path_relative_from_to)
 
 ## Filesystem utils
 
@@ -133,10 +242,10 @@ const otherEtag = bufferToEtag(Buffer.from("Hello world"))
 eTag === otherEtag
 ```
 
+This function returns a hash (a small string) representing a file content. You can later check if the file content has changed by comparing a previously generated eTag with the current file content. Jsenv uses it to generate eTag headers and to know if a file content has changed in specific scenarios.
+
 — see [Buffer documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/buffer.html)<br />
 — see [eTag documentation on MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag)
-
-This function returns a hash (a small string) representing a file content. You can later check if the file content has changed by comparing a previously generated eTag with the current file content. Jsenv uses it to generate eTag headers and to know if a file content has changed in specific scenarios.
 
 ### cleanDirectory
 

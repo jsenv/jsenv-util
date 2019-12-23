@@ -1,5 +1,5 @@
 import { fileURLToPath } from "url"
 
-export const urlToFilePath = (fileUrl) => {
+export const urlToFileSystemPath = (fileUrl) => {
   return fileURLToPath(fileUrl)
 }
