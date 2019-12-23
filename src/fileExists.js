@@ -1,13 +1,13 @@
 import { stat } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
-import { urlToFilePath } from "./urlToFilePath.js"
+import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 
 // Do not factorize with readFileStat because of
 // the error.code === 'ENOENT' shortcut that avoids
 // throwing any error
 export const fileExists = async (value) => {
   const fileUrl = assertAndNormalizeFileUrl(value)
-  const filePath = urlToFilePath(fileUrl)
+  const filePath = urlToFileSystemPath(fileUrl)
 
   return new Promise((resolve, reject) => {
     stat(filePath, (error) => {

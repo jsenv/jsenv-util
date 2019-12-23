@@ -1,14 +1,14 @@
 import { assert } from "@jsenv/assert"
-import { urlToFilePath } from "../index.js"
+import { urlToFileSystemPath } from "../index.js"
 
 {
-  const actual = urlToFilePath("file:///directory/file.js")
+  const actual = urlToFileSystemPath("file:///directory/file.js")
   const expected = "/directory/file.js"
   assert({ actual, expected })
 }
 
 try {
-  urlToFilePath("http://example.com/directory/file.js")
+  urlToFileSystemPath("http://example.com/directory/file.js")
   throw new Error("should throw")
 } catch (error) {
   const actual = { code: error.code, name: error.name, message: error.message }

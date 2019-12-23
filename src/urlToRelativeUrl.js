@@ -1,11 +1,39 @@
-export const urlToRelativeUrl = (url, baseUrl) => {
-  if (typeof baseUrl !== "string") {
-    throw new TypeError(`baseUrl must be a string, got ${baseUrl}`)
+import { getCommonPathname } from "./internal/getCommonPathname.js"
+import { pathnameToDirectoryPathname } from "./internal/pathnameToDirectoryPathname.js"
+
+export const urlToRelativeUrl = (urlArg, baseUrlArg) => {
+  const url = new URL(urlArg)
+  const baseUrl = new URL(baseUrlArg)
+
+  if (url.protocol !== baseUrl.protocol) {
+    return urlArg
   }
-  if (url.startsWith(baseUrl)) {
-    // we should take into account only pathname
-    // and ignore search params
-    return url.slice(baseUrl.length)
+
+  if (url.username !== baseUrl.username || url.password !== baseUrl.password) {
+    return urlArg.slice(url.protocol.length)
   }
-  return url
+
+  if (url.host !== baseUrl.host) {
+    return urlArg.slice(url.protocol.length)
+  }
+
+  const { pathname, hash, search } = url
+  if (pathname === "/") {
+    return baseUrl.pathname.slice(1)
+  }
+
+  const { pathname: basePathname } = baseUrl
+
+  const commonPathname = getCommonPathname(pathname, basePathname)
+  if (!commonPathname) {
+    return urlArg
+  }
+
+  const specificPathname = pathname.slice(commonPathname.length)
+  const baseSpecificPathname = basePathname.slice(commonPathname.length)
+  const baseSpecificDirectoryPathname = pathnameToDirectoryPathname(baseSpecificPathname)
+  const relativeDirectoriesNotation = baseSpecificDirectoryPathname.replace(/.*?\//g, "../")
+
+  const relativePathname = `${relativeDirectoriesNotation}${specificPathname}`
+  return `${relativePathname}${search}${hash}`
 }

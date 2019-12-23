@@ -1,11 +1,11 @@
 import { rename } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
-import { urlToFilePath } from "./urlToFilePath.js"
+import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { createFileDirectories } from "./createFileDirectories.js"
 
 export const moveFile = async (value, destinationValue) => {
   const fileUrl = assertAndNormalizeFileUrl(value)
-  const filePath = urlToFilePath(fileUrl)
+  const filePath = urlToFileSystemPath(fileUrl)
   const destinationFileUrl = assertAndNormalizeFileUrl(destinationValue)
   const destinationFilePath = assertAndNormalizeFileUrl(destinationFileUrl)
 

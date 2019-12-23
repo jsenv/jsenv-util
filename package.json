@@ -1,7 +1,7 @@
 {
   "name": "@jsenv/util",
   "description": "Set of functions often needed when using Node.js.",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "license": "MIT",
   "repository": {
     "type": "git",

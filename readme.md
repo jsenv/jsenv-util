@@ -10,18 +10,11 @@ Set of functions often needed when using Node.js.
 # Table of contents
 
 - [Presentation](#Presentation)
-- [Url utils](#Url-utils)
+- [Why prefer url string?](#Why-prefer-url-string)
+- [Why prefer url over filesystem path?](#Why-prefer-url-over-filesystem-path)
+- [API]
   - [assertAndNormalizeDirectoryUrl](#assertAndNormalizeDirectoryUrl)
   - [assertAndNormalizeFileUrl](#assertAndNormalizeFileUrl)
-  - [filePathToUrl](#filePathToUrl)
-  - [resolveDirectoryUrl](#resolveDirectoryUrl)
-  - [resolveUrl](#resolveUrl)
-  - [urlToFilePath](#urlToFilePath)
-  - [urlToRelativePath](#urlToRelativePath)
-  - [urlToRelativeUrl](#urlToRelativeUrl)
-  - [urlHasScheme](#urlHasScheme)
-  - [urlsHaveSameOrigin](#urlsHaveSameOrigin)
-- [Filesystem utils](#Filesystem-utils)
   - [assertDirectoryExists](#assertDirectoryExists)
   - [assertFileExists](#assertFileExists)
   - [bufferToEtag](#bufferToEtag)
@@ -29,10 +22,17 @@ Set of functions often needed when using Node.js.
   - [createDirectory](#createDirectory)
   - [createFileDirectories](#createFileDirectories)
   - [fileExists](#fileExists)
+  - [fileSystemPathToUrl](#fileSystemPathToUrl)
+  - [isFileSystemPath](#isFileSystemPath)
   - [moveFile](#moveFile)
   - [readFileContent](#readFileContent)
   - [readFileStat](#readFileStat)
   - [removeDirectory](#removeDirectory)
+  - [removeFile](#removeFile)
+  - [resolveDirectoryUrl](#resolveDirectoryUrl)
+  - [resolveUrl](#resolveUrl)
+  - [urlToFileSystemPath](#urlToFileSystemPath)
+  - [urlToRelativeUrl](#urlToRelativeUrl)
   - [writeFileContent](#writeFileContent)
   - [writeFileModificationDate](#writeFileModificationDate)
 - [Installation](#Installation)
@@ -55,9 +55,33 @@ const packageFileBuffer = readFileSync(packageFilePath)
 
 With times more functions were added, all util are documented in the next part.
 
-## Url utils
+## Why prefer url string ?
 
-The functions dedicated to manipulate urls are regrouped in this part.
+```js
+const urlString = "file:///directory/file.js"
+const urlObject = new URL("file:///directory/file.js")
+```
+
+In this package functions working with urls prefer to receive url string or return url string and not url object.
+
+This is a deliberate choice because over time it appeared that an url string is easier to work with in general than an url object. It is probably because a string is a well known primitive while an url object is a more complex structure.
+
+For jsenv, choosing to work with strings simplified the codebase.
+
+## Why prefer url over filesystem path ?
+
+```js
+const url = "file:///directory/file.js"
+const filesystemPath = "/directory/file.js"
+```
+
+In this package functions working with files prefer to receive an url string instead of a filesystem path.
+
+This allows function to manipulate a value that is the same across operating systems. Because on windows a filesystem path looks like `C:\\directory\\file.js` while linux/mac equivalent looks like `/directory/file.js`. Also url are standard. A standard is more robust and knowledge acquired on a standard is reusable.
+
+## API
+
+The functions exported by this package are documented in this part.
 
 ### assertAndNormalizeDirectoryUrl
 
@@ -86,10 +110,6 @@ assertAndNormalizeFileUrl("/directory/file.js")
 ```
 
 This function is great to make a function accept various values as file url and normalize it to a standard file url like `file:///directory/file.js`. Jsenv uses it for every function having a file url parameter.
-
-## Filesystem utils
-
-The functions dedicated to work with the filesystem are regrouped in this part.
 
 ### assertDirectoryExists
 
@@ -133,10 +153,10 @@ const otherEtag = bufferToEtag(Buffer.from("Hello world"))
 eTag === otherEtag
 ```
 
+This function returns a hash (a small string) representing a file content. You can later check if the file content has changed by comparing a previously generated eTag with the current file content. Jsenv uses it to generate eTag headers and to know if a file content has changed in specific scenarios.
+
 — see [Buffer documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/buffer.html)<br />
 — see [eTag documentation on MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag)
-
-This function returns a hash (a small string) representing a file content. You can later check if the file content has changed by comparing a previously generated eTag with the current file content. Jsenv uses it to generate eTag headers and to know if a file content has changed in specific scenarios.
 
 ### cleanDirectory
 
@@ -164,7 +184,7 @@ import { createDirectory } from "@jsenv/util"
 await createDirectory(`/directory`)
 ```
 
-This function exists just to accept file urls strings like `file:///directory` that [fsPromises.mkdir](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_mkdir_path_options) does not accepts.
+`createDirectory` is equivalent to [fs.promises.mkdir](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_mkdir_path_options) but accepts url strings as directory path.
 
 ### createFileDirectories
 
@@ -194,6 +214,200 @@ const exists = await fileExists(`/directory/file.js`)
 
 This function exists mostly to console.warn in case a file is missing.
 
+### fileSystemPathToUrl
+
+> `fileSystemPathToUrl` is a function returning a filesystem path from an url string.
+
+Implemented in [src/fileSystemPathToUrl.js](./src/fileSystemPathToUrl.js), you can use it as shown below.
+
+```js
+import { fileSystemPathToUrl } from "@jsenv/util"
+
+fileSystemPathToUrl("/directory/file.js")
+```
+
+`fileSystemPathToUrl` is equivalent to [pathToFileURL from Node.js](https://nodejs.org/docs/latest-v13.x/api/url.html#url_url_pathtofileurl_path) but returns string instead of url objects.
+
+### isFileSystemPath
+
+> `isFileSystemPath` is a function returning a filesystem path from an url string.
+
+Implemented in [src/isFileSystemPath.js](./src/isFileSystemPath.js), you can use it as shown below.
+
+```js
+import { isFileSystemPath } from "@jsenv/util"
+
+isFileSystemPath("/directory/file.js") // true
+isFileSystemPath("C:\\directory\\file.js") // true
+isFileSystemPath("directory/file.js") // false
+isFileSystemPath("file:///directory/file.js") // false
+```
+
+### moveFile
+
+> `moveFile` is an async function moving a file from its current location to an other.
+
+Implemented in [src/moveFile.js](./src/moveFile.js), you can use it as shown below.
+
+```js
+import { moveFile } from "@jsenv/util"
+
+await moveFile("file:///directory/file.js", "file:///destination/file.js")
+```
+
+This function will auto create the destination directories if they do not exists.
+
+### readFileContent
+
+> `readFileContent` is an async function returning the content of a file as string.
+
+Implemented in [src/readFileContent.js](./src/readFileContent.js), you can use it as shown below.
+
+```js
+import { readFileContent } from "@jsenv/util"
+
+const content = await readFileContent("file:///directory/file.js")
+```
+
+### readFileStat
+
+> `readFileStat` is an async function returning a file stats object.
+
+Implemented in [src/readFileStat.js](./src/readFileStat.js), you can use it as shown below.
+
+```js
+import { readFileStat } from "@jsenv/util"
+
+const stats = await readFileStat("file:///directory/file.js")
+```
+
+`readFileStat` is equivalent to [fs.promises.stats from Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_stat_path_options) but accepts url strings as file path.
+
+— see also [stats object documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_class_fs_stats)
+
+### removeDirectory
+
+> `removeDirectory` is an async function removing a directory and its content.
+
+Implemented in [src/removeDirectory.js](./src/removeDirectory.js), you can use it as shown below.
+
+```js
+import { removeDirectory } from "@jsenv/util"
+
+await removeDirectory("file:///directory/")
+```
+
+This function is a wrapper around rimraf.
+
+— see [rimraf on github](https://github.com/isaacs/rimraf/tree/312bf555559f2953606268ef72bf4463bd763efc#api)
+
+### removeFile
+
+> `removeFile` is an async function removing a file from the filesystem.
+
+Implemented in [src/removeFile.js](./src/removeFile.js), you can use it as shown below.
+
+```js
+import { removeFile } from "@jsenv/util"
+
+await removeFile("file:///directory/file.js")
+```
+
+`removeFile` is equivalent to [fs.promises.unlink from Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_unlink_path) but accepts url strings as file path.
+
+### resolveDirectoryUrl
+
+> `resolveDirectoryUrl` is a function resolving a relative url to an absolute directory url string.
+
+Implemented in [src/resolveDirectoryUrl.js](./src/resolveDirectoryUrl.js), you can use it as shown below.
+
+```js
+import { resolveDirectoryUrl } from "@jsenv/util"
+
+resolveDirectoryUrl("src", "file:///directory")
+```
+
+This function applies url resolution and ensure the returned url ends with a slash. Enforcing the trailing slash indicates explicitely that the url is a directory. `file:///directory/whatever/` shows `whatever` is a directory while `file:///directory/whatever` is ambiguous. This specificity helps url resolution against a directory as shown in the code below.
+
+```js
+const urlA = new URL("file.js", "file:///directory/")
+const urlB = new URL("file.js", "file:///directory")
+
+urlA.href // file:///directory/file.js
+urlB.href // file:///file.js
+```
+
+### resolveUrl
+
+> `resolveUrl` is a function resolving a relative url to an absolute url string.
+
+Implemented in [src/resolveUrl.js](./src/resolveUrl.js), you can use it as shown below.
+
+```js
+import { resolveUrl } from "@jsenv/util"
+
+resolveUrl("file.js", "file:///directory/")
+```
+
+As explained before jsenv prefer to work with url string. When it comes to url resolution it implies to write code like `String(new URL(relativeUrl, url))`. But it makes `relativeUrl` and `url` values less readable in the middle of `String(new URL())`. `resolveUrl` exists just to increase code readability.
+
+### urlToFileSystemPath
+
+> `urlToFileSystemPath` is a function returning a filesystem path from an url.
+
+Implemented in [src/urlToFileSystemPath.js](./src/urlToFileSystemPath.js), you can use it as shown below.
+
+```js
+import { urlToFileSystemPath } from "@jsenv/util"
+
+urlToFileSystemPath("file:///directory/file.js")
+```
+
+`urlToFileSystemPath` is equivalent to [pathToFileURL from Node.js](https://nodejs.org/docs/latest-v13.x/api/url.html#url_url_pathtofileurl_path) but returns string instead of url objects.
+
+### urlToRelativeUrl
+
+> `urlToRelativeUrl` is a function receiving two absolute urls and returning the first url relative to the second one.
+
+Implemented in [src/urlToRelativeUrl.js](./src/urlToRelativeUrl.js), you can use it as shown below.
+
+```js
+import { urlToRelativeUrl } from "@jsenv/util"
+
+urlToRelativeUrl("file:///directory/file.js", "file:///directory/")
+urlToRelativeUrl("http://example.com/directory/file.js", "http://example.com/directory/")
+```
+
+`urlToRelativeUrl` is the url equivalent to [path.relative from Node.js](https://nodejs.org/docs/latest-v13.x/api/path.html#path_path_relative_from_to).
+
+### writeFileContent
+
+> `writeFileContent` is an async function writing file and its content on the filesystem.
+
+Implemented in [src/writeFileContent.js](./src/writeFileContent.js), you can use it as shown below.
+
+```js
+import { writeFileContent } from "@jsenv/util"
+
+await writeFileContent("file:///directory/file.txt", "Hello world")
+```
+
+This function auto create file parent directories if they do not exists.
+
+### writeFileModificationDate
+
+> `writeFileModificationDate` is an async function writing file and its content on the filesystem.
+
+Implemented in [src/writeFileModificationDate.js](./src/writeFileModificationDate.js), you can use it as shown below.
+
+```js
+import { writeFileModificationDate } from "@jsenv/util"
+
+await writeFileModificationDate("file:///directory/file.js", new Date())
+```
+
+`writeFileModificationDate` is equivalent to [fs.promises.utimes](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_utimes_path_atime_mtime) but accepts url strings as file path.
+
 ## Installation
 
 If you never installed a jsenv package, read [Installing a jsenv package](./docs/installing-jsenv-package.md) before going further.
@@ -201,9 +415,9 @@ If you never installed a jsenv package, read [Installing a jsenv package](./docs
 This documentation is up-to-date with a specific version so prefer any of the following commands
 
 ```console
-npm install @jsenv/util@1.4.0
+npm install @jsenv/util@2.0.0
 ```
 
 ```console
-yarn add @jsenv/core@1.4.0
+yarn add @jsenv/core@2.0.0
 ```
