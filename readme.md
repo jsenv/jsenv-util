@@ -415,9 +415,9 @@ If you never installed a jsenv package, read [Installing a jsenv package](./docs
 This documentation is up-to-date with a specific version so prefer any of the following commands
 
 ```console
-npm install @jsenv/util@1.4.0
+npm install @jsenv/util@2.0.0
 ```
 
 ```console
-yarn add @jsenv/core@1.4.0
+yarn add @jsenv/core@2.0.0
 ```
