@@ -33,6 +33,7 @@ Set of functions often needed when using Node.js.
   - [removeFile](#removeFile)
   - [resolveDirectoryUrl](#resolveDirectoryUrl)
   - [resolveUrl](#resolveUrl)
+  - [urlIsInsideOf](#urlIsInsideOf)
   - [urlToFileSystemPath](#urlToFileSystemPath)
   - [urlToRelativeUrl](#urlToRelativeUrl)
   - [writeFileContent](#writeFileContent)
@@ -375,6 +376,19 @@ resolveUrl("file.js", "file:///directory/")
 As explained before jsenv prefer to work with url string. When it comes to url resolution it implies to write code like `String(new URL(relativeUrl, url))`. But it makes `relativeUrl` and `url` values less readable in the middle of `String(new URL())`. `resolveUrl` exists just to increase code readability.
 
 — source code at [src/resolveUrl.js](./src/resolveUrl.js).
+
+### urlIsInsideOf
+
+> `urlIsInsideOf` is a function returning a boolean indicating if an url is inside an other url.
+
+```js
+import { urlIsInsideOf } from "@jsenv/util"
+
+urlIsInsideOf("file:///directory/file.js", 'file:///directory/') // true
+urlIsInsideOf("file:///file.js", 'file:///directory/') // false
+```
+
+— source code at [src/urlIsInsideOf.js](./src/urlIsInsideOf.js).
 
 ### urlToFileSystemPath
 
