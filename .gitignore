@@ -2,6 +2,7 @@
 /.vscode/settings.json
 /coverage/
 /node_modules/
+/test/copyFile/directory/
 /test/moveFile/directory/
 /importMap.json
 /jsconfig.json

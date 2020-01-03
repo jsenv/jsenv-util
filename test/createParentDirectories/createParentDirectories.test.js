@@ -1,11 +1,16 @@
 import { assert } from "@jsenv/assert"
-import { resolveUrl, cleanDirectory, createFileDirectories, directoryExists } from "../../index.js"
+import {
+  resolveUrl,
+  cleanDirectory,
+  createParentDirectories,
+  directoryExists,
+} from "../../index.js"
 
 const directoryUrl = import.meta.resolve("./directory/")
 const subdirectoryUrl = resolveUrl("subdir/", directoryUrl)
 const fileUrl = resolveUrl("file.js", subdirectoryUrl)
 await cleanDirectory(directoryUrl)
-await createFileDirectories(fileUrl)
+await createParentDirectories(fileUrl)
 
 {
   const actual = await directoryExists(subdirectoryUrl)
@@ -14,4 +19,4 @@ await createFileDirectories(fileUrl)
 }
 
 // ensure does not throw if already exists
-await createFileDirectories(fileUrl)
+await createParentDirectories(fileUrl)

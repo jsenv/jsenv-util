@@ -1,13 +1,14 @@
 import { promisify } from "util"
-import { writeFile } from "fs"
+import { writeFile as writeFileNode } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
-import { createFileDirectories } from "./createFileDirectories.js"
+import { createParentDirectories } from "./createParentDirectories.js"
 
-const writeFilePromisified = promisify(writeFile)
-export const writeFileContent = async (value, content) => {
+const writeFilePromisified = promisify(writeFileNode)
+export const writeFile = async (value, content) => {
   const fileUrl = assertAndNormalizeFileUrl(value)
+  await createParentDirectories(fileUrl)
+
   const filePath = urlToFileSystemPath(fileUrl)
-  await createFileDirectories(filePath)
   return writeFilePromisified(filePath, content)
 }

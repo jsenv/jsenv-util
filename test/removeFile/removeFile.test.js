@@ -1,8 +1,8 @@
 import { assert } from "@jsenv/assert"
-import { fileExists, writeFileContent, removeFile } from "../../index.js"
+import { fileExists, writeFile, removeFile } from "../../index.js"
 
 const fileUrl = import.meta.resolve("./file.txt")
-await writeFileContent(fileUrl, "coucou")
+await writeFile(fileUrl, "coucou")
 await removeFile(fileUrl)
 
 const actual = await fileExists(fileUrl)

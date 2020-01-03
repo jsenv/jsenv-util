@@ -1,15 +1,9 @@
 import { assert } from "@jsenv/assert"
-import {
-  cleanDirectory,
-  resolveUrl,
-  writeFileContent,
-  directoryExists,
-  fileExists,
-} from "../../index.js"
+import { cleanDirectory, resolveUrl, writeFile, directoryExists, fileExists } from "../../index.js"
 
 const directoryUrl = import.meta.resolve("./directory/")
 const fileUrl = resolveUrl("file.js", directoryUrl)
-await writeFileContent(fileUrl, "coucou")
+await writeFile(fileUrl, "coucou")
 await cleanDirectory(directoryUrl)
 
 {

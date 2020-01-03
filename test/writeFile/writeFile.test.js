@@ -1,11 +1,11 @@
 import { assert } from "@jsenv/assert"
-import { writeFileContent, resolveUrl, readFileContent, removeDirectory } from "../../index.js"
+import { writeFile, resolveUrl, readFile, removeDirectory } from "../../index.js"
 
 {
   const directoryUrl = import.meta.resolve("./directory/")
   const fileUrl = resolveUrl("file.txt", directoryUrl)
-  await writeFileContent(fileUrl, "hello world")
-  const actual = await readFileContent(fileUrl)
+  await writeFile(fileUrl, "hello world")
+  const actual = await readFile(fileUrl)
   const expected = "hello world"
   assert({ actual, expected })
   await removeDirectory(directoryUrl)
