@@ -21,6 +21,7 @@ Set of functions often needed when using Node.js.
   - [cleanDirectory](#cleanDirectory)
   - [createDirectory](#createDirectory)
   - [createFileDirectories](#createFileDirectories)
+  - [directoryExists](#directoryExists)
   - [fileExists](#fileExists)
   - [fileSystemPathToUrl](#fileSystemPathToUrl)
   - [isFileSystemPath](#isFileSystemPath)
@@ -186,6 +187,20 @@ await createDirectory(`/directory`)
 
 — source code at [src/createDirectory.js](./src/createDirectory.js).
 
+### directoryExists
+
+> `directoryExists` is an async function returning a boolean indicating a directory presence on the filesystem.
+
+```js
+import { directoryExists } from "@jsenv/util"
+
+const exists = await directoryExists(`/directory`)
+```
+
+This function was designed to warn in case an important directory is missing.
+
+— source code at [src/directoryExists.js](./src/directoryExists.js).
+
 ### createFileDirectories
 
 > `createFileDirectories` is an async function creating every directory leading to a file.
@@ -210,7 +225,7 @@ import { fileExists } from "@jsenv/util"
 const exists = await fileExists(`/directory/file.js`)
 ```
 
-This function exists mostly to console.warn in case a file is missing.
+This function was designed to warn in case an important file is missing.
 
 — source code at [src/fileExists.js](./src/fileExists.js).
 
