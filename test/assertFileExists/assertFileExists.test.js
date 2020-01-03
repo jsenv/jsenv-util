@@ -10,7 +10,7 @@ try {
   assert({ actual, expected })
 }
 
-const directoryUrl = import.meta.resolve("./fixtures/")
+const directoryUrl = import.meta.resolve("./directory/")
 try {
   await assertFileExists(directoryUrl)
   throw new Error("should throw")
@@ -22,7 +22,7 @@ try {
 }
 
 {
-  const fileUrl = import.meta.resolve("./fixtures/file.js")
+  const fileUrl = import.meta.resolve("./directory/file.js")
   const actual = await assertFileExists(fileUrl)
   const expected = undefined
   assert({ actual, expected })
