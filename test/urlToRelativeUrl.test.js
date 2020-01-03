@@ -52,6 +52,28 @@ import { urlToRelativeUrl } from "../index.js"
   assert({ actual, expected })
 }
 
+// same origins and ressources
+{
+  const actual = urlToRelativeUrl("http://example.org", "http://example.org")
+  const expected = ""
+  assert({ actual, expected })
+}
+{
+  const actual = urlToRelativeUrl("http://example.org/", "http://example.org")
+  const expected = ""
+  assert({ actual, expected })
+}
+{
+  const actual = urlToRelativeUrl("http://example.org", "http://example.org/")
+  const expected = ""
+  assert({ actual, expected })
+}
+{
+  const actual = urlToRelativeUrl("http://example.org/", "http://example.org/")
+  const expected = ""
+  assert({ actual, expected })
+}
+
 {
   const actual = urlToRelativeUrl("file:///directory/foo/file.js", "file:///directory/file.js")
   const expected = "foo/file.js"
