@@ -6,12 +6,12 @@ import { createFileDirectories } from "./createFileDirectories.js"
 export const moveFile = async (value, destinationValue) => {
   const fileUrl = assertAndNormalizeFileUrl(value)
   const filePath = urlToFileSystemPath(fileUrl)
-  const destinationFileUrl = assertAndNormalizeFileUrl(destinationValue)
-  const destinationFilePath = assertAndNormalizeFileUrl(destinationFileUrl)
+  const fileDestinationUrl = assertAndNormalizeFileUrl(destinationValue)
+  const fileDestinationPath = urlToFileSystemPath(fileDestinationUrl)
 
-  await createFileDirectories(destinationFileUrl)
+  await createFileDirectories(fileDestinationUrl)
   return new Promise((resolve, reject) => {
-    rename(filePath, destinationFilePath, (error) => {
+    rename(filePath, fileDestinationPath, (error) => {
       if (error) {
         reject(error)
       } else {

@@ -10,12 +10,12 @@ export const fileExists = async (value) => {
   const filePath = urlToFileSystemPath(fileUrl)
 
   return new Promise((resolve, reject) => {
-    stat(filePath, (error) => {
+    stat(filePath, (error, stats) => {
       if (error) {
         if (error.code === "ENOENT") resolve(false)
         else reject(error)
       } else {
-        resolve(true)
+        resolve(stats.isFile())
       }
     })
   })
