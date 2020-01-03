@@ -6,3 +6,11 @@ import { resolveUrl } from "../index.js"
   const expected = "file:///directory/file.js"
   assert({ actual, expected })
 }
+
+try {
+  resolveUrl("./foo.js")
+  throw new Error("should throw")
+} catch (actual) {
+  const expected = new TypeError(`baseUrl missing`)
+  assert({ actual, expected })
+}

@@ -21,10 +21,12 @@ Set of functions often needed when using Node.js.
   - [cleanDirectory](#cleanDirectory)
   - [createDirectory](#createDirectory)
   - [createFileDirectories](#createFileDirectories)
+  - [directoryExists](#directoryExists)
   - [fileExists](#fileExists)
   - [fileSystemPathToUrl](#fileSystemPathToUrl)
   - [isFileSystemPath](#isFileSystemPath)
   - [moveFile](#moveFile)
+  - [readFileModificationTime](#readFileModificationTime)
   - [readFileContent](#readFileContent)
   - [readFileStat](#readFileStat)
   - [removeDirectory](#removeDirectory)
@@ -34,7 +36,7 @@ Set of functions often needed when using Node.js.
   - [urlToFileSystemPath](#urlToFileSystemPath)
   - [urlToRelativeUrl](#urlToRelativeUrl)
   - [writeFileContent](#writeFileContent)
-  - [writeFileModificationDate](#writeFileModificationDate)
+  - [writeFileModificationTime](#writeFileModificationTime)
 - [Installation](#Installation)
 
 ## Presentation
@@ -185,6 +187,20 @@ await createDirectory(`/directory`)
 
 — source code at [src/createDirectory.js](./src/createDirectory.js).
 
+### directoryExists
+
+> `directoryExists` is an async function returning a boolean indicating a directory presence on the filesystem.
+
+```js
+import { directoryExists } from "@jsenv/util"
+
+const exists = await directoryExists(`/directory`)
+```
+
+This function was designed to warn in case an important directory is missing.
+
+— source code at [src/directoryExists.js](./src/directoryExists.js).
+
 ### createFileDirectories
 
 > `createFileDirectories` is an async function creating every directory leading to a file.
@@ -209,7 +225,7 @@ import { fileExists } from "@jsenv/util"
 const exists = await fileExists(`/directory/file.js`)
 ```
 
-This function exists mostly to console.warn in case a file is missing.
+This function was designed to warn in case an important file is missing.
 
 — source code at [src/fileExists.js](./src/fileExists.js).
 
@@ -255,6 +271,18 @@ await moveFile("file:///directory/file.js", "file:///destination/file.js")
 This function will auto create the destination directories if they do not exists.
 
 — source code at [src/moveFile.js](./src/moveFile.js).
+
+### readFileModificationTime
+
+> `readFileModificationTime` is an async function returning a number of milliseconds representing the date when the file was modified.
+
+```js
+import { readFileModificationTime } from "@jsenv/util"
+
+const mtimeMs = await readFileModificationTime("file:///directory/file.js")
+```
+
+— source code at [src/readFileModificationTime.js](./src/readFileModificationTime.js).
 
 ### readFileContent
 
@@ -391,19 +419,19 @@ This function auto create file parent directories if they do not exists.
 
 — source code at [src/writeFileContent.js](./src/writeFileContent.js).
 
-### writeFileModificationDate
+### writeFileModificationTime
 
-> `writeFileModificationDate` is an async function writing file and its content on the filesystem.
+> `writeFileModificationTime` is an async function writing file and its content on the filesystem.
 
 ```js
-import { writeFileModificationDate } from "@jsenv/util"
+import { writeFileModificationTime } from "@jsenv/util"
 
-await writeFileModificationDate("file:///directory/file.js", new Date())
+await writeFileModificationTime("file:///directory/file.js", Date.now())
 ```
 
-`writeFileModificationDate` is equivalent to [fs.promises.utimes](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_utimes_path_atime_mtime) but accepts url strings as file path.
+`writeFileModificationTime` is equivalent to [fs.promises.utimes](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_utimes_path_atime_mtime) but accepts url strings as file path.
 
-— source code at [src/writeFileModificationDate.js](./src/writeFileModificationDate.js).
+— source code at [src/writeFileModificationTime.js](./src/writeFileModificationTime.js).
 
 ## Installation
 

@@ -1,21 +1,18 @@
-import { mkdir } from "fs"
+import { stat } from "fs"
 import { assertAndNormalizeDirectoryUrl } from "./assertAndNormalizeDirectoryUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 
-export const createDirectory = (value) => {
+export const directoryExists = async (value) => {
   const directoryUrl = assertAndNormalizeDirectoryUrl(value)
   const directoryPath = urlToFileSystemPath(directoryUrl)
 
   return new Promise((resolve, reject) => {
-    mkdir(directoryPath, (error) => {
+    stat(directoryPath, (error, stats) => {
       if (error) {
-        if (error.code === "EEXIST") {
-          resolve()
-        } else {
-          reject(error)
-        }
+        if (error.code === "ENOENT") resolve(false)
+        else reject(error)
       } else {
-        resolve()
+        resolve(stats.isDirectory())
       }
     })
   })
