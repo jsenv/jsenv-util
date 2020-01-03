@@ -25,6 +25,7 @@ Set of functions often needed when using Node.js.
   - [fileSystemPathToUrl](#fileSystemPathToUrl)
   - [isFileSystemPath](#isFileSystemPath)
   - [moveFile](#moveFile)
+  - [readFileModificationTime](#readFileModificationTime)
   - [readFileContent](#readFileContent)
   - [readFileStat](#readFileStat)
   - [removeDirectory](#removeDirectory)
@@ -34,7 +35,7 @@ Set of functions often needed when using Node.js.
   - [urlToFileSystemPath](#urlToFileSystemPath)
   - [urlToRelativeUrl](#urlToRelativeUrl)
   - [writeFileContent](#writeFileContent)
-  - [writeFileModificationDate](#writeFileModificationDate)
+  - [writeFileModificationTime](#writeFileModificationTime)
 - [Installation](#Installation)
 
 ## Presentation
@@ -256,6 +257,18 @@ This function will auto create the destination directories if they do not exists
 
 — source code at [src/moveFile.js](./src/moveFile.js).
 
+### readFileModificationTime
+
+> `readFileModificationTime` is an async function returning a number of milliseconds representing the date when the file was modified.
+
+```js
+import { readFileModificationTime } from "@jsenv/util"
+
+const mtimeMs = await readFileModificationTime("file:///directory/file.js")
+```
+
+— source code at [src/readFileModificationTime.js](./src/readFileModificationTime.js).
+
 ### readFileContent
 
 > `readFileContent` is an async function returning the content of a file as string.
@@ -391,19 +404,19 @@ This function auto create file parent directories if they do not exists.
 
 — source code at [src/writeFileContent.js](./src/writeFileContent.js).
 
-### writeFileModificationDate
+### writeFileModificationTime
 
-> `writeFileModificationDate` is an async function writing file and its content on the filesystem.
+> `writeFileModificationTime` is an async function writing file and its content on the filesystem.
 
 ```js
-import { writeFileModificationDate } from "@jsenv/util"
+import { writeFileModificationTime } from "@jsenv/util"
 
-await writeFileModificationDate("file:///directory/file.js", new Date())
+await writeFileModificationTime("file:///directory/file.js", Date.now())
 ```
 
-`writeFileModificationDate` is equivalent to [fs.promises.utimes](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_utimes_path_atime_mtime) but accepts url strings as file path.
+`writeFileModificationTime` is equivalent to [fs.promises.utimes](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_utimes_path_atime_mtime) but accepts url strings as file path.
 
-— source code at [src/writeFileModificationDate.js](./src/writeFileModificationDate.js).
+— source code at [src/writeFileModificationTime.js](./src/writeFileModificationTime.js).
 
 ## Installation
 
