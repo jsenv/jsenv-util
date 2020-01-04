@@ -3,7 +3,11 @@ import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { createParentDirectories } from "./createParentDirectories.js"
 
-export const moveFile = async (value, destinationValue) => {
+export const moveFile = async (
+  value,
+  destinationValue,
+  { autoGrantRequiredPermissions = true } = {},
+) => {
   const fileUrl = assertAndNormalizeFileUrl(value)
   const filePath = urlToFileSystemPath(fileUrl)
   const fileDestinationUrl = assertAndNormalizeFileUrl(destinationValue)

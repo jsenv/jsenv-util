@@ -8,27 +8,28 @@ import { removeFile } from "./removeFile.js"
 import { directoryExists } from "./directoryExists.js"
 import { copyDirectory } from "./copyDirectory.js"
 
-export const moveDirectory = async (directoryUrl, directoryDestinationUrl) => {
+export const moveDirectory = async (
+  directoryUrl,
+  directoryDestinationUrl,
+  { autoGrantRequiredPermissions = true } = {},
+) => {
   directoryUrl = assertAndNormalizeDirectoryUrl(directoryUrl)
   directoryDestinationUrl = assertAndNormalizeDirectoryUrl(directoryDestinationUrl)
 
   if (await directoryExists(directoryDestinationUrl)) {
-    // TODO: handle permission denied to write destination directory (to remove it)
-    await removeDirectory(directoryDestinationUrl)
+    await removeDirectory(directoryDestinationUrl, { autoGrantRequiredPermissions })
   } else {
     await createParentDirectories(directoryDestinationUrl)
   }
 
   if (await fileExists(directoryDestinationUrl)) {
-    // TODO: handle permission denied to write destination file (to remove it)
-    await removeFile(directoryDestinationUrl)
+    await removeFile(directoryDestinationUrl, { autoGrantRequiredPermissions })
   }
 
   await moveDirectoryNaive(directoryUrl, directoryDestinationUrl, {
     handleCrossDeviceError: async () => {
-      await copyDirectory(directoryUrl, directoryDestinationUrl)
-      // TODO: handle permission denied to write source directory (to remove it)
-      await removeDirectory(directoryUrl)
+      await copyDirectory(directoryUrl, directoryDestinationUrl, { autoGrantRequiredPermissions })
+      await removeDirectory(directoryUrl, { autoGrantRequiredPermissions })
     },
   })
 }

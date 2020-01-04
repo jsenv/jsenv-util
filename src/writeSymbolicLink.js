@@ -2,7 +2,7 @@ import { symlink } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 
-export const writeSymbolicLink = (url, targetUrl) => {
+export const writeSymbolicLink = (url, targetUrl, { autoGrantRequiredPermissions } = {}) => {
   const symbolicLinkUrl = assertAndNormalizeFileUrl(url)
   const symbolicLinkTargetUrl = assertAndNormalizeFileUrl(targetUrl)
 

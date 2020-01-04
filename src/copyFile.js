@@ -9,12 +9,16 @@ import { writeTimestamps } from "./writeTimestamps.js"
 import { testPermission } from "./testPermission.js"
 import { grantPermission } from "./grantPermission.js"
 
-export const copyFile = async (url, destinationUrl, fileStat) => {
+export const copyFile = async (
+  url,
+  destinationUrl,
+  { autoGrantRequiredPermissions = true, fileStat } = {},
+) => {
   const fileUrl = assertAndNormalizeFileUrl(url)
   const fileDestinationUrl = assertAndNormalizeFileUrl(destinationUrl)
 
   await createParentDirectories(fileDestinationUrl)
-  await copyFileContent(fileUrl, fileDestinationUrl)
+  await copyFileContent(fileUrl, fileDestinationUrl, { autoGrantRequiredPermissions })
 
   if (!fileStat) {
     fileStat = await readLStat(fileUrl)
@@ -30,33 +34,37 @@ export const copyFile = async (url, destinationUrl, fileStat) => {
   })
 }
 
-const copyFileContent = async (fileUrl, fileDestinationUrl) => {
+const copyFileContent = async (fileUrl, fileDestinationUrl, { autoGrantRequiredPermissions }) => {
   const filePath = urlToFileSystemPath(fileUrl)
   const fileDestinationPath = urlToFileSystemPath(fileDestinationUrl)
 
   return copyFileContentNaive(filePath, fileDestinationPath, {
-    handlePermissionError: async () => {
-      const [readSourcePermission, writeDestinationPermission] = await Promise.all([
-        testPermission(fileUrl, { read: true }),
-        testPermission(fileDestinationUrl, { write: true }),
-      ])
+    ...(autoGrantRequiredPermissions
+      ? {
+          handlePermissionError: async () => {
+            const [readSourcePermission, writeDestinationPermission] = await Promise.all([
+              testPermission(fileUrl, { read: true }),
+              testPermission(fileDestinationUrl, { write: true }),
+            ])
 
-      let restoreSource = () => {}
-      let restoreDestination = () => {}
+            let restoreSource = () => {}
+            let restoreDestination = () => {}
 
-      if (!readSourcePermission) {
-        restoreSource = await grantPermission(fileUrl, { read: true })
-      }
-      if (!writeDestinationPermission) {
-        restoreDestination = await grantPermission(fileDestinationUrl, { write: true })
-      }
+            if (!readSourcePermission) {
+              restoreSource = await grantPermission(fileUrl, { read: true })
+            }
+            if (!writeDestinationPermission) {
+              restoreDestination = await grantPermission(fileDestinationUrl, { write: true })
+            }
 
-      try {
-        await copyFileContentNaive(filePath, fileDestinationPath)
-      } finally {
-        await Promise.all([restoreSource(), restoreDestination()])
-      }
-    },
+            try {
+              await copyFileContentNaive(filePath, fileDestinationPath)
+            } finally {
+              await Promise.all([restoreSource(), restoreDestination()])
+            }
+          },
+        }
+      : {}),
   })
 }
 

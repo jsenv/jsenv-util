@@ -2,7 +2,7 @@ import { mkdir } from "fs"
 import { assertAndNormalizeDirectoryUrl } from "./assertAndNormalizeDirectoryUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 
-export const createDirectory = (value) => {
+export const createDirectory = (value, { autoGrantRequiredPermissions = false } = {}) => {
   const directoryUrl = assertAndNormalizeDirectoryUrl(value)
   const directoryPath = urlToFileSystemPath(directoryUrl)
 

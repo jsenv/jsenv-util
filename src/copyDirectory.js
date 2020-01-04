@@ -14,7 +14,11 @@ import { readSymbolicLink } from "./readSymbolicLink.js"
 import { writeSymbolicLink } from "./writeSymbolicLink.js"
 import { urlIsInsideOf } from "./urlIsInsideOf.js"
 
-export const copyDirectory = async (directoryUrl, directoryDestinationUrl) => {
+export const copyDirectory = async (
+  directoryUrl,
+  directoryDestinationUrl,
+  { autoGrantRequiredPermissions = true } = {},
+) => {
   const rootDirectoryUrl = assertAndNormalizeDirectoryUrl(directoryUrl)
   const rootDirectoryDestinationUrl = assertAndNormalizeDirectoryUrl(directoryDestinationUrl)
 
@@ -40,7 +44,7 @@ export const copyDirectory = async (directoryUrl, directoryDestinationUrl) => {
     const directoryRelativeUrl = urlToRelativeUrl(directoryUrl, rootDirectoryUrl)
     const directoryCopyUrl = resolveUrl(directoryRelativeUrl, rootDirectoryDestinationUrl)
 
-    await createDirectory(directoryCopyUrl)
+    await createDirectory(directoryCopyUrl, { autoGrantRequiredPermissions })
     await Promise.all([
       writePermissions(directoryCopyUrl, binaryFlagsToPermissions(mode)),
       copyDirectoryContent(directoryUrl),
@@ -51,7 +55,7 @@ export const copyDirectory = async (directoryUrl, directoryDestinationUrl) => {
   const visitFile = async (fileUrl, fileStat) => {
     const fileRelativeUrl = urlToRelativeUrl(fileUrl, rootDirectoryUrl)
     const fileCopyUrl = resolveUrl(fileRelativeUrl, rootDirectoryDestinationUrl)
-    await copyFile(fileUrl, fileCopyUrl, fileStat)
+    await copyFile(fileUrl, fileCopyUrl, { autoGrantRequiredPermissions, fileStat })
   }
 
   const visitSymbolicLink = async (symbolicLinkUrl) => {
@@ -74,13 +78,13 @@ export const copyDirectory = async (directoryUrl, directoryDestinationUrl) => {
       symbolicLinkCopyTargetUrl = symbolicLinkTargetUrl
     }
 
-    // TODO: handle permission denied to write symbolic link here
-    await writeSymbolicLink(symbolicLinkCopyUrl, symbolicLinkCopyTargetUrl)
+    await writeSymbolicLink(symbolicLinkCopyUrl, symbolicLinkCopyTargetUrl, {
+      autoGrantRequiredPermissions,
+    })
   }
 
   const copyDirectoryContent = async (url) => {
-    // TODO: handle permission denied to read directory here
-    const names = await readDirectory(url)
+    const names = await readDirectory(url, { autoGrantRequiredPermissions })
     await Promise.all(
       names.map(async (name) => {
         const url = resolveUrl(name, url)
