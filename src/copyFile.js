@@ -9,19 +9,24 @@ import { writeTimestamps } from "./writeTimestamps.js"
 import { testPermission } from "./testPermission.js"
 import { grantPermission } from "./grantPermission.js"
 
-export const copyFile = async (url, destinationUrl) => {
+export const copyFile = async (url, destinationUrl, fileStat) => {
   const fileUrl = assertAndNormalizeFileUrl(url)
   const fileDestinationUrl = assertAndNormalizeFileUrl(destinationUrl)
 
   await createParentDirectories(fileDestinationUrl)
   await copyFileContent(fileUrl, fileDestinationUrl)
 
-  const fileStat = await readLStat(fileUrl)
-  const filePermissions = binaryFlagsToPermissions(fileStat.mode)
-  await writePermissions(fileDestinationUrl, filePermissions)
+  if (!fileStat) {
+    fileStat = await readLStat(fileUrl)
+  }
+
+  const { mode, atimeMs, mtimeMs } = fileStat
+  await writePermissions(fileDestinationUrl, binaryFlagsToPermissions(mode))
+  // do this in the end and not in parallel otherwise atime could be affected by
+  // writePermissions
   await writeTimestamps(fileDestinationUrl, {
-    atime: fileStat.atimeMs,
-    mtime: fileStat.mtimeMs,
+    atime: atimeMs,
+    mtime: mtimeMs,
   })
 }
 

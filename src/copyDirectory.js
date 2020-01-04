@@ -1,16 +1,18 @@
 /* eslint-disable import/max-dependencies */
 import { resolveUrl } from "./resolveUrl.js"
+import { binaryFlagsToPermissions } from "./internal/permissions.js"
 import { assertAndNormalizeDirectoryUrl } from "./assertAndNormalizeDirectoryUrl.js"
 import { createParentDirectories } from "./createParentDirectories.js"
 import { createDirectory } from "./createDirectory.js"
 import { urlToRelativeUrl } from "./urlToRelativeUrl.js"
-import { copyFileContent } from "./copyFileContent.js"
+import { copyFile } from "./copyFile.js"
 import { readLStat } from "./readLStat.js"
 import { writePermissions } from "./writePermissions.js"
 import { writeTimestamps } from "./writeTimestamps.js"
 import { readDirectory } from "./readDirectory.js"
 import { readSymbolicLink } from "./readSymbolicLink.js"
 import { writeSymbolicLink } from "./writeSymbolicLink.js"
+import { urlIsInsideOf } from "./urlIsInsideOf.js"
 
 export const copyDirectory = async (directoryUrl, directoryDestinationUrl) => {
   const rootDirectoryUrl = assertAndNormalizeDirectoryUrl(directoryUrl)
@@ -19,50 +21,60 @@ export const copyDirectory = async (directoryUrl, directoryDestinationUrl) => {
   await createParentDirectories(directoryDestinationUrl)
 
   const visit = async (url) => {
-    const lstatObject = await readLStat(url)
+    const filesystemStat = await readLStat(url)
 
-    if (lstatObject.isDirectory()) {
-      await visitDirectory(url, lstatObject.mode)
+    if (filesystemStat.isDirectory()) {
+      await visitDirectory(url, filesystemStat.mode)
     } else if (
-      lstatObject.isFile() ||
-      lstatObject.isCharacterDevice() ||
-      lstatObject.isBlockDevice()
+      filesystemStat.isFile() ||
+      filesystemStat.isCharacterDevice() ||
+      filesystemStat.isBlockDevice()
     ) {
-      await visitFile(url, lstatObject.mode)
-    } else if (lstatObject.isSymbolicLink()) {
-      await visitSymbolicLink(url, lstatObject.mode)
+      await visitFile(url, filesystemStat.mode)
+    } else if (filesystemStat.isSymbolicLink()) {
+      await visitSymbolicLink(url, filesystemStat.mode)
     }
   }
 
-  const visitDirectory = async (directoryUrl, { mode, atime, mtime }) => {
+  const visitDirectory = async (directoryUrl, { mode, atimeMs, mtimeMs }) => {
     const directoryRelativeUrl = urlToRelativeUrl(directoryUrl, rootDirectoryUrl)
     const directoryCopyUrl = resolveUrl(directoryRelativeUrl, rootDirectoryDestinationUrl)
 
     await createDirectory(directoryCopyUrl)
-
     await Promise.all([
-      Promise.all([
-        writePermissions(directoryCopyUrl, mode),
-        writeTimestamps(directoryCopyUrl, { atime, mtime }),
-      ]),
+      writePermissions(directoryCopyUrl, binaryFlagsToPermissions(mode)),
       copyDirectoryContent(directoryUrl),
     ])
+    await writeTimestamps(directoryCopyUrl, { atime: atimeMs, mtime: mtimeMs })
   }
-  const visitFile = async (fileUrl, { mode, atime, mtime }) => {
+
+  const visitFile = async (fileUrl, fileStat) => {
     const fileRelativeUrl = urlToRelativeUrl(fileUrl, rootDirectoryUrl)
     const fileCopyUrl = resolveUrl(fileRelativeUrl, rootDirectoryDestinationUrl)
-    await copyFileContent(fileUrl, fileCopyUrl)
-    await Promise.all([
-      writePermissions(fileCopyUrl, mode),
-      writeTimestamps(fileCopyUrl, { atime, mtime }),
-    ])
+    await copyFile(fileUrl, fileCopyUrl, fileStat)
   }
 
   const visitSymbolicLink = async (symbolicLinkUrl) => {
     const symbolicLinkRelativeUrl = urlToRelativeUrl(symbolicLinkUrl, rootDirectoryUrl)
     const symbolicLinkTargetUrl = await readSymbolicLink(symbolicLinkUrl)
     const symbolicLinkCopyUrl = resolveUrl(symbolicLinkRelativeUrl, rootDirectoryDestinationUrl)
-    await writeSymbolicLink(symbolicLinkCopyUrl, symbolicLinkTargetUrl)
+
+    if (symbolicLinkTargetUrl === rootDirectoryUrl) {
+      await writeSymbolicLink(symbolicLinkCopyUrl, rootDirectoryDestinationUrl)
+    } else if (urlIsInsideOf(symbolicLinkTargetUrl, rootDirectoryUrl)) {
+      // symbolic link targets something inside the directory we want to copy
+      // reflects it inside the copied directory structure
+      await writeSymbolicLink(
+        symbolicLinkCopyUrl,
+        resolveUrl(
+          urlToRelativeUrl(symbolicLinkTargetUrl, rootDirectoryUrl),
+          rootDirectoryDestinationUrl,
+        ),
+      )
+    } else {
+      // symbolic link targets something outside the directory we want to copy
+      await writeSymbolicLink(symbolicLinkCopyUrl, symbolicLinkTargetUrl)
+    }
   }
 
   const copyDirectoryContent = async (url) => {
