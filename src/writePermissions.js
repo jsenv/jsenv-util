@@ -2,8 +2,14 @@ import { chmod } from "fs"
 import { permissionsToBinaryFlags } from "./internal/permissions.js"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
+import { resolveUrl } from "./resolveUrl.js"
+import { grantPermission } from "./grantPermission.js"
 
-export const writePermissions = async (url, permissions = {}) => {
+export const writePermissions = async (
+  url,
+  permissions,
+  { autoGrantRequiredPermissions = true } = {},
+) => {
   const fileSystemUrl = assertAndNormalizeFileUrl(url)
   const fileSystemPath = urlToFileSystemPath(fileSystemUrl)
 
@@ -26,10 +32,47 @@ export const writePermissions = async (url, permissions = {}) => {
   }
   const binaryFlags = permissionsToBinaryFlags(permissions)
 
+  return chmodNaive(fileSystemPath, binaryFlags, {
+    ...(autoGrantRequiredPermissions
+      ? {
+          handlePermissionDeniedError: async () => {
+            // you might not be allowed to update the file mod
+            // because of directory I would say
+            const directoryUrl = resolveUrl(
+              fileSystemUrl.endsWith("/") ? "../" : "./",
+              fileSystemUrl,
+            )
+            const restoreDirectoryPermission = await grantPermission(directoryUrl, {
+              read: true,
+              write: true,
+              execute: true,
+            })
+            // const restoreFilePermission = await grantPermission(fileSystemUrl, {
+            //   read: true,
+            //   write: true,
+            //   execute: true,
+            // })
+            try {
+              await chmodNaive(fileSystemPath, binaryFlags)
+              await restoreDirectoryPermission()
+            } finally {
+              // await restoreFilePermission()
+            }
+          },
+        }
+      : {}),
+  })
+}
+
+const chmodNaive = (fileSystemPath, binaryFlags, { handlePermissionDeniedError = null } = {}) => {
   return new Promise((resolve, reject) => {
     chmod(fileSystemPath, binaryFlags, (error) => {
       if (error) {
-        reject(error)
+        if (handlePermissionDeniedError && error.code === "EACCES") {
+          resolve(handlePermissionDeniedError(error))
+        } else {
+          reject(error)
+        }
       } else {
         resolve()
       }

@@ -28,15 +28,15 @@ export const copyDirectory = async (
     const filesystemStat = await readLStat(url)
 
     if (filesystemStat.isDirectory()) {
-      await visitDirectory(url, filesystemStat.mode)
+      await visitDirectory(url, filesystemStat)
     } else if (
       filesystemStat.isFile() ||
       filesystemStat.isCharacterDevice() ||
       filesystemStat.isBlockDevice()
     ) {
-      await visitFile(url, filesystemStat.mode)
+      await visitFile(url, filesystemStat)
     } else if (filesystemStat.isSymbolicLink()) {
-      await visitSymbolicLink(url, filesystemStat.mode)
+      await visitSymbolicLink(url, filesystemStat)
     }
   }
 

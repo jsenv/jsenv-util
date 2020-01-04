@@ -1,9 +1,13 @@
 import { lstat } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
+import { resolveUrl } from "./resolveUrl.js"
 import { grantPermission } from "./grantPermission.js"
 
-export const readLStat = async (url, { autoGrantRequiredPermissions = true } = {}) => {
+export const readLStat = async (
+  url,
+  { autoGrantRequiredPermissions = true, nullIfNotFound = false } = {},
+) => {
   const fileSystemUrl = assertAndNormalizeFileUrl(url)
   const fileSystemPath = urlToFileSystemPath(fileSystemUrl)
 
@@ -11,34 +15,55 @@ export const readLStat = async (url, { autoGrantRequiredPermissions = true } = {
     ...(autoGrantRequiredPermissions
       ? {
           handlePermissionDeniedError: async () => {
-            // HERE there is an infinite loop of trying to read the lstat to be able to
-            // restore the permission but we don't have the right to read before hand
-            // to solve this grantPermission should handle permission denied error
-            // and understand he cannot read permission and autogrant read to himself
+            /*
+            if we don't have the right to read lstat
+            it's because a parent or ancestor directory is not readable
+            we could recursively read all parent directory to auto grant the rights
+            to read the directory content up to the file
+            but that's something that looks too complex to be desirable
+            */
+            const directoryUrl = resolveUrl(
+              fileSystemUrl.endsWith("/") ? "../" : "./",
+              fileSystemUrl,
+            )
+            const restoreDirectoryPermission = await grantPermission(directoryUrl, {
+              read: true,
+              execute: true,
+            })
             const restorePermission = await grantPermission(fileSystemUrl, {
               read: true,
-              write: true,
-              execute: true,
+              // execute: true,
             })
 
             try {
               const stat = await lstatNaive(fileSystemPath)
               return stat
             } finally {
+              await restoreDirectoryPermission()
               await restorePermission()
             }
           },
         }
       : {}),
+    ...(nullIfNotFound
+      ? {
+          handleNotFoundError: () => null,
+        }
+      : {}),
   })
 }
 
-const lstatNaive = (fileSystemPath, { handlePermissionDeniedError = null } = {}) => {
+const lstatNaive = (
+  fileSystemPath,
+  { handleNotFoundError = null, handlePermissionDeniedError = null } = {},
+) => {
   return new Promise((resolve, reject) => {
     lstat(fileSystemPath, (error, lstatObject) => {
       if (error) {
-        if (handlePermissionDeniedError && error.code === "EACCES") {
+        if (handlePermissionDeniedError && (error.code === "EPERM" || error.code === "EACCES")) {
           resolve(handlePermissionDeniedError(error))
+        } else if (handleNotFoundError && error.code === "ENOENT") {
+          resolve(handleNotFoundError(error))
         } else {
           reject(error)
         }

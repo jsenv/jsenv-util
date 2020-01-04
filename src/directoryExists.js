@@ -4,13 +4,6 @@ import { readLStat } from "./readLStat.js"
 export const directoryExists = async (url) => {
   const directoryUrl = assertAndNormalizeDirectoryUrl(url)
 
-  try {
-    const stat = await readLStat(directoryUrl)
-    return stat.isDirectory()
-  } catch (e) {
-    if (e.code === "ENOENT") {
-      return false
-    }
-    throw e
-  }
+  const stat = await readLStat(directoryUrl, { nullIfNotFound: true })
+  return Boolean(stat && stat.isDirectory())
 }
