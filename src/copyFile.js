@@ -35,7 +35,7 @@ const copyFileContent = async (fileUrl, fileDestinationUrl) => {
   const fileDestinationPath = urlToFileSystemPath(fileDestinationUrl)
 
   return copyFileContentNaive(filePath, fileDestinationPath, {
-    onPermissionsDenied: async () => {
+    handlePermissionError: async () => {
       const [readSourcePermission, writeDestinationPermission] = await Promise.all([
         testPermission(fileUrl, { read: true }),
         testPermission(fileDestinationUrl, { write: true }),
@@ -63,13 +63,13 @@ const copyFileContent = async (fileUrl, fileDestinationUrl) => {
 const copyFileContentNaive = (
   filePath,
   fileDestinationPath,
-  { onPermissionsDenied = null } = {},
+  { handlePermissionError = null } = {},
 ) => {
   return new Promise((resolve, reject) => {
     copyFileNode(filePath, fileDestinationPath, async (error) => {
       if (error) {
-        if (onPermissionsDenied && error.code === "EACCES") {
-          resolve(onPermissionsDenied(error))
+        if (handlePermissionError && error.code === "EACCES") {
+          resolve(handlePermissionError(error))
         } else {
           reject(error)
         }

@@ -59,25 +59,27 @@ export const copyDirectory = async (directoryUrl, directoryDestinationUrl) => {
     const symbolicLinkTargetUrl = await readSymbolicLink(symbolicLinkUrl)
     const symbolicLinkCopyUrl = resolveUrl(symbolicLinkRelativeUrl, rootDirectoryDestinationUrl)
 
+    let symbolicLinkCopyTargetUrl
     if (symbolicLinkTargetUrl === rootDirectoryUrl) {
-      await writeSymbolicLink(symbolicLinkCopyUrl, rootDirectoryDestinationUrl)
+      symbolicLinkCopyTargetUrl = rootDirectoryDestinationUrl
     } else if (urlIsInsideOf(symbolicLinkTargetUrl, rootDirectoryUrl)) {
       // symbolic link targets something inside the directory we want to copy
       // reflects it inside the copied directory structure
-      await writeSymbolicLink(
-        symbolicLinkCopyUrl,
-        resolveUrl(
-          urlToRelativeUrl(symbolicLinkTargetUrl, rootDirectoryUrl),
-          rootDirectoryDestinationUrl,
-        ),
+      symbolicLinkCopyTargetUrl = resolveUrl(
+        urlToRelativeUrl(symbolicLinkTargetUrl, rootDirectoryUrl),
+        rootDirectoryDestinationUrl,
       )
     } else {
       // symbolic link targets something outside the directory we want to copy
-      await writeSymbolicLink(symbolicLinkCopyUrl, symbolicLinkTargetUrl)
+      symbolicLinkCopyTargetUrl = symbolicLinkTargetUrl
     }
+
+    // TODO: handle permission denied to write symbolic link here
+    await writeSymbolicLink(symbolicLinkCopyUrl, symbolicLinkCopyTargetUrl)
   }
 
   const copyDirectoryContent = async (url) => {
+    // TODO: handle permission denied to read directory here
     const names = await readDirectory(url)
     await Promise.all(
       names.map(async (name) => {

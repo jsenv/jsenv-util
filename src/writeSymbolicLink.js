@@ -8,6 +8,7 @@ export const writeSymbolicLink = (url, targetUrl) => {
 
   const symbolicLinkPath = urlToFileSystemPath(symbolicLinkUrl)
   const symbolicLinkTargetPath = urlToFileSystemPath(symbolicLinkTargetUrl)
+
   return new Promise((resolve, reject) => {
     symlink(symbolicLinkPath, symbolicLinkTargetPath, (error) => {
       if (error) {

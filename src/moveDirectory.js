@@ -10,31 +10,42 @@ import { copyDirectory } from "./copyDirectory.js"
 
 export const moveDirectory = async (directoryUrl, directoryDestinationUrl) => {
   directoryUrl = assertAndNormalizeDirectoryUrl(directoryUrl)
-  const directoryPath = urlToFileSystemPath(directoryUrl)
   directoryDestinationUrl = assertAndNormalizeDirectoryUrl(directoryDestinationUrl)
-  const directoryDestinationPath = urlToFileSystemPath(directoryDestinationUrl)
 
   if (await directoryExists(directoryDestinationUrl)) {
+    // TODO: handle permission denied to write destination directory (to remove it)
     await removeDirectory(directoryDestinationUrl)
   } else {
     await createParentDirectories(directoryDestinationUrl)
   }
 
   if (await fileExists(directoryDestinationUrl)) {
+    // TODO: handle permission denied to write destination file (to remove it)
     await removeFile(directoryDestinationUrl)
   }
 
+  await moveDirectoryNaive(directoryUrl, directoryDestinationUrl, {
+    handleCrossDeviceError: async () => {
+      await copyDirectory(directoryUrl, directoryDestinationUrl)
+      // TODO: handle permission denied to write source directory (to remove it)
+      await removeDirectory(directoryUrl)
+    },
+  })
+}
+
+const moveDirectoryNaive = (
+  directoryUrl,
+  directoryDestinationUrl,
+  { handleCrossDeviceError = null } = {},
+) => {
+  const directoryPath = urlToFileSystemPath(directoryUrl)
+  const directoryDestinationPath = urlToFileSystemPath(directoryDestinationUrl)
+
   return new Promise((resolve, reject) => {
-    rename(directoryPath, directoryDestinationPath, async (error) => {
+    rename(directoryPath, directoryDestinationPath, (error) => {
       if (error) {
-        if (error.code === "EXDEV") {
-          try {
-            await copyDirectory(directoryUrl, directoryDestinationUrl)
-            await removeDirectory(directoryUrl)
-            resolve()
-          } catch (e) {
-            reject(e)
-          }
+        if (handleCrossDeviceError && error.code === "EXDEV") {
+          resolve(handleCrossDeviceError(error))
         } else {
           reject(error)
         }

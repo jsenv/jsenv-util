@@ -10,6 +10,7 @@ export const moveFile = async (value, destinationValue) => {
   const fileDestinationPath = urlToFileSystemPath(fileDestinationUrl)
 
   await createParentDirectories(fileDestinationUrl)
+  // TODO: handle permission denied to write source file and/or to write destination file
   return new Promise((resolve, reject) => {
     rename(filePath, fileDestinationPath, (error) => {
       if (error) {
