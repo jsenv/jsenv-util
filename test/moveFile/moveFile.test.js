@@ -1,28 +1,24 @@
 import { assert } from "@jsenv/assert"
 import {
   resolveUrl,
-  cleanDirectory,
+  createDirectory,
   writeFile,
   moveFile,
   readFile,
   urlToFileSystemPath,
+  removeFile,
 } from "../../index.js"
 
-const directoryUrl = import.meta.resolve("./directory/")
-const fileUrl = resolveUrl("./subdir/file.txt", directoryUrl)
-const fileDestinationUrl = resolveUrl("./otherdir/file.txt", directoryUrl)
+const tempDirectoryUrl = import.meta.resolve("./temp/")
+const directoryUrl = resolveUrl("directory/", tempDirectoryUrl)
+const destinationDirectoryUrl = resolveUrl("otherdir/", tempDirectoryUrl)
+const fileUrl = resolveUrl("file.txt", directoryUrl)
+const fileDestinationUrl = resolveUrl("file.txt", destinationDirectoryUrl)
+await createDirectory(tempDirectoryUrl)
+await createDirectory(directoryUrl)
+await createDirectory(destinationDirectoryUrl)
 
-await cleanDirectory(directoryUrl)
-await writeFile(fileUrl, "Hello world")
-await moveFile(fileUrl, fileDestinationUrl)
-
-{
-  const actual = await readFile(fileDestinationUrl)
-  const expected = "Hello world"
-  assert({ actual, expected })
-}
-
-// source does not exists
+// file does not exists
 try {
   await moveFile(fileUrl, fileDestinationUrl)
   throw new Error("should throw")
@@ -40,11 +36,53 @@ try {
   assert({ actual, expected })
 }
 
-// destination is overwritten
-await writeFile(fileUrl, "foo")
-await moveFile(fileUrl, fileDestinationUrl)
+// on a directory
+try {
+  await moveFile(directoryUrl, destinationDirectoryUrl)
+  throw new Error("should throw")
+} catch (actual) {
+  const expected = new Error(
+    `moveFile must be called on a file, found directory at ${urlToFileSystemPath(directoryUrl)}`,
+  )
+  assert({ actual, expected })
+}
+
+// destination does not exists
 {
+  await writeFile(fileUrl, "Hello world")
+  await moveFile(fileUrl, fileDestinationUrl)
+  const actual = await readFile(fileDestinationUrl)
+  const expected = "Hello world"
+  assert({ actual, expected })
+  await removeFile(fileDestinationUrl)
+}
+
+// destination exists
+{
+  await writeFile(fileUrl, "foo")
+  await writeFile(fileDestinationUrl, "Hello world")
+  await moveFile(fileUrl, fileDestinationUrl)
   const actual = await readFile(fileDestinationUrl)
   const expected = "foo"
   assert({ actual, expected })
+  await removeFile(fileDestinationUrl)
+}
+
+// destination is an empty directory
+await writeFile(fileUrl, "foo")
+try {
+  await moveFile(fileUrl, destinationDirectoryUrl)
+} catch (actual) {
+  const expected = new Error(
+    `EISDIR: illegal operation on a directory, rename '${urlToFileSystemPath(
+      fileUrl,
+    )}' -> '${urlToFileSystemPath(destinationDirectoryUrl)}'`,
+  )
+  expected.errno = -21
+  expected.code = "EISDIR"
+  expected.syscall = "rename"
+  expected.path = urlToFileSystemPath(fileUrl)
+  expected.dest = urlToFileSystemPath(destinationDirectoryUrl)
+  assert({ actual, expected })
+  await removeFile(fileUrl, "foo")
 }
