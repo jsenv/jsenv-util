@@ -4,7 +4,6 @@ import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { resolveUrl } from "./resolveUrl.js"
 import { readDirectory } from "./readDirectory.js"
 import { removeFile } from "./removeFile.js"
-import { grantPermission } from "./grantPermission.js"
 import { readLStat } from "./readLStat.js"
 
 export const removeDirectory = async (url, { removeContent = false } = {}) => {
@@ -42,19 +41,6 @@ export const removeDirectory = async (url, { removeContent = false } = {}) => {
             },
           }
         : {}),
-      handlePermissionDeniedError: async () => {
-        const restoreDirectoryPermission = await grantPermission(directoryUrl, {
-          read: true,
-          write: true,
-          execute: true,
-        })
-        try {
-          await visitDirectory(directoryUrl)
-        } catch (e) {
-          await restoreDirectoryPermission() // in case of failure restore directory as it was
-          throw e
-        }
-      },
     })
   }
 
@@ -79,22 +65,22 @@ export const removeDirectory = async (url, { removeContent = false } = {}) => {
   await visitDirectory(directoryUrl)
 }
 
-const removeDirectoryNaive = (
-  directoryPath,
-  { handleNotEmptyError = null, handlePermissionDeniedError = null } = {},
-) => {
+const removeDirectoryNaive = (directoryPath, { handleNotEmptyError = null } = {}) => {
   return new Promise((resolve, reject) => {
     rmdir(directoryPath, (error, lstatObject) => {
       if (error) {
         if (error.code === "ENOENT") {
           resolve()
-        } else if (handleNotEmptyError && (error.code === "ENOTEMPTY" || error.code === "EEXIST")) {
-          resolve(handleNotEmptyError(error))
         } else if (
-          handlePermissionDeniedError &&
-          (error.code === "EPERM" || error.code === "EACCES")
+          handleNotEmptyError &&
+          // linux os
+          (error.code === "ENOTEMPTY" ||
+            // SunOS
+            error.code === "EEXIST" ||
+            // windows os
+            error.code === "EPERM")
         ) {
-          resolve(handlePermissionDeniedError(error))
+          resolve(handleNotEmptyError(error))
         } else {
           reject(error)
         }

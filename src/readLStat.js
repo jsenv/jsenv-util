@@ -1,6 +1,7 @@
 import { lstat } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
+import { grantPermission } from "./grantPermission.js"
 
 export const readLStat = async (url, { nullIfNotFound = false } = {}) => {
   const fileSystemUrl = assertAndNormalizeFileUrl(url)
@@ -12,6 +13,20 @@ export const readLStat = async (url, { nullIfNotFound = false } = {}) => {
           handleNotFoundError: () => null,
         }
       : {}),
+    handlePermissionDeniedError: async () => {
+      // Windows can EPERM on stat
+      const restorePermission = await grantPermission(fileSystemUrl, {
+        read: true,
+        write: true,
+        execute: true,
+      })
+      try {
+        const lstat = await lstatNaive(fileSystemPath)
+        return lstat
+      } finally {
+        await restorePermission()
+      }
+    },
   })
 }
 
