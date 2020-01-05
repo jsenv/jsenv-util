@@ -14,7 +14,6 @@ import { makeBusyFile } from "../testHelpers.js"
 const tempDirectoryUrl = import.meta.resolve("./temp/")
 const directoryUrl = resolveUrl("directory/", tempDirectoryUrl)
 const fileUrl = resolveUrl("file.txt", tempDirectoryUrl)
-
 await createDirectory(tempDirectoryUrl)
 
 // lstat on directory without permission

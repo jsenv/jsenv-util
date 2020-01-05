@@ -1,18 +1,19 @@
-import { fork } from "child_process"
-import { writeFile, urlToFileSystemPath } from "../index.js"
+// import { fork } from "child_process"
+import { promises } from "fs"
+import { removeFile, urlToFileSystemPath } from "../index.js"
 
+const { open } = promises
+
+// does not seems sufficient to trigger EBUSY error
+// make the file content executable (and a code that does not exit) instead ?
 export const makeBusyFile = async (fileUrl, callback) => {
-  await writeFile(fileUrl, `setInterval(() => {}, 100)`)
-  const child = fork(urlToFileSystemPath(fileUrl), {
-    // to avoid debugging that child
-    execArgv: [],
-  })
+  // await writeFile(fileUrl)
+  const filePath = urlToFileSystemPath(fileUrl)
+  const filehandle = await open(filePath, "a")
   try {
     await callback()
   } finally {
-    await new Promise((resolve) => {
-      child.on("close", resolve)
-      child.kill()
-    })
+    await filehandle.close()
+    await removeFile(filePath)
   }
 }

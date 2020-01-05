@@ -7,10 +7,7 @@ import { removeFile } from "./removeFile.js"
 import { grantPermission } from "./grantPermission.js"
 import { readLStat } from "./readLStat.js"
 
-export const removeDirectory = async (
-  url,
-  { removeContent = false, autoGrantRequiredPermissions = false } = {},
-) => {
+export const removeDirectory = async (url, { removeContent = false } = {}) => {
   const directoryUrl = assertAndNormalizeDirectoryUrl(url)
 
   const visit = async (url) => {
@@ -62,7 +59,7 @@ export const removeDirectory = async (
   }
 
   const removeDirectoryContent = async (directoryUrl) => {
-    const names = await readDirectory(directoryUrl, { autoGrantRequiredPermissions })
+    const names = await readDirectory(directoryUrl)
     await Promise.all(
       names.map(async (name) => {
         const url = resolveUrl(name, directoryUrl)
@@ -72,14 +69,14 @@ export const removeDirectory = async (
   }
 
   const visitFile = async (fileUrl) => {
-    await removeFile(fileUrl, { autoGrantRequiredPermissions })
+    await removeFile(fileUrl)
   }
 
   const visitSymbolicLink = async (symbolicLinkUrl) => {
-    await removeFile(symbolicLinkUrl, { autoGrantRequiredPermissions })
+    await removeFile(symbolicLinkUrl)
   }
 
-  await visit(directoryUrl)
+  await visitDirectory(directoryUrl)
 }
 
 const removeDirectoryNaive = (
@@ -89,7 +86,9 @@ const removeDirectoryNaive = (
   return new Promise((resolve, reject) => {
     rmdir(directoryPath, (error, lstatObject) => {
       if (error) {
-        if (handleNotEmptyError && (error.code === "ENOTEMPTY" || error.code === "EEXIST")) {
+        if (error.code === "ENOENT") {
+          resolve()
+        } else if (handleNotEmptyError && (error.code === "ENOTEMPTY" || error.code === "EEXIST")) {
           resolve(handleNotEmptyError(error))
         } else if (
           handlePermissionDeniedError &&
