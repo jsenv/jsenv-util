@@ -37,9 +37,11 @@ export const copyFileSystemNode = async (
     followSymbolicLink: false,
   })
   const sourcePath = urlToFileSystemPath(sourceUrl)
+  const destinationPath = urlToFileSystemPath(destinationUrl)
   if (!sourceStats) {
     throw new Error(`nothing to copy at ${sourcePath}`)
   }
+
   if (sourceStats.isDirectory()) {
     sourceUrl = ensureUrlTrailingSlash(sourceUrl)
     destinationUrl = ensureUrlTrailingSlash(destinationUrl)
@@ -49,7 +51,7 @@ export const copyFileSystemNode = async (
     nullIfNotFound: true,
     followSymbolicLink: false,
   })
-  const destinationPath = urlToFileSystemPath(destinationUrl)
+
   if (destinationStats) {
     const sourceType = statsToType(sourceStats)
     const destinationType = statsToType(destinationStats)
@@ -140,13 +142,13 @@ export const copyFileSystemNode = async (
     await copyStats(directoryCopyUrl, directoryStats)
   }
 
-  const copyDirectoryContent = async (url) => {
-    const names = await readDirectory(url)
+  const copyDirectoryContent = async (directoryUrl) => {
+    const names = await readDirectory(directoryUrl)
     await Promise.all(
       names.map(async (name) => {
-        const url = resolveUrl(name, url)
-        const stats = await readFileSystemNodeStat(url, { followSymbolicLink: false })
-        await visit(url, stats)
+        const fileSystemNodeUrl = resolveUrl(name, directoryUrl)
+        const stats = await readFileSystemNodeStat(fileSystemNodeUrl, { followSymbolicLink: false })
+        await visit(fileSystemNodeUrl, stats)
       }),
     )
   }
