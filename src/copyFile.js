@@ -4,7 +4,7 @@ import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { writeParentDirectories } from "./writeParentDirectories.js"
 import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
-import { writePermissions } from "./writePermissions.js"
+import { writeFileSystemNodePermissions } from "./writeFileSystemNodePermissions.js"
 import { writeTimestamps } from "./writeTimestamps.js"
 import { removeFileSystemNode } from "./removeFileSystemNode.js"
 
@@ -70,7 +70,7 @@ export const copyFile = async (
       })
     }
     if (preservePermissions) {
-      await writePermissions(fileDestinationUrl, binaryFlagsToPermissions(mode))
+      await writeFileSystemNodePermissions(fileDestinationUrl, binaryFlagsToPermissions(mode))
     }
   }
 }

@@ -6,7 +6,7 @@ import { writeDirectory } from "./writeDirectory.js"
 import { urlToRelativeUrl } from "./urlToRelativeUrl.js"
 import { copyFile } from "./copyFile.js"
 import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
-import { writePermissions } from "./writePermissions.js"
+import { writeFileSystemNodePermissions } from "./writeFileSystemNodePermissions.js"
 import { writeTimestamps } from "./writeTimestamps.js"
 import { readDirectory } from "./readDirectory.js"
 import { readSymbolicLink } from "./readSymbolicLink.js"
@@ -68,7 +68,7 @@ export const copyDirectory = async (
     await writeDirectory(directoryCopyUrl)
     await Promise.all([
       ...(preservePermissions
-        ? [writePermissions(directoryCopyUrl, binaryFlagsToPermissions(mode))]
+        ? [writeFileSystemNodePermissions(directoryCopyUrl, binaryFlagsToPermissions(mode))]
         : [Promise.resolve()]),
       copyDirectoryContent(directoryUrl),
     ])

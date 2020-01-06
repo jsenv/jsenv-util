@@ -6,9 +6,9 @@ import {
   writeFile,
   copyFile,
   readFile,
-  writePermissions,
+  writeFileSystemNodePermissions,
   writeTimestamps,
-  readPermissions,
+  readFileSystemNodePermissions,
   readTimestamps,
   urlToFileSystemPath,
   removeFileSystemNode,
@@ -58,16 +58,16 @@ try {
   }
 
   await writeFile(fileUrl, "hello")
-  await writePermissions(fileUrl, sourcePermissions)
+  await writeFileSystemNodePermissions(fileUrl, sourcePermissions)
   await writeTimestamps(fileUrl, { mtime: sourceMtime })
   await copyFile(fileUrl, fileDestinationUrl)
 
   const actual = {
     sourceContent: await readFile(fileUrl),
-    sourcePermissions: await readPermissions(fileUrl),
+    sourcePermissions: await readFileSystemNodePermissions(fileUrl),
     sourceTimestamps: await readTimestamps(fileUrl),
     destinationContent: await readFile(fileDestinationUrl),
-    destinationPermissions: await readPermissions(fileDestinationUrl),
+    destinationPermissions: await readFileSystemNodePermissions(fileDestinationUrl),
     destinationTimestamps: await readTimestamps(fileDestinationUrl),
   }
   const expected = {

@@ -1,18 +1,18 @@
 import { lstat, stat } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
-import { grantPermission } from "./grantPermission.js"
+import { grantPermissionsOnFileSystemNode } from "./grantPermissionsOnFileSystemNode.js"
 
 export const readFileSystemNodeStat = async (
-  url,
+  source,
   { nullIfNotFound = false, followSymbolicLink = true } = {},
 ) => {
-  if (url.endsWith("/")) url = url.slice(0, -1)
+  if (source.endsWith("/")) source = source.slice(0, -1)
 
-  const fileSystemUrl = assertAndNormalizeFileUrl(url)
-  const fileSystemPath = urlToFileSystemPath(fileSystemUrl)
+  const sourceUrl = assertAndNormalizeFileUrl(source)
+  const sourcePath = urlToFileSystemPath(sourceUrl)
 
-  return readStat(fileSystemPath, {
+  return readStat(sourcePath, {
     followSymbolicLink,
     ...(nullIfNotFound
       ? {
@@ -21,13 +21,13 @@ export const readFileSystemNodeStat = async (
       : {}),
     handlePermissionDeniedError: async () => {
       // Windows can EPERM on stat
-      const restorePermission = await grantPermission(fileSystemUrl, {
+      const restorePermission = await grantPermissionsOnFileSystemNode(sourceUrl, {
         read: true,
         write: true,
         execute: true,
       })
       try {
-        const stat = await readStat(fileSystemPath)
+        const stat = await readStat(sourcePath)
         return stat
       } finally {
         await restorePermission()

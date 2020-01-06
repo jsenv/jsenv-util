@@ -4,14 +4,14 @@ import {
   writeDirectory,
   cleanDirectory,
   directoryExists,
-  writePermissions,
+  writeFileSystemNodePermissions,
   urlToFileSystemPath,
 } from "../../index.js"
 
 const directoryUrl = import.meta.resolve("./directory/")
 const subdirUrl = resolveDirectoryUrl("subdir", directoryUrl)
 await cleanDirectory(directoryUrl)
-await writePermissions(directoryUrl, { owner: { read: true, write: false } })
+await writeFileSystemNodePermissions(directoryUrl, { owner: { read: true, write: false } })
 
 try {
   await writeDirectory(subdirUrl)

@@ -4,7 +4,7 @@ import {
   writeFile,
   resolveUrl,
   readFileSystemNodeStat,
-  writePermissions,
+  writeFileSystemNodePermissions,
   removeFileSystemNode,
   urlToFileSystemPath,
 } from "../../index.js"
@@ -18,7 +18,7 @@ await writeDirectory(tempDirectoryUrl)
 // lstat on directory without permission
 {
   await writeDirectory(directoryUrl)
-  await writePermissions(directoryUrl, {
+  await writeFileSystemNodePermissions(directoryUrl, {
     owner: { read: false, write: false, execute: false },
   })
   const directoryStat = await readFileSystemNodeStat(directoryUrl)
@@ -31,7 +31,7 @@ await writeDirectory(tempDirectoryUrl)
 // lstat on file without permission
 {
   await writeFile(fileUrl, "coucou")
-  await writePermissions(fileUrl, {
+  await writeFileSystemNodePermissions(fileUrl, {
     owner: { read: false, write: false, execute: false },
   })
   const fileStat = await readFileSystemNodeStat(fileUrl)
@@ -54,7 +54,7 @@ await makeBusyFile(fileUrl, async () => {
   const directoryFileUrl = resolveUrl("file.js", directoryUrl)
   await writeDirectory(directoryUrl)
   await writeFile(directoryFileUrl, "")
-  await writePermissions(directoryUrl, {
+  await writeFileSystemNodePermissions(directoryUrl, {
     owner: { read: false, write: false, execute: false },
   })
   try {
@@ -70,7 +70,7 @@ await makeBusyFile(fileUrl, async () => {
     expected.path = urlToFileSystemPath(directoryFileUrl)
     assert({ actual, expected })
 
-    await writePermissions(directoryUrl, {
+    await writeFileSystemNodePermissions(directoryUrl, {
       owner: { read: true, execute: true },
     })
     await removeFileSystemNode(directoryUrl, { removeContent: true })

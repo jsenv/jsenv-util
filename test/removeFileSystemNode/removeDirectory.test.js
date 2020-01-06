@@ -5,7 +5,7 @@ import {
   directoryExists,
   resolveUrl,
   writeFile,
-  writePermissions,
+  writeFileSystemNodePermissions,
   urlToFileSystemPath,
   removeFileSystemNode,
 } from "../../index.js"
@@ -36,7 +36,7 @@ await cleanDirectory(tempDirectoryUrl)
 {
   const directoryUrl = resolveUrl("directory/", tempDirectoryUrl)
   await writeDirectory(directoryUrl)
-  await writePermissions(directoryUrl, {
+  await writeFileSystemNodePermissions(directoryUrl, {
     other: { read: false, write: false, execute: false },
   })
   await removeFileSystemNode(directoryUrl)
@@ -86,7 +86,7 @@ await cleanDirectory(tempDirectoryUrl)
   const fileInsideDirectoryUrl = resolveUrl("file.txt", directoryUrl)
   await writeDirectory(directoryUrl)
   await writeFile(fileInsideDirectoryUrl)
-  await writePermissions(directoryUrl, {
+  await writeFileSystemNodePermissions(directoryUrl, {
     owner: { read: true, write: true, execute: false },
   })
   try {
@@ -102,7 +102,7 @@ await cleanDirectory(tempDirectoryUrl)
     expected.path = urlToFileSystemPath(fileInsideDirectoryUrl)
     assert({ actual, expected })
   } finally {
-    await writePermissions(directoryUrl, {
+    await writeFileSystemNodePermissions(directoryUrl, {
       owner: { read: true, write: true, execute: true },
     })
     await removeFileSystemNode(directoryUrl, { recursive: true })
@@ -127,7 +127,7 @@ await cleanDirectory(tempDirectoryUrl)
   const directoryUrl = resolveUrl("directory/", tempDirectoryUrl)
   const fileInsideDirectoryUrl = resolveUrl("file.txt", directoryUrl)
   await writeFile(fileInsideDirectoryUrl)
-  await writePermissions(fileInsideDirectoryUrl, {
+  await writeFileSystemNodePermissions(fileInsideDirectoryUrl, {
     owner: { read: false, write: false, execute: false },
   })
   await removeFileSystemNode(directoryUrl, { recursive: true })

@@ -6,7 +6,7 @@ import {
   writeFile,
   resolveUrl,
   writeDirectory,
-  writePermissions,
+  writeFileSystemNodePermissions,
   urlToFileSystemPath,
 } from "../../index.js"
 import { makeBusyFile } from "../testHelpers.js"
@@ -39,7 +39,7 @@ await cleanDirectory(tempDirectoryUrl)
   const fileInsideDirectoryUrl = resolveUrl("file.txt", directoryUrl)
   await writeDirectory(directoryUrl)
   await writeFile(fileInsideDirectoryUrl, "dirnoperm")
-  await writePermissions(directoryUrl, {
+  await writeFileSystemNodePermissions(directoryUrl, {
     owner: { read: true, write: true, execute: false },
   })
   try {
@@ -55,7 +55,7 @@ await cleanDirectory(tempDirectoryUrl)
     expected.path = urlToFileSystemPath(fileInsideDirectoryUrl)
     assert({ actual, expected })
   } finally {
-    await writePermissions(directoryUrl, {
+    await writeFileSystemNodePermissions(directoryUrl, {
       owner: { read: true, write: true, execute: true },
     })
     await removeFileSystemNode(directoryUrl, { recursive: true })
@@ -66,7 +66,7 @@ await cleanDirectory(tempDirectoryUrl)
 {
   const fileUrl = resolveUrl("file.txt", tempDirectoryUrl)
   await writeFile(fileUrl, "noperm")
-  await writePermissions(fileUrl, {
+  await writeFileSystemNodePermissions(fileUrl, {
     owner: { read: false, write: false, execute: false },
   })
   await removeFileSystemNode(fileUrl)
