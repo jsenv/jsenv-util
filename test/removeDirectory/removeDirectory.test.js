@@ -121,3 +121,15 @@ try {
   assert({ actual, expected })
   await removeFile(fileUrl)
 }
+
+// directory with a file without write permission
+{
+  await writeFile(fileInsideDirectoryUrl)
+  await writePermissions(fileInsideDirectoryUrl, {
+    owner: { read: false, write: false, execute: false },
+  })
+  await removeDirectory(directoryUrl, { removeContent: true })
+  const actual = await directoryExists(directoryUrl)
+  const expected = false
+  assert({ actual, expected })
+}

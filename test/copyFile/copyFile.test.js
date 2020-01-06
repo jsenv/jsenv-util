@@ -1,5 +1,6 @@
 import { assert } from "@jsenv/assert"
 import {
+  createDirectory,
   resolveUrl,
   cleanDirectory,
   writeFile,
@@ -10,22 +11,15 @@ import {
   readPermissions,
   readTimestamps,
   urlToFileSystemPath,
-  grantPermission,
-  removeFile,
+  removeDirectory,
 } from "../../index.js"
 
-const directoryUrl = import.meta.resolve("./directory/")
-const fileUrl = resolveUrl("./subdir/file.txt", directoryUrl)
-const fileDestinationUrl = resolveUrl("./otherdir/file.txt", directoryUrl)
-const permissions = {
-  owner: { read: false, write: false, execute: false },
-  group: { read: false, write: false, execute: false },
-  others: { read: false, write: false, execute: false },
-}
-const atime = Date.now()
-const mtime = Date.now()
-
-await cleanDirectory(directoryUrl)
+const tempDirectoryUrl = import.meta.resolve("./temp/")
+const directoryUrl = resolveUrl("directory/", tempDirectoryUrl)
+const destinationDirectoryUrl = resolveUrl("otherdir/", tempDirectoryUrl)
+const fileUrl = resolveUrl("file.txt", directoryUrl)
+const fileDestinationUrl = resolveUrl("file.txt", destinationDirectoryUrl)
+await cleanDirectory(tempDirectoryUrl)
 
 // source does not exists
 try {
@@ -33,50 +27,78 @@ try {
   throw new Error("should throw")
 } catch (actual) {
   const expected = new Error(
-    `ENOENT: no such file or directory, copyfile '${urlToFileSystemPath(
-      fileUrl,
-    )}' -> '${urlToFileSystemPath(fileDestinationUrl)}'`,
+    `copyFile must be called on a file, nothing found at ${urlToFileSystemPath(fileUrl)}`,
   )
-  expected.errno = -2
-  expected.code = "ENOENT"
-  expected.syscall = "copyfile"
-  expected.path = urlToFileSystemPath(fileUrl)
-  expected.dest = urlToFileSystemPath(fileDestinationUrl)
   assert({ actual, expected })
 }
 
-// copy without read/write permission
-await writeFile(fileUrl, "Hello world")
-await writePermissions(fileUrl, permissions)
-await writeTimestamps(fileUrl, { atime, mtime })
-await copyFile(fileUrl, fileDestinationUrl)
-{
-  const actual = await readPermissions(fileDestinationUrl)
-  const expected = permissions
+// source is a directory
+await createDirectory(directoryUrl)
+try {
+  await copyFile(directoryUrl, fileDestinationUrl)
+  throw new Error("should throw")
+} catch (actual) {
+  const expected = new Error(
+    `copyFile must be called on a file, found directory at ${urlToFileSystemPath(
+      fileDestinationUrl,
+    )}`,
+  )
   assert({ actual, expected })
+  await removeDirectory(directoryUrl)
 }
+
+// destination does not exists
 {
-  const actual = await readTimestamps(fileDestinationUrl)
+  const sourceContent = "hello"
+  const sourceMtime = Date.now()
+  const sourcePermissions = {
+    owner: { read: true, write: false, execute: false },
+    group: { read: false, write: false, execute: false },
+    others: { read: false, write: false, execute: false },
+  }
+
+  await writeFile(fileUrl, "hello")
+  await writePermissions(fileUrl, sourcePermissions)
+  await writeTimestamps(fileUrl, { mtime: sourceMtime })
+  await copyFile(fileUrl, fileDestinationUrl)
+
+  const actual = {
+    sourceContent: await readFile(fileUrl),
+    sourcePermissions: await readPermissions(fileUrl),
+    sourceTimestamps: await readTimestamps(fileUrl),
+    destinationContent: await readFile(fileDestinationUrl),
+    destinationPermissions: await readPermissions(fileDestinationUrl),
+    destinationTimestamps: await readTimestamps(fileDestinationUrl),
+  }
   const expected = {
-    // reading atime mutates its value, so we cant assert something about it
-    atime: actual.atime,
-    mtime,
+    sourceContent,
+    sourcePermissions: {
+      owner: { ...sourcePermissions.owner },
+      group: { ...sourcePermissions.group },
+      others: { ...sourcePermissions.others },
+    },
+    sourceTimestamps: {
+      // reading atime mutates its value, so we cant assert something about it
+      atime: actual.sourceTimestamps.atime,
+      mtime: sourceMtime,
+    },
+    destinationContent: sourceContent,
+    destinationPermissions: sourcePermissions,
+    destinationTimestamps: {
+      // reading atime mutates its value, so we cant assert something about it
+      atime: actual.destinationTimestamps.atime,
+      mtime: sourceMtime,
+    },
   }
   assert({ actual, expected })
-}
-{
-  await grantPermission(fileDestinationUrl, { read: true })
-  const actual = await readFile(fileDestinationUrl)
-  const expected = "Hello world"
-  assert({ actual, expected })
+  await removeDirectory(directoryUrl, { removeContent: true })
+  await removeDirectory(destinationDirectoryUrl, { removeContent: true })
 }
 
-// destination is overwritten
-await grantPermission(fileUrl, { read: true, write: true })
-await writeFile(fileUrl, "foo")
-await copyFile(fileUrl, fileDestinationUrl)
-{
-  const actual = await readFile(fileDestinationUrl)
-  const expected = "foo"
-  assert({ actual, expected })
-}
+// destination is a file and overwrite disabled
+
+// destination is a file and overwrite enabled
+
+// destination is a directory
+
+//

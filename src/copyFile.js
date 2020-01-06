@@ -6,7 +6,6 @@ import { createParentDirectories } from "./createParentDirectories.js"
 import { readLStat } from "./readLStat.js"
 import { writePermissions } from "./writePermissions.js"
 import { writeTimestamps } from "./writeTimestamps.js"
-import { removeDirectory } from "./removeDirectory.js"
 import { removeFile } from "./removeFile.js"
 
 export const copyFile = async (
@@ -23,26 +22,36 @@ export const copyFile = async (
 ) => {
   const fileUrl = assertAndNormalizeFileUrl(url)
   const fileDestinationUrl = assertAndNormalizeFileUrl(destinationUrl)
+  const filePath = urlToFileSystemPath(fileUrl)
+  const fileDestinationPath = urlToFileSystemPath(fileDestinationUrl)
 
-  const stat = await readLStat(fileDestinationUrl, { nullIfNotFound: true })
-  if (stat) {
-    if (!overwrite) {
-      throw new Error(
-        `cannot copy ${fileUrl} at ${fileDestinationUrl}, there is already a ${
-          stat.isDirectory() ? "directory" : "file"
-        }`,
-      )
-    }
-
-    if (stat.isDirectory()) {
-      await removeDirectory(fileDestinationUrl, { removeContent: true })
-    } else {
-      await removeFile(fileDestinationUrl)
-    }
+  const sourceStat = await readLStat(fileUrl, { nullIfNotFound: true })
+  if (!sourceStat) {
+    throw new Error(`copyFile must be called on a file, nothing found at ${filePath}`)
+  }
+  if (sourceStat.isDirectory()) {
+    throw new Error(`copyFile must be called on a file, found directory at ${filePath}`)
   }
 
-  await createParentDirectories(fileDestinationUrl)
-  await copyFileContent(fileUrl, fileDestinationUrl)
+  const destinationStat = await readLStat(fileDestinationUrl, { nullIfNotFound: true })
+  if (destinationStat) {
+    if (destinationStat.isDirectory()) {
+      throw new Error(
+        `cannot copy ${filePath} at ${fileDestinationPath} because destination is a directory`,
+      )
+    }
+    if (overwrite) {
+      await removeFile(fileDestinationUrl)
+    } else {
+      throw new Error(
+        `cannot copy ${filePath} at ${fileDestinationPath} because there is already a file and overwrite option is disabled`,
+      )
+    }
+  } else {
+    await createParentDirectories(fileDestinationUrl)
+  }
+
+  await copyFileContentNaive(filePath, fileDestinationPath)
 
   if (preservePermissions || preserveMtime || preserveAtime) {
     if (!fileStat) {
@@ -50,30 +59,21 @@ export const copyFile = async (
     }
 
     const { mode, atimeMs, mtimeMs } = fileStat
-    if (preservePermissions) {
-      await writePermissions(fileDestinationUrl, binaryFlagsToPermissions(mode))
-    }
     if (preserveMtime || preserveAtime) {
-      // do this in the end and not in parallel otherwise atime could be affected by
-      // writePermissions
       await writeTimestamps(fileDestinationUrl, {
         ...(preserveMtime ? { mtime: mtimeMs } : {}),
         ...(preserveAtime ? { atime: atimeMs } : {}),
       })
     }
+    if (preservePermissions) {
+      await writePermissions(fileDestinationUrl, binaryFlagsToPermissions(mode))
+    }
   }
-}
-
-const copyFileContent = async (fileUrl, fileDestinationUrl) => {
-  const filePath = urlToFileSystemPath(fileUrl)
-  const fileDestinationPath = urlToFileSystemPath(fileDestinationUrl)
-
-  return copyFileContentNaive(filePath, fileDestinationPath)
 }
 
 const copyFileContentNaive = (filePath, fileDestinationPath) => {
   return new Promise((resolve, reject) => {
-    copyFileNode(filePath, fileDestinationPath, async (error) => {
+    copyFileNode(filePath, fileDestinationPath, (error) => {
       if (error) {
         reject(error)
       } else {
