@@ -1,38 +1,17 @@
 import { mkdir } from "fs"
 import { assertAndNormalizeDirectoryUrl } from "./assertAndNormalizeDirectoryUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
-import { grantPermission } from "./grantPermission.js"
-import { resolveDirectoryUrl } from "./resolveDirectoryUrl.js"
 
-export const createDirectory = (url, { autoGrantRequiredPermissions = false } = {}) => {
+export const createDirectory = (url) => {
   const directoryUrl = assertAndNormalizeDirectoryUrl(url)
   const directoryPath = urlToFileSystemPath(directoryUrl)
 
-  return createDirectoryNaive(directoryPath, {
-    ...(autoGrantRequiredPermissions
-      ? {
-          handlePermissionDeniedError: async () => {
-            const parentDirectoryUrl = resolveDirectoryUrl("../", directoryUrl)
-            const restoreParentDirectoryPermission = await grantPermission(parentDirectoryUrl, {
-              read: true,
-              write: true,
-              execute: true,
-            })
-
-            try {
-              await createDirectoryNaive(directoryPath)
-            } finally {
-              await restoreParentDirectoryPermission()
-            }
-          },
-        }
-      : {}),
-  })
+  return createDirectoryNaive(directoryPath)
 }
 
 const createDirectoryNaive = (directoryPath, { handlePermissionDeniedError = null } = {}) => {
   return new Promise((resolve, reject) => {
-    mkdir(directoryPath, (error) => {
+    mkdir(directoryPath, { recursive: true }, (error) => {
       if (error) {
         if (error.code === "EEXIST") {
           resolve()
