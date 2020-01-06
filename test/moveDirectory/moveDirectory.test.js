@@ -18,7 +18,7 @@ const fileUrl = resolveUrl("file.txt", tempDirectoryUrl)
 const fileDestinationUrl = resolveUrl("file.txt", tempDirectoryUrl)
 await createDirectory(tempDirectoryUrl)
 
-// source directory does not exists
+// source does not exists
 try {
   await moveDirectory(directoryUrl, destinationDirectoryUrl)
 } catch (actual) {

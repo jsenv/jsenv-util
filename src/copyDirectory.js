@@ -50,7 +50,7 @@ export const copyDirectory = async (
     const filesystemStat = await readLStat(url)
 
     if (filesystemStat.isDirectory()) {
-      await visitDirectory(url, filesystemStat)
+      await visitDirectory(`${url}/`, filesystemStat)
     } else if (
       filesystemStat.isFile() ||
       filesystemStat.isCharacterDevice() ||
@@ -94,8 +94,13 @@ export const copyDirectory = async (
 
   const visitSymbolicLink = async (symbolicLinkUrl) => {
     const symbolicLinkRelativeUrl = urlToRelativeUrl(symbolicLinkUrl, rootDirectoryUrl)
+    // that link might be relative right ? we should absolutize it before anything
+    // should be done in readSymbolicLink
     const symbolicLinkTargetUrl = await readSymbolicLink(symbolicLinkUrl)
     const symbolicLinkCopyUrl = resolveUrl(symbolicLinkRelativeUrl, rootDirectoryDestinationUrl)
+
+    // first thing to do: test how moveFile and copyFile behaves on symbolic link.
+    // once we see that we can decide what to do
 
     let symbolicLinkCopyTargetUrl
     if (symbolicLinkTargetUrl === rootDirectoryUrl) {

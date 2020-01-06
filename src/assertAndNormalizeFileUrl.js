@@ -1,7 +1,7 @@
 import { isFileSystemPath } from "./isFileSystemPath.js"
 import { fileSystemPathToUrl } from "./fileSystemPathToUrl.js"
 
-export const assertAndNormalizeFileUrl = (value) => {
+export const assertAndNormalizeFileUrl = (value, baseUrl) => {
   let urlString
 
   if (value instanceof URL) {
@@ -11,7 +11,7 @@ export const assertAndNormalizeFileUrl = (value) => {
       urlString = fileSystemPathToUrl(value)
     } else {
       try {
-        urlString = String(new URL(value))
+        urlString = String(new URL(value, baseUrl))
       } catch (e) {
         throw new TypeError(`fileUrl must be a valid url, received ${value}`)
       }

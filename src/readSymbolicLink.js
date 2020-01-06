@@ -2,6 +2,7 @@ import { readlink } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { fileSystemPathToUrl } from "./fileSystemPathToUrl.js"
+import { isFileSystemPath } from "./isFileSystemPath.js"
 
 export const readSymbolicLink = (url) => {
   const symbolicLinkUrl = assertAndNormalizeFileUrl(url)
@@ -12,7 +13,7 @@ export const readSymbolicLink = (url) => {
       if (error) {
         reject(error)
       } else {
-        resolve(fileSystemPathToUrl(resolvedPath))
+        resolve(isFileSystemPath(resolvedPath) ? fileSystemPathToUrl(resolvedPath) : resolvedPath)
       }
     })
   })

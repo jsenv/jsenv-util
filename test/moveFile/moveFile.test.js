@@ -1,5 +1,6 @@
 import { assert } from "@jsenv/assert"
 import {
+  cleanDirectory,
   resolveUrl,
   createDirectory,
   writeFile,
@@ -7,6 +8,9 @@ import {
   readFile,
   urlToFileSystemPath,
   removeFile,
+  writeSymbolicLink,
+  readSymbolicLink,
+  fileExists,
 } from "../../index.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
@@ -14,11 +18,11 @@ const directoryUrl = resolveUrl("directory/", tempDirectoryUrl)
 const destinationDirectoryUrl = resolveUrl("otherdir/", tempDirectoryUrl)
 const fileUrl = resolveUrl("file.txt", directoryUrl)
 const fileDestinationUrl = resolveUrl("file.txt", destinationDirectoryUrl)
-await createDirectory(tempDirectoryUrl)
+await cleanDirectory(tempDirectoryUrl)
 await createDirectory(directoryUrl)
 await createDirectory(destinationDirectoryUrl)
 
-// file does not exists
+// source does not exists
 try {
   await moveFile(fileUrl, fileDestinationUrl)
   throw new Error("should throw")
@@ -36,7 +40,7 @@ try {
   assert({ actual, expected })
 }
 
-// on a directory
+// source is a directory
 try {
   await moveFile(directoryUrl, destinationDirectoryUrl)
   throw new Error("should throw")
@@ -45,6 +49,31 @@ try {
     `moveFile must be called on a file, found directory at ${urlToFileSystemPath(directoryUrl)}`,
   )
   assert({ actual, expected })
+}
+
+// source is a symbolic link
+// ( I think the proper behaviour should be to move the symlinked file)
+// only if we use moveSymbolicLink, then we would move the symlink instead
+// same for every function working with files or directories
+// they should not rely on lstat by on stat
+// so that they ignore the symlink
+// only function working with symlink would consider them
+// all test must now have a source being a symlink
+// that points either to a directory or a file or nothing (symlink broken)
+// so ensure and document this behaviour
+{
+  await writeSymbolicLink(fileUrl, "./otherfile.js")
+  await moveFile(fileUrl, fileDestinationUrl)
+  const actual = {
+    sourceFileExists: await fileExists(fileUrl),
+    destinationFileContent: await readSymbolicLink(fileDestinationUrl),
+  }
+  const expected = {
+    sourceFileExists: false,
+    destinationFileContent: "./otherfile.js",
+  }
+  assert({ actual, expected })
+  await removeFile(fileDestinationUrl)
 }
 
 // destination does not exists

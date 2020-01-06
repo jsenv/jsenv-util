@@ -8,6 +8,10 @@ import { writePermissions } from "./writePermissions.js"
 import { writeTimestamps } from "./writeTimestamps.js"
 import { removeFile } from "./removeFile.js"
 
+// hum copyFile doit changer pour tenir compte des liens symboliques
+// en gros on copie un lien symbolique avec la logique de copyDirectory
+// et on va tester ça dans copyFile et pas dans copyDirectory
+
 export const copyFile = async (
   url,
   destinationUrl,
