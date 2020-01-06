@@ -4,7 +4,7 @@ import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { isFileSystemPath } from "./isFileSystemPath.js"
 import { writeParentDirectories } from "./writeParentDirectories.js"
 
-export const writeSymbolicLink = async (destination, target) => {
+export const writeSymbolicLink = async (destination, target, { type } = {}) => {
   const destinationUrl = assertAndNormalizeFileUrl(destination)
 
   let targetValue
@@ -32,7 +32,7 @@ export const writeSymbolicLink = async (destination, target) => {
 
   const symbolicLinkPath = urlToFileSystemPath(destinationUrl)
   return new Promise((resolve, reject) => {
-    symlink(targetValue, symbolicLinkPath, (error) => {
+    symlink(targetValue, symbolicLinkPath, type, (error) => {
       if (error) {
         reject(error)
       } else {

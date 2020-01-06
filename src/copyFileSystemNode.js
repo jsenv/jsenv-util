@@ -113,8 +113,17 @@ export const copyFileSystemNode = async (
       symbolicLinkCopyTarget = symbolicLinkTarget
     }
 
+    // we must guess ourself the type of the symlink
+    // because the destination might not exists because not yet copied
+    // https://nodejs.org/dist/latest-v13.x/docs/api/fs.html#fs_fs_symlink_target_path_type_callback
+    const targetStats = await readFileSystemNodeStat(symbolicLinkTargetUrl, {
+      nullIfNotFound: true,
+      followSymbolicLink: false,
+    })
+    const linkType = targetStats && targetStats.isDirectory() ? "dir" : "file"
+
     const symbolicLinkCopyUrl = resolveUrl(symbolicLinkRelativeUrl, destinationUrl)
-    await writeSymbolicLink(symbolicLinkCopyUrl, symbolicLinkCopyTarget)
+    await writeSymbolicLink(symbolicLinkCopyUrl, symbolicLinkCopyTarget, { type: linkType })
   }
 
   const copyStats = async (destinationUrl, stats) => {
