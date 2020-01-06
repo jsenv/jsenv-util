@@ -2,18 +2,17 @@
 import { resolveUrl } from "./resolveUrl.js"
 import { binaryFlagsToPermissions } from "./internal/permissions.js"
 import { assertAndNormalizeDirectoryUrl } from "./assertAndNormalizeDirectoryUrl.js"
-import { createDirectory } from "./createDirectory.js"
+import { writeDirectory } from "./writeDirectory.js"
 import { urlToRelativeUrl } from "./urlToRelativeUrl.js"
 import { copyFile } from "./copyFile.js"
-import { readLStat } from "./readLStat.js"
+import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
 import { writePermissions } from "./writePermissions.js"
 import { writeTimestamps } from "./writeTimestamps.js"
 import { readDirectory } from "./readDirectory.js"
 import { readSymbolicLink } from "./readSymbolicLink.js"
 import { writeSymbolicLink } from "./writeSymbolicLink.js"
 import { urlIsInsideOf } from "./urlIsInsideOf.js"
-import { removeDirectory } from "./removeDirectory.js"
-import { removeFile } from "./removeFile.js"
+import { removeFileSystemNode } from "./removeFileSystemNode.js"
 
 export const copyDirectory = async (
   directoryUrl,
@@ -29,7 +28,7 @@ export const copyDirectory = async (
   const rootDirectoryUrl = assertAndNormalizeDirectoryUrl(directoryUrl)
   const rootDirectoryDestinationUrl = assertAndNormalizeDirectoryUrl(directoryDestinationUrl)
 
-  const stat = await readLStat(rootDirectoryDestinationUrl, { nullIfNotFound: true })
+  const stat = await readFileSystemNodeStat(rootDirectoryDestinationUrl, { nullIfNotFound: true })
   if (stat) {
     if (!overwrite) {
       throw new Error(
@@ -40,14 +39,14 @@ export const copyDirectory = async (
     }
 
     if (stat.isDirectory()) {
-      await removeDirectory(directoryDestinationUrl, { removeContent: true })
+      await removeFileSystemNode(directoryDestinationUrl, { removeContent: true })
     } else {
-      await removeFile(directoryDestinationUrl.slice(-1))
+      await removeFileSystemNode(directoryDestinationUrl.slice(-1))
     }
   }
 
   const visit = async (url) => {
-    const filesystemStat = await readLStat(url)
+    const filesystemStat = await readFileSystemNodeStat(url)
 
     if (filesystemStat.isDirectory()) {
       await visitDirectory(`${url}/`, filesystemStat)
@@ -66,7 +65,7 @@ export const copyDirectory = async (
     const directoryRelativeUrl = urlToRelativeUrl(directoryUrl, rootDirectoryUrl)
     const directoryCopyUrl = resolveUrl(directoryRelativeUrl, rootDirectoryDestinationUrl)
 
-    await createDirectory(directoryCopyUrl)
+    await writeDirectory(directoryCopyUrl)
     await Promise.all([
       ...(preservePermissions
         ? [writePermissions(directoryCopyUrl, binaryFlagsToPermissions(mode))]

@@ -1,15 +1,19 @@
-import { lstat } from "fs"
+import { lstat, stat } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { grantPermission } from "./grantPermission.js"
 
-export const readLStat = async (url, { nullIfNotFound = false } = {}) => {
+export const readFileSystemNodeStat = async (
+  url,
+  { nullIfNotFound = false, followSymbolicLink = true } = {},
+) => {
   if (url.endsWith("/")) url = url.slice(0, -1)
 
   const fileSystemUrl = assertAndNormalizeFileUrl(url)
   const fileSystemPath = urlToFileSystemPath(fileSystemUrl)
 
-  return lstatNaive(fileSystemPath, {
+  return readStat(fileSystemPath, {
+    followSymbolicLink,
     ...(nullIfNotFound
       ? {
           handleNotFoundError: () => null,
@@ -23,8 +27,8 @@ export const readLStat = async (url, { nullIfNotFound = false } = {}) => {
         execute: true,
       })
       try {
-        const lstat = await lstatNaive(fileSystemPath)
-        return lstat
+        const stat = await readStat(fileSystemPath)
+        return stat
       } finally {
         await restorePermission()
       }
@@ -32,12 +36,14 @@ export const readLStat = async (url, { nullIfNotFound = false } = {}) => {
   })
 }
 
-const lstatNaive = (
+const readStat = (
   fileSystemPath,
-  { handleNotFoundError = null, handlePermissionDeniedError = null } = {},
+  { followSymbolicLink, handleNotFoundError = null, handlePermissionDeniedError = null } = {},
 ) => {
+  const nodeMethod = followSymbolicLink ? lstat : stat
+
   return new Promise((resolve, reject) => {
-    lstat(fileSystemPath, (error, lstatObject) => {
+    nodeMethod(fileSystemPath, (error, lstatObject) => {
       if (error) {
         if (handlePermissionDeniedError && (error.code === "EPERM" || error.code === "EACCES")) {
           resolve(handlePermissionDeniedError(error))

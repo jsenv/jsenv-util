@@ -1,53 +1,58 @@
+// hum en vrai ce serais mieux d'avoir juste move
+// et on stat dessus et en fonction on fait des choses différente
+
 import { rename } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
-import { createParentDirectories } from "./createParentDirectories.js"
+import { writeParentDirectories } from "./writeParentDirectories.js"
 import { copyFile } from "./copyFile.js"
-import { removeFile } from "./removeFile.js"
-import { directoryExists } from "./directoryExists.js"
-import { readLStat } from "./readLStat.js"
+import { removeFileSystemNode } from "./removeFileSystemNode.js"
+import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
 
-export const moveFile = async (value, destinationValue, { overwrite = false } = {}) => {
-  const fileUrl = assertAndNormalizeFileUrl(value)
-  const fileDestinationUrl = assertAndNormalizeFileUrl(destinationValue)
+export const moveFile = async (source, destination, { overwrite = false } = {}) => {
+  const sourceUrl = assertAndNormalizeFileUrl(source)
+  const destinationUrl = assertAndNormalizeFileUrl(destination)
 
-  const filePath = urlToFileSystemPath(fileUrl)
-  const fileDestinationPath = urlToFileSystemPath(fileDestinationUrl)
-
-  if (await directoryExists(filePath)) {
-    throw new Error(`moveFile must be called on a file, found directory at ${filePath}`)
+  const sourcePath = urlToFileSystemPath(sourceUrl)
+  const sourceStat = await readFileSystemNodeStat(sourceUrl, { nullIfNotFound: true })
+  if (!sourceStat) {
+    throw new Error(`moveFile must be called on a file, found nothing at ${sourcePath}`)
+  }
+  if (sourceStat.isDirectory()) {
+    throw new Error(`moveFile must be called on a file, found directory at ${sourcePath}`)
   }
 
-  const destinationStat = await readLStat(fileDestinationPath, { nullIfNotFound: true })
+  const destinationPath = urlToFileSystemPath(destinationUrl)
+  const destinationStat = await readFileSystemNodeStat(destinationPath, { nullIfNotFound: true })
   if (destinationStat) {
     if (destinationStat.isDirectory()) {
       throw new Error(
-        `cannot move ${filePath} at ${fileDestinationPath} because destination is a directory`,
+        `cannot move ${sourcePath} at ${destinationPath} because destination is a directory`,
       )
     }
 
     if (overwrite) {
-      await removeFile(fileDestinationUrl)
+      await removeFileSystemNode(destinationUrl)
     } else {
       throw new Error(
-        `cannot move ${filePath} at ${fileDestinationPath} because destination file exists and overwrite option is disabled`,
+        `cannot move ${sourcePath} at ${destinationPath} because destination file exists and overwrite option is disabled`,
       )
     }
   } else {
-    await createParentDirectories(fileDestinationUrl)
+    await writeParentDirectories(destinationUrl)
   }
 
-  return moveFileNaive(filePath, fileDestinationPath, {
+  return moveFileNaive(sourcePath, destinationPath, {
     handleCrossDeviceError: async () => {
-      await copyFile(filePath, fileDestinationPath, { preserveStat: true })
-      await removeFile(filePath)
+      await copyFile(sourceUrl, destinationUrl, { preserveStat: true })
+      await removeFileSystemNode(sourceUrl)
     },
   })
 }
 
-const moveFileNaive = (filePath, fileDestinationPath, { handleCrossDeviceError = null } = {}) => {
+const moveFileNaive = (sourcePath, destinationPath, { handleCrossDeviceError = null } = {}) => {
   return new Promise((resolve, reject) => {
-    rename(filePath, fileDestinationPath, (error) => {
+    rename(sourcePath, destinationPath, (error) => {
       if (error) {
         if (handleCrossDeviceError && error.code === "EXDEV") {
           resolve(handleCrossDeviceError(error))

@@ -2,12 +2,12 @@ import { assert } from "@jsenv/assert"
 import {
   cleanDirectory,
   resolveUrl,
-  createDirectory,
+  writeDirectory,
   writeFile,
   moveFile,
   readFile,
   urlToFileSystemPath,
-  removeFile,
+  removeFileSystemNode,
   writeSymbolicLink,
   readSymbolicLink,
   fileExists,
@@ -19,8 +19,8 @@ const destinationDirectoryUrl = resolveUrl("otherdir/", tempDirectoryUrl)
 const fileUrl = resolveUrl("file.txt", directoryUrl)
 const fileDestinationUrl = resolveUrl("file.txt", destinationDirectoryUrl)
 await cleanDirectory(tempDirectoryUrl)
-await createDirectory(directoryUrl)
-await createDirectory(destinationDirectoryUrl)
+await writeDirectory(directoryUrl)
+await writeDirectory(destinationDirectoryUrl)
 
 // source does not exists
 try {
@@ -73,7 +73,7 @@ try {
     destinationFileContent: "./otherfile.js",
   }
   assert({ actual, expected })
-  await removeFile(fileDestinationUrl)
+  await removeFileSystemNode(fileDestinationUrl)
 }
 
 // destination does not exists
@@ -83,7 +83,7 @@ try {
   const actual = await readFile(fileDestinationUrl)
   const expected = "Hello world"
   assert({ actual, expected })
-  await removeFile(fileDestinationUrl)
+  await removeFileSystemNode(fileDestinationUrl)
 }
 
 // destination is a file
@@ -98,7 +98,7 @@ try {
     )} because destination file exists and overwrite option is disabled`,
   )
   assert({ actual, expected })
-  await removeFile(fileDestinationUrl)
+  await removeFileSystemNode(fileDestinationUrl)
 }
 
 // destination is a file and overwrite: true
@@ -109,7 +109,7 @@ try {
   const actual = await readFile(fileDestinationUrl)
   const expected = "foo"
   assert({ actual, expected })
-  await removeFile(fileDestinationUrl)
+  await removeFileSystemNode(fileDestinationUrl)
 }
 
 // destination is a directory
@@ -123,5 +123,5 @@ try {
     )} because destination is a directory`,
   )
   assert({ actual, expected })
-  await removeFile(fileUrl, "foo")
+  await removeFileSystemNode(fileUrl, "foo")
 }

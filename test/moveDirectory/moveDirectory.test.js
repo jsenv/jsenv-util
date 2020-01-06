@@ -1,12 +1,11 @@
 import { assert } from "@jsenv/assert"
 import {
   resolveUrl,
-  createDirectory,
+  writeDirectory,
   writeFile,
   urlToFileSystemPath,
-  removeFile,
+  removeFileSystemNode,
   moveDirectory,
-  removeDirectory,
   directoryExists,
 } from "../../index.js"
 
@@ -16,7 +15,7 @@ const destinationParentDirectoryUrl = resolveUrl("otherdir/", tempDirectoryUrl)
 const destinationDirectoryUrl = resolveUrl("directory-renamed/", destinationParentDirectoryUrl)
 const fileUrl = resolveUrl("file.txt", tempDirectoryUrl)
 const fileDestinationUrl = resolveUrl("file.txt", tempDirectoryUrl)
-await createDirectory(tempDirectoryUrl)
+await writeDirectory(tempDirectoryUrl)
 
 // source does not exists
 try {
@@ -39,12 +38,12 @@ try {
     `moveDirectory must be called on a directory, found file at ${urlToFileSystemPath(fileUrl)}`,
   )
   assert({ actual, expected })
-  await removeFile(fileUrl)
+  await removeFileSystemNode(fileUrl)
 }
 
 // destination does not exists
 {
-  await createDirectory(directoryUrl)
+  await writeDirectory(directoryUrl)
   await moveDirectory(directoryUrl, destinationDirectoryUrl)
   const actual = {
     sourceExists: await directoryExists(directoryUrl),
@@ -59,7 +58,7 @@ try {
 
 // destination is a file
 await writeFile(fileDestinationUrl)
-await createDirectory(directoryUrl)
+await writeDirectory(directoryUrl)
 try {
   await moveDirectory(directoryUrl, fileDestinationUrl)
 } catch (actual) {
@@ -69,13 +68,13 @@ try {
     )}/ because destination is not a directory`,
   )
   assert({ actual, expected })
-  await removeDirectory(directoryUrl)
-  await removeFile(fileDestinationUrl)
+  await removeFileSystemNode(directoryUrl)
+  await removeFileSystemNode(fileDestinationUrl)
 }
 
 // destination is a directory
-await createDirectory(destinationDirectoryUrl)
-await createDirectory(directoryUrl)
+await writeDirectory(destinationDirectoryUrl)
+await writeDirectory(directoryUrl)
 try {
   await moveDirectory(directoryUrl, destinationDirectoryUrl)
 } catch (actual) {
@@ -85,14 +84,14 @@ try {
     )} because there is already a directory and overwrite option is disabled`,
   )
   assert({ actual, expected })
-  await removeDirectory(directoryUrl)
-  await removeDirectory(destinationDirectoryUrl)
+  await removeFileSystemNode(directoryUrl)
+  await removeFileSystemNode(destinationDirectoryUrl)
 }
 
 // destination is a directory and overwrite enabled
 {
-  await createDirectory(destinationDirectoryUrl)
-  await createDirectory(directoryUrl)
+  await writeDirectory(destinationDirectoryUrl)
+  await writeDirectory(directoryUrl)
   await moveDirectory(directoryUrl, destinationDirectoryUrl, { overwrite: true })
   const actual = {
     sourceExists: await directoryExists(directoryUrl),

@@ -1,6 +1,6 @@
 // import { fork } from "child_process"
 import { promises } from "fs"
-import { removeFile, urlToFileSystemPath } from "../index.js"
+import { removeFileSystemNode, urlToFileSystemPath } from "../index.js"
 
 const { open } = promises
 
@@ -14,6 +14,6 @@ export const makeBusyFile = async (fileUrl, callback) => {
     await callback()
   } finally {
     await filehandle.close()
-    await removeFile(filePath)
+    await removeFileSystemNode(filePath)
   }
 }

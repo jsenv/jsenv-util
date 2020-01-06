@@ -1,9 +1,9 @@
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
-import { readLStat } from "./readLStat.js"
+import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
 
 export const fileExists = async (value) => {
   const fileUrl = assertAndNormalizeFileUrl(value)
 
-  const stat = await readLStat(fileUrl, { nullIfNotFound: true })
-  return Boolean(stat && !stat.isDirectory())
+  const stat = await readFileSystemNodeStat(fileUrl, { nullIfNotFound: true })
+  return Boolean(stat && stat.isFile())
 }

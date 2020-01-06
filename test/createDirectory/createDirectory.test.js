@@ -1,7 +1,7 @@
 import { assert } from "@jsenv/assert"
 import {
   resolveDirectoryUrl,
-  createDirectory,
+  writeDirectory,
   cleanDirectory,
   directoryExists,
   writePermissions,
@@ -14,7 +14,7 @@ await cleanDirectory(directoryUrl)
 await writePermissions(directoryUrl, { owner: { read: true, write: false } })
 
 try {
-  await createDirectory(subdirUrl)
+  await writeDirectory(subdirUrl)
 } catch (actual) {
   const expected = new Error(`EACCES: permission denied, mkdir '${urlToFileSystemPath(subdirUrl)}'`)
   expected.errno = -13
@@ -24,7 +24,7 @@ try {
   assert({ actual, expected })
 }
 
-await createDirectory(subdirUrl, { autoGrantRequiredPermissions: true })
+await writeDirectory(subdirUrl, { autoGrantRequiredPermissions: true })
 {
   const actual = await directoryExists(subdirUrl)
   const expected = true
@@ -32,4 +32,4 @@ await createDirectory(subdirUrl, { autoGrantRequiredPermissions: true })
 }
 
 // ensure does not throw if already exists
-await createDirectory(directoryUrl)
+await writeDirectory(directoryUrl)

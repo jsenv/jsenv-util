@@ -1,13 +1,12 @@
 import { assert } from "@jsenv/assert"
 import {
-  createDirectory,
+  writeDirectory,
   directoryExists,
-  removeDirectory,
   resolveUrl,
   writeFile,
   writePermissions,
   urlToFileSystemPath,
-  removeFile,
+  removeFileSystemNode,
 } from "../../index.js"
 import { makeBusyFile } from "../testHelpers.js"
 
@@ -15,11 +14,11 @@ const tempDirectoryUrl = import.meta.resolve("./temp/")
 const directoryUrl = resolveUrl("directory/", tempDirectoryUrl)
 const fileUrl = resolveUrl("file.txt", tempDirectoryUrl)
 const fileInsideDirectoryUrl = resolveUrl("file.js", directoryUrl)
-await createDirectory(tempDirectoryUrl)
+await writeDirectory(tempDirectoryUrl)
 
 // directory does not exists
 {
-  await removeDirectory(directoryUrl)
+  await removeFileSystemNode(directoryUrl)
   const actual = await directoryExists(directoryUrl)
   const expected = false
   assert({ actual, expected })
@@ -27,8 +26,8 @@ await createDirectory(tempDirectoryUrl)
 
 // empty directory
 {
-  await createDirectory(directoryUrl)
-  await removeDirectory(directoryUrl)
+  await writeDirectory(directoryUrl)
+  await removeFileSystemNode(directoryUrl)
   const actual = await directoryExists(directoryUrl)
   const expected = false
   assert({ actual, expected })
@@ -36,21 +35,21 @@ await createDirectory(tempDirectoryUrl)
 
 // empty directory without permission
 {
-  await createDirectory(directoryUrl)
+  await writeDirectory(directoryUrl)
   await writePermissions(directoryUrl, {
     other: { read: false, write: false, execute: false },
   })
-  await removeDirectory(directoryUrl)
+  await removeFileSystemNode(directoryUrl)
   const actual = await directoryExists(directoryUrl)
   const expected = false
   assert({ actual, expected })
 }
 
 // directory with content
-await createDirectory(directoryUrl)
+await writeDirectory(directoryUrl)
 await writeFile(fileInsideDirectoryUrl)
 try {
-  await removeDirectory(directoryUrl)
+  await removeFileSystemNode(directoryUrl)
   throw new Error("should throw")
 } catch (actual) {
   const expected = new Error(
@@ -61,27 +60,27 @@ try {
   expected.syscall = "rmdir"
   expected.path = urlToFileSystemPath(directoryUrl)
   assert({ actual, expected })
-  await removeDirectory(directoryUrl, { removeContent: true })
+  await removeFileSystemNode(directoryUrl, { removeContent: true })
 }
 
 // directory with content and removeContent: true
 {
-  await createDirectory(directoryUrl)
+  await writeDirectory(directoryUrl)
   await writeFile(fileInsideDirectoryUrl)
-  await removeDirectory(directoryUrl, { removeContent: true })
+  await removeFileSystemNode(directoryUrl, { removeContent: true })
   const actual = await directoryExists(directoryUrl)
   const expected = false
   assert({ actual, expected })
 }
 
 // directory without permission and content and removeContent: true
-await createDirectory(directoryUrl)
+await writeDirectory(directoryUrl)
 await writeFile(fileInsideDirectoryUrl)
 await writePermissions(directoryUrl, {
   owner: { read: true, write: true, execute: false },
 })
 try {
-  await removeDirectory(directoryUrl, { removeContent: true })
+  await removeFileSystemNode(directoryUrl, { removeContent: true })
   throw new Error("should throw")
 } catch (actual) {
   const expected = new Error(
@@ -95,13 +94,13 @@ try {
   await writePermissions(directoryUrl, {
     owner: { read: true, write: true, execute: true },
   })
-  await removeDirectory(directoryUrl, { removeContent: true })
+  await removeFileSystemNode(directoryUrl, { removeContent: true })
 }
 
 // directory with a busy file
-await createDirectory(directoryUrl)
+await writeDirectory(directoryUrl)
 await makeBusyFile(fileInsideDirectoryUrl, async () => {
-  await removeDirectory(directoryUrl, { removeContent: true })
+  await removeFileSystemNode(directoryUrl, { removeContent: true })
   const actual = await directoryExists(directoryUrl)
   const expected = false
   assert({ actual, expected })
@@ -110,7 +109,7 @@ await makeBusyFile(fileInsideDirectoryUrl, async () => {
 // on a file
 await writeFile(fileUrl)
 try {
-  await removeDirectory(fileUrl)
+  await removeFileSystemNode(fileUrl)
   throw new Error("should throw")
 } catch (actual) {
   const expected = new Error(`ENOTDIR: not a directory, rmdir '${urlToFileSystemPath(fileUrl)}/'`)
@@ -119,7 +118,7 @@ try {
   expected.syscall = "rmdir"
   expected.path = `${urlToFileSystemPath(fileUrl)}/`
   assert({ actual, expected })
-  await removeFile(fileUrl)
+  await removeFileSystemNode(fileUrl)
 }
 
 // directory with a file without write permission
@@ -128,7 +127,7 @@ try {
   await writePermissions(fileInsideDirectoryUrl, {
     owner: { read: false, write: false, execute: false },
   })
-  await removeDirectory(directoryUrl, { removeContent: true })
+  await removeFileSystemNode(directoryUrl, { removeContent: true })
   const actual = await directoryExists(directoryUrl)
   const expected = false
   assert({ actual, expected })
@@ -143,7 +142,7 @@ try {
   const fileB = resolveUrl("fileB.js", dirB)
   await writeFile(fileA, "contentA")
   await writeFile(fileB, "contentB")
-  await removeDirectory(rootDir, { removeContent: true })
+  await removeFileSystemNode(rootDir, { removeContent: true })
   const actual = await directoryExists(rootDir)
   const expected = false
   assert({ actual, expected })

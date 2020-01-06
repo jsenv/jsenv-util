@@ -1,10 +1,10 @@
 import { assertAndNormalizeDirectoryUrl } from "./assertAndNormalizeDirectoryUrl.js"
-import { readLStat } from "./readLStat.js"
+import { readStat } from "./readStat.js"
 
 export const directoryExists = async (url) => {
   const directoryUrl = assertAndNormalizeDirectoryUrl(url)
   const fileSystemUrl = directoryUrl.slice(0, -1)
 
-  const stat = await readLStat(fileSystemUrl, { nullIfNotFound: true })
+  const stat = await readStat(fileSystemUrl, { nullIfNotFound: true })
   return Boolean(stat && stat.isDirectory())
 }

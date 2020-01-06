@@ -2,8 +2,8 @@ import { mkdir } from "fs"
 import { assertAndNormalizeDirectoryUrl } from "./assertAndNormalizeDirectoryUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 
-export const createDirectory = (url) => {
-  const directoryUrl = assertAndNormalizeDirectoryUrl(url)
+export const writeDirectory = (destination) => {
+  const directoryUrl = assertAndNormalizeDirectoryUrl(destination)
   const directoryPath = urlToFileSystemPath(directoryUrl)
 
   return createDirectoryNaive(directoryPath)

@@ -1,6 +1,6 @@
 import { assert } from "@jsenv/assert"
 import {
-  createDirectory,
+  writeDirectory,
   resolveUrl,
   cleanDirectory,
   writeFile,
@@ -11,8 +11,7 @@ import {
   readPermissions,
   readTimestamps,
   urlToFileSystemPath,
-  removeDirectory,
-  removeFile,
+  removeFileSystemNode,
 } from "../../index.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
@@ -34,7 +33,7 @@ try {
 }
 
 // source is a directory
-await createDirectory(directoryUrl)
+await writeDirectory(directoryUrl)
 try {
   await copyFile(directoryUrl.slice(0, -1), fileDestinationUrl)
   throw new Error("should throw")
@@ -45,7 +44,7 @@ try {
     )}`,
   )
   assert({ actual, expected })
-  await removeDirectory(directoryUrl)
+  await removeFileSystemNode(directoryUrl)
 }
 
 // destination does not exists
@@ -92,8 +91,8 @@ try {
     },
   }
   assert({ actual, expected })
-  await removeDirectory(directoryUrl, { removeContent: true })
-  await removeDirectory(destinationDirectoryUrl, { removeContent: true })
+  await removeFileSystemNode(directoryUrl, { removeContent: true })
+  await removeFileSystemNode(destinationDirectoryUrl, { removeContent: true })
 }
 
 // destination is a file and overwrite disabled
@@ -109,8 +108,8 @@ try {
     )} because there is already a file and overwrite option is disabled`,
   )
   assert({ actual, expected })
-  await removeDirectory(directoryUrl, { removeContent: true })
-  await removeDirectory(destinationDirectoryUrl, { removeContent: true })
+  await removeFileSystemNode(directoryUrl, { removeContent: true })
+  await removeFileSystemNode(destinationDirectoryUrl, { removeContent: true })
 }
 
 // destination is a file and overwrite enabled
