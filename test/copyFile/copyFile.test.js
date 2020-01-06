@@ -12,6 +12,7 @@ import {
   readTimestamps,
   urlToFileSystemPath,
   removeDirectory,
+  removeFile,
 } from "../../index.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
@@ -35,12 +36,12 @@ try {
 // source is a directory
 await createDirectory(directoryUrl)
 try {
-  await copyFile(directoryUrl, fileDestinationUrl)
+  await copyFile(directoryUrl.slice(0, -1), fileDestinationUrl)
   throw new Error("should throw")
 } catch (actual) {
   const expected = new Error(
     `copyFile must be called on a file, found directory at ${urlToFileSystemPath(
-      fileDestinationUrl,
+      directoryUrl.slice(0, -1),
     )}`,
   )
   assert({ actual, expected })
@@ -97,8 +98,43 @@ try {
 
 // destination is a file and overwrite disabled
 
+await writeFile(fileUrl)
+await writeFile(fileDestinationUrl)
+try {
+  await copyFile(fileUrl, fileDestinationUrl)
+} catch (actual) {
+  const expected = new Error(
+    `cannot copy ${urlToFileSystemPath(fileUrl)} at ${urlToFileSystemPath(
+      fileDestinationUrl,
+    )} because there is already a file and overwrite option is disabled`,
+  )
+  assert({ actual, expected })
+  await removeDirectory(directoryUrl, { removeContent: true })
+  await removeDirectory(destinationDirectoryUrl, { removeContent: true })
+}
+
 // destination is a file and overwrite enabled
+{
+  await writeFile(fileUrl, "foo")
+  await writeFile(fileDestinationUrl, "bar")
+  await copyFile(fileUrl, fileDestinationUrl, { overwrite: true })
+  const actual = await readFile(fileDestinationUrl)
+  const expected = "foo"
+  assert({ actual, expected })
+  await removeFile(fileUrl)
+  await removeFile(fileDestinationUrl)
+}
 
 // destination is a directory
-
-//
+await writeFile(fileUrl, "foo")
+try {
+  await copyFile(fileUrl, destinationDirectoryUrl.slice(0, -1))
+  throw new Error("should throw")
+} catch (actual) {
+  const expected = new Error(
+    `cannot copy ${urlToFileSystemPath(fileUrl)} at ${urlToFileSystemPath(
+      destinationDirectoryUrl.slice(0, -1),
+    )} because destination is a directory`,
+  )
+  assert({ actual, expected })
+}
