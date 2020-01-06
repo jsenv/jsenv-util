@@ -5,8 +5,10 @@ import { createParentDirectories } from "./createParentDirectories.js"
 import { copyFile } from "./copyFile.js"
 import { removeFile } from "./removeFile.js"
 import { directoryExists } from "./directoryExists.js"
+import { readLStat } from "./readLStat.js"
+import { removeDirectory } from "./removeDirectory.js"
 
-export const moveFile = async (value, destinationValue) => {
+export const moveFile = async (value, destinationValue, { overwrite = false } = {}) => {
   const fileUrl = assertAndNormalizeFileUrl(value)
   const fileDestinationUrl = assertAndNormalizeFileUrl(destinationValue)
 
@@ -17,10 +19,28 @@ export const moveFile = async (value, destinationValue) => {
     throw new Error(`moveFile must be called on a file, found directory at ${filePath}`)
   }
 
-  await createParentDirectories(fileDestinationUrl)
+  const stat = await readLStat(fileDestinationPath, { nullIfNotFound: true })
+  if (stat) {
+    if (!overwrite) {
+      throw new Error(
+        `cannot move ${filePath} at ${fileDestinationPath}, there is already a ${
+          stat.isDirectory() ? "directory" : "file"
+        }`,
+      )
+    }
+
+    if (stat.isDirectory()) {
+      await removeDirectory(fileDestinationUrl, { removeContent: true })
+    } else {
+      await removeFile(fileDestinationUrl)
+    }
+  } else {
+    await createParentDirectories(fileDestinationUrl)
+  }
+
   return moveFileNaive(filePath, fileDestinationPath, {
     handleCrossDeviceError: async () => {
-      await copyFile(filePath, fileDestinationPath)
+      await copyFile(filePath, fileDestinationPath, { preserveStat: true })
       await removeFile(filePath)
     },
   })

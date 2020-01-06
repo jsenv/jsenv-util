@@ -3,33 +3,41 @@ import { assertAndNormalizeDirectoryUrl } from "./assertAndNormalizeDirectoryUrl
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { createParentDirectories } from "./createParentDirectories.js"
 import { removeDirectory } from "./removeDirectory.js"
-import { fileExists } from "./fileExists.js"
 import { removeFile } from "./removeFile.js"
-import { directoryExists } from "./directoryExists.js"
 import { copyDirectory } from "./copyDirectory.js"
+import { readLStat } from "./readLStat.js"
 
 export const moveDirectory = async (
   directoryUrl,
   directoryDestinationUrl,
-  { autoGrantRequiredPermissions = true } = {},
+  { overwrite = false } = {},
 ) => {
   directoryUrl = assertAndNormalizeDirectoryUrl(directoryUrl)
   directoryDestinationUrl = assertAndNormalizeDirectoryUrl(directoryDestinationUrl)
 
-  if (await directoryExists(directoryDestinationUrl)) {
-    await removeDirectory(directoryDestinationUrl, { autoGrantRequiredPermissions })
+  const stat = await readLStat(directoryDestinationUrl, { nullIfNotFound: true })
+  if (stat) {
+    if (!overwrite) {
+      throw new Error(
+        `cannot move ${directoryUrl} at ${directoryDestinationUrl}, there is already a ${
+          stat.isDirectory() ? "directory" : "file"
+        }`,
+      )
+    }
+
+    if (stat.isDirectory()) {
+      await removeDirectory(directoryDestinationUrl, { removeContent: true })
+    } else {
+      await removeFile(directoryDestinationUrl.slice(-1))
+    }
   } else {
     await createParentDirectories(directoryDestinationUrl)
   }
 
-  if (await fileExists(directoryDestinationUrl)) {
-    await removeFile(directoryDestinationUrl, { autoGrantRequiredPermissions })
-  }
-
   await moveDirectoryNaive(directoryUrl, directoryDestinationUrl, {
     handleCrossDeviceError: async () => {
-      await copyDirectory(directoryUrl, directoryDestinationUrl, { autoGrantRequiredPermissions })
-      await removeDirectory(directoryUrl, { autoGrantRequiredPermissions })
+      await copyDirectory(directoryUrl, directoryDestinationUrl, { preserveStat: true })
+      await removeDirectory(directoryUrl, { removeContent: true })
     },
   })
 }

@@ -2,7 +2,6 @@
 import { resolveUrl } from "./resolveUrl.js"
 import { binaryFlagsToPermissions } from "./internal/permissions.js"
 import { assertAndNormalizeDirectoryUrl } from "./assertAndNormalizeDirectoryUrl.js"
-import { createParentDirectories } from "./createParentDirectories.js"
 import { createDirectory } from "./createDirectory.js"
 import { urlToRelativeUrl } from "./urlToRelativeUrl.js"
 import { copyFile } from "./copyFile.js"
@@ -13,16 +12,39 @@ import { readDirectory } from "./readDirectory.js"
 import { readSymbolicLink } from "./readSymbolicLink.js"
 import { writeSymbolicLink } from "./writeSymbolicLink.js"
 import { urlIsInsideOf } from "./urlIsInsideOf.js"
+import { removeDirectory } from "./removeDirectory.js"
+import { removeFile } from "./removeFile.js"
 
 export const copyDirectory = async (
   directoryUrl,
   directoryDestinationUrl,
-  { autoGrantRequiredPermissions = true } = {},
+  {
+    overwrite = false,
+    preserveStat = true,
+    preserveMtime = preserveStat,
+    preserveAtime = preserveStat,
+    preservePermissions = preserveStat,
+  } = {},
 ) => {
   const rootDirectoryUrl = assertAndNormalizeDirectoryUrl(directoryUrl)
   const rootDirectoryDestinationUrl = assertAndNormalizeDirectoryUrl(directoryDestinationUrl)
 
-  await createParentDirectories(directoryDestinationUrl)
+  const stat = await readLStat(rootDirectoryDestinationUrl, { nullIfNotFound: true })
+  if (stat) {
+    if (!overwrite) {
+      throw new Error(
+        `cannot move ${rootDirectoryUrl} at ${rootDirectoryDestinationUrl}, there is already a ${
+          stat.isDirectory() ? "directory" : "file"
+        }`,
+      )
+    }
+
+    if (stat.isDirectory()) {
+      await removeDirectory(directoryDestinationUrl, { removeContent: true })
+    } else {
+      await removeFile(directoryDestinationUrl.slice(-1))
+    }
+  }
 
   const visit = async (url) => {
     const filesystemStat = await readLStat(url)
@@ -44,18 +66,30 @@ export const copyDirectory = async (
     const directoryRelativeUrl = urlToRelativeUrl(directoryUrl, rootDirectoryUrl)
     const directoryCopyUrl = resolveUrl(directoryRelativeUrl, rootDirectoryDestinationUrl)
 
-    await createDirectory(directoryCopyUrl, { autoGrantRequiredPermissions })
+    await createDirectory(directoryCopyUrl)
     await Promise.all([
-      writePermissions(directoryCopyUrl, binaryFlagsToPermissions(mode)),
+      ...(preservePermissions
+        ? [writePermissions(directoryCopyUrl, binaryFlagsToPermissions(mode))]
+        : [Promise.resolve()]),
       copyDirectoryContent(directoryUrl),
     ])
-    await writeTimestamps(directoryCopyUrl, { atime: atimeMs, mtime: mtimeMs })
+    if (preserveMtime || preserveAtime) {
+      await writeTimestamps(directoryCopyUrl, {
+        ...(preserveMtime ? { mtime: mtimeMs } : {}),
+        ...(preserveAtime ? { atime: atimeMs } : {}),
+      })
+    }
   }
 
   const visitFile = async (fileUrl, fileStat) => {
     const fileRelativeUrl = urlToRelativeUrl(fileUrl, rootDirectoryUrl)
     const fileCopyUrl = resolveUrl(fileRelativeUrl, rootDirectoryDestinationUrl)
-    await copyFile(fileUrl, fileCopyUrl, { autoGrantRequiredPermissions, fileStat })
+    await copyFile(fileUrl, fileCopyUrl, {
+      preserveMtime,
+      preserveAtime,
+      preservePermissions,
+      fileStat,
+    })
   }
 
   const visitSymbolicLink = async (symbolicLinkUrl) => {
@@ -78,13 +112,11 @@ export const copyDirectory = async (
       symbolicLinkCopyTargetUrl = symbolicLinkTargetUrl
     }
 
-    await writeSymbolicLink(symbolicLinkCopyUrl, symbolicLinkCopyTargetUrl, {
-      autoGrantRequiredPermissions,
-    })
+    await writeSymbolicLink(symbolicLinkCopyUrl, symbolicLinkCopyTargetUrl)
   }
 
   const copyDirectoryContent = async (url) => {
-    const names = await readDirectory(url, { autoGrantRequiredPermissions })
+    const names = await readDirectory(url)
     await Promise.all(
       names.map(async (name) => {
         const url = resolveUrl(name, url)
@@ -93,5 +125,5 @@ export const copyDirectory = async (
     )
   }
 
-  await visit(rootDirectoryUrl)
+  await visitDirectory(rootDirectoryUrl)
 }

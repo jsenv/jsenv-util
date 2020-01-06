@@ -5,5 +5,5 @@ export const fileExists = async (value) => {
   const fileUrl = assertAndNormalizeFileUrl(value)
 
   const stat = await readLStat(fileUrl, { nullIfNotFound: true })
-  return Boolean(stat && stat.isFile())
+  return Boolean(stat && !stat.isDirectory())
 }

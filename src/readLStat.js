@@ -4,6 +4,8 @@ import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { grantPermission } from "./grantPermission.js"
 
 export const readLStat = async (url, { nullIfNotFound = false } = {}) => {
+  if (url.endsWith("/")) url = url.slice(-1)
+
   const fileSystemUrl = assertAndNormalizeFileUrl(url)
   const fileSystemPath = urlToFileSystemPath(fileSystemUrl)
 

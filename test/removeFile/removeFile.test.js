@@ -51,7 +51,8 @@ try {
 }
 
 // file inside a directory without execute permission
-await writeFile(fileInsideDirectoryUrl, "coucou")
+await createDirectory(directoryUrl)
+await writeFile(fileInsideDirectoryUrl, "dirnoperm")
 await writePermissions(directoryUrl, {
   owner: { read: true, write: true, execute: false },
 })
@@ -68,14 +69,14 @@ try {
   expected.path = urlToFileSystemPath(fileInsideDirectoryUrl)
   assert({ actual, expected })
   await writePermissions(directoryUrl, {
-    owner: { read: true, execute: true },
+    owner: { read: true, write: true, execute: true },
   })
   await removeDirectory(directoryUrl, { removeContent: true })
 }
 
 // file without permission
 {
-  await writeFile(fileUrl, "coucou")
+  await writeFile(fileUrl, "noperm")
   await writePermissions(fileUrl, {
     owner: { read: false, write: false, execute: false },
   })
@@ -87,9 +88,26 @@ try {
 
 // normal file
 {
-  await writeFile(fileUrl, "coucou")
+  await writeFile(fileUrl, "normal")
   await removeFile(fileUrl)
   const actual = await fileExists(fileUrl)
   const expected = false
   assert({ actual, expected })
+}
+
+// normal file with trailing slash
+await writeFile(fileUrl, "trailing")
+const fileUrlWithTrailingSlash = `${fileUrl}/`
+try {
+  await removeFile(fileUrlWithTrailingSlash)
+} catch (actual) {
+  const expected = new Error(
+    `ENOTDIR: not a directory, unlink '${urlToFileSystemPath(fileUrlWithTrailingSlash)}'`,
+  )
+  expected.errno = -20
+  expected.code = "ENOTDIR"
+  expected.syscall = "unlink"
+  expected.path = urlToFileSystemPath(fileUrlWithTrailingSlash)
+  assert({ actual, expected })
+  await removeFile(fileUrl)
 }

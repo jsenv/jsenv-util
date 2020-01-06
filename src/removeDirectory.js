@@ -7,7 +7,7 @@ import { removeFile } from "./removeFile.js"
 import { readLStat } from "./readLStat.js"
 
 export const removeDirectory = async (url, { removeContent = false } = {}) => {
-  const directoryUrl = assertAndNormalizeDirectoryUrl(url)
+  const rootDirectoryUrl = assertAndNormalizeDirectoryUrl(url)
 
   const visit = async (url) => {
     const filesystemStat = await readLStat(url, { nullIfNotFound: true })
@@ -62,7 +62,7 @@ export const removeDirectory = async (url, { removeContent = false } = {}) => {
     await removeFile(symbolicLinkUrl)
   }
 
-  await visitDirectory(directoryUrl)
+  await visitDirectory(rootDirectoryUrl)
 }
 
 const removeDirectoryNaive = (directoryPath, { handleNotEmptyError = null } = {}) => {
