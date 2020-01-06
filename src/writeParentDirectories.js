@@ -4,10 +4,11 @@ import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 
 export const writeParentDirectories = (destination) => {
-  const fileSystemUrl = assertAndNormalizeFileUrl(destination)
-  const fileSystemPath = urlToFileSystemPath(fileSystemUrl)
+  const destinationUrl = assertAndNormalizeFileUrl(destination)
+  const destinationPath = urlToFileSystemPath(destinationUrl)
+  const destinationParentPath = dirname(destinationPath)
   return new Promise((resolve, reject) => {
-    mkdir(dirname(fileSystemPath), { recursive: true }, (error) => {
+    mkdir(destinationParentPath, { recursive: true }, (error) => {
       if (error) {
         if (error.code === "EEXIST") {
           resolve()

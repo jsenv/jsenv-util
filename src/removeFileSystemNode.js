@@ -7,12 +7,12 @@ import { readDirectory } from "./readDirectory.js"
 import { resolveUrl } from "./resolveUrl.js"
 
 export const removeFileSystemNode = async (
-  value,
+  source,
   { recursive = false, maxRetries = 3, retryDelay = 100 } = {},
 ) => {
-  const fileSystemUrl = assertAndNormalizeFileUrl(value)
+  const sourceUrl = assertAndNormalizeFileUrl(source)
 
-  const stat = await readFileSystemNodeStat(fileSystemUrl, {
+  const stat = await readFileSystemNodeStat(sourceUrl, {
     nullIfNotFound: true,
     followSymbolicLink: false,
   })
@@ -24,7 +24,7 @@ export const removeFileSystemNode = async (
   // FIFO and socket are ignored, not sure what they are exactly and what to do with them
   // other libraries ignore them, let's do the same.
   if (stat.isDirectory()) {
-    await removeDirectory(ensureUrlTrailingSlash(fileSystemUrl), {
+    await removeDirectory(ensureUrlTrailingSlash(sourceUrl), {
       recursive,
       maxRetries,
       retryDelay,
@@ -35,19 +35,19 @@ export const removeFileSystemNode = async (
     stat.isCharacterDevice() ||
     stat.isBlockDevice()
   ) {
-    await removeNonDirectory(
-      fileSystemUrl.endsWith("/") ? fileSystemUrl.slice(0, -1) : fileSystemUrl,
-      { maxRetries, retryDelay },
-    )
+    await removeNonDirectory(sourceUrl.endsWith("/") ? sourceUrl.slice(0, -1) : sourceUrl, {
+      maxRetries,
+      retryDelay,
+    })
   }
 }
 
-const removeNonDirectory = (fileSystemUrl, { maxRetries, retryDelay }) => {
-  const fileSystemPath = urlToFileSystemPath(fileSystemUrl)
+const removeNonDirectory = (sourceUrl, { maxRetries, retryDelay }) => {
+  const sourcePath = urlToFileSystemPath(sourceUrl)
 
   let retryCount = 0
   const attempt = () => {
-    return unlinkNaive(fileSystemPath, {
+    return unlinkNaive(sourcePath, {
       ...(retryCount >= maxRetries
         ? {}
         : {
@@ -65,9 +65,9 @@ const removeNonDirectory = (fileSystemUrl, { maxRetries, retryDelay }) => {
   return attempt()
 }
 
-const unlinkNaive = (fileSystemPath, { handleTemporaryError = null } = {}) => {
+const unlinkNaive = (sourcePath, { handleTemporaryError = null } = {}) => {
   return new Promise((resolve, reject) => {
-    unlink(fileSystemPath, (error) => {
+    unlink(sourcePath, (error) => {
       if (error) {
         if (error.code === "ENOENT") {
           resolve()
@@ -91,16 +91,17 @@ const unlinkNaive = (fileSystemPath, { handleTemporaryError = null } = {}) => {
 
 const removeDirectory = async (rootDirectoryUrl, { maxRetries, retryDelay, recursive }) => {
   const visit = async (url) => {
-    const filesystemStat = await readFileSystemNodeStat(url, { nullIfNotFound: true })
+    const filesystemStat = await readFileSystemNodeStat(url, {
+      nullIfNotFound: true,
+      followSymbolicLink: false,
+    })
 
     // file/directory not found
     if (filesystemStat === null) {
       return
     }
 
-    if (filesystemStat.isDirectory()) {
-      await visitDirectory(`${url}/`)
-    } else if (
+    if (
       filesystemStat.isFile() ||
       filesystemStat.isCharacterDevice() ||
       filesystemStat.isBlockDevice()
@@ -108,6 +109,8 @@ const removeDirectory = async (rootDirectoryUrl, { maxRetries, retryDelay, recur
       await visitFile(url)
     } else if (filesystemStat.isSymbolicLink()) {
       await visitSymbolicLink(url)
+    } else if (filesystemStat.isDirectory()) {
+      await visitDirectory(`${url}/`)
     }
   }
 

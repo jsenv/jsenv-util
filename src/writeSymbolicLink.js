@@ -2,9 +2,10 @@ import { symlink } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { isFileSystemPath } from "./isFileSystemPath.js"
+import { writeParentDirectories } from "./writeParentDirectories.js"
 
-export const writeSymbolicLink = (destination, target) => {
-  const symbolicLinkUrl = assertAndNormalizeFileUrl(destination)
+export const writeSymbolicLink = async (destination, target) => {
+  const destinationUrl = assertAndNormalizeFileUrl(destination)
 
   let targetValue
   if (typeof target === "string") {
@@ -18,7 +19,7 @@ export const writeSymbolicLink = (destination, target) => {
     }
     // absolute url
     else {
-      const targetUrl = String(new URL(targetUrl, symbolicLinkUrl))
+      const targetUrl = String(new URL(target, destinationUrl))
       targetValue = urlToFileSystemPath(targetUrl)
     }
   } else if (target instanceof URL) {
@@ -27,7 +28,9 @@ export const writeSymbolicLink = (destination, target) => {
     throw new TypeError(`symbolic link target must be a string or an url, received ${target}`)
   }
 
-  const symbolicLinkPath = urlToFileSystemPath(symbolicLinkUrl)
+  await writeParentDirectories(destinationUrl)
+
+  const symbolicLinkPath = urlToFileSystemPath(destinationUrl)
   return new Promise((resolve, reject) => {
     symlink(targetValue, symbolicLinkPath, (error) => {
       if (error) {

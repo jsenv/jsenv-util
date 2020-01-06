@@ -79,7 +79,7 @@ export const copyFileSystemNode = async (
     } else if (stats.isSymbolicLink()) {
       await visitSymbolicLink(url, stats)
     } else if (stats.isDirectory()) {
-      await visitDirectory(`${url}/`, stats)
+      await visitDirectory(ensureUrlTrailingSlash(url), stats)
     }
   }
 
@@ -91,7 +91,7 @@ export const copyFileSystemNode = async (
     await copyStats(fileCopyUrl, fileStats)
   }
 
-  const visitSymbolicLink = async (symbolicLinkUrl, symbolicLinkStats) => {
+  const visitSymbolicLink = async (symbolicLinkUrl) => {
     const symbolicLinkRelativeUrl = urlToRelativeUrl(symbolicLinkUrl, sourceUrl)
     const symbolicLinkTarget = await readSymbolicLink(symbolicLinkUrl)
     const symbolicLinkTargetUrl = resolveUrl(symbolicLinkTarget, symbolicLinkUrl)
@@ -106,7 +106,7 @@ export const copyFileSystemNode = async (
       // reflects it inside the copied directory structure
       const linkCopyTargetRelative = urlToRelativeUrl(symbolicLinkTargetUrl, sourceUrl)
       symbolicLinkCopyTarget = linkIsRelative
-        ? linkCopyTargetRelative
+        ? `./${linkCopyTargetRelative}`
         : resolveUrl(linkCopyTargetRelative, destinationUrl)
     } else {
       // symbolic link targets something outside the directory we want to copy
@@ -115,7 +115,6 @@ export const copyFileSystemNode = async (
 
     const symbolicLinkCopyUrl = resolveUrl(symbolicLinkRelativeUrl, destinationUrl)
     await writeSymbolicLink(symbolicLinkCopyUrl, symbolicLinkCopyTarget)
-    await copyStats(symbolicLinkCopyUrl, symbolicLinkStats)
   }
 
   const copyStats = async (destinationUrl, stats) => {

@@ -26,6 +26,20 @@ await cleanDirectory(tempDirectoryUrl)
   assert({ actual, expected })
 }
 
+// link to nothing inside a dir
+{
+  const sourceUrl = resolveUrl("dir/", tempDirectoryUrl)
+  const linkUrl = resolveUrl("link", sourceUrl)
+  await writeSymbolicLink(linkUrl, "./whatever")
+  await removeFileSystemNode(sourceUrl, { recursive: true })
+  const actual = await readFileSystemNodeStat(sourceUrl, {
+    nullIfNotFound: true,
+    followSymbolicLink: false,
+  })
+  const expected = null
+  assert({ actual, expected })
+}
+
 // link to an existing file
 {
   const fileUrl = resolveUrl("file.txt", tempDirectoryUrl)
