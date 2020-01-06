@@ -40,10 +40,10 @@ const readStat = (
   fileSystemPath,
   { followSymbolicLink, handleNotFoundError = null, handlePermissionDeniedError = null } = {},
 ) => {
-  const nodeMethod = followSymbolicLink ? lstat : stat
+  const nodeMethod = followSymbolicLink ? stat : lstat
 
   return new Promise((resolve, reject) => {
-    nodeMethod(fileSystemPath, (error, lstatObject) => {
+    nodeMethod(fileSystemPath, (error, statsObject) => {
       if (error) {
         if (handlePermissionDeniedError && (error.code === "EPERM" || error.code === "EACCES")) {
           resolve(handlePermissionDeniedError(error))
@@ -53,7 +53,7 @@ const readStat = (
           reject(error)
         }
       } else {
-        resolve(lstatObject)
+        resolve(statsObject)
       }
     })
   })

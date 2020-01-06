@@ -3,31 +3,33 @@ import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { isFileSystemPath } from "./isFileSystemPath.js"
 
-export const writeSymbolicLink = (url, targetUrl) => {
-  const symbolicLinkUrl = assertAndNormalizeFileUrl(url)
+export const writeSymbolicLink = (destination, target) => {
+  const symbolicLinkUrl = assertAndNormalizeFileUrl(destination)
 
-  let symbolicLinkTargetPath
-  if (typeof targetUrl === "string") {
+  let targetValue
+  if (typeof target === "string") {
     // absolute filesystem path
-    if (isFileSystemPath(targetUrl)) {
-      symbolicLinkTargetPath = targetUrl
+    if (isFileSystemPath(target)) {
+      targetValue = target
     }
     // relative url
-    else if (targetUrl.startsWith("./") || targetUrl.startsWith("../")) {
-      symbolicLinkTargetPath = targetUrl
+    else if (target.startsWith("./") || target.startsWith("../")) {
+      targetValue = target
     }
     // absolute url
     else {
-      const symbolicLinkTargetUrl = String(new URL(targetUrl, symbolicLinkUrl))
-      symbolicLinkTargetPath = urlToFileSystemPath(symbolicLinkTargetUrl)
+      const targetUrl = String(new URL(targetUrl, symbolicLinkUrl))
+      targetValue = urlToFileSystemPath(targetUrl)
     }
-  } else if (targetUrl instanceof URL) {
-    symbolicLinkTargetPath = urlToFileSystemPath(targetUrl)
+  } else if (target instanceof URL) {
+    targetValue = urlToFileSystemPath(target)
+  } else {
+    throw new TypeError(`symbolic link target must be a string or an url, received ${target}`)
   }
 
   const symbolicLinkPath = urlToFileSystemPath(symbolicLinkUrl)
   return new Promise((resolve, reject) => {
-    symlink(symbolicLinkTargetPath, symbolicLinkPath, (error) => {
+    symlink(targetValue, symbolicLinkPath, (error) => {
       if (error) {
         reject(error)
       } else {
