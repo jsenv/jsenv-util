@@ -57,32 +57,42 @@ try {
   await removeFile(fileDestinationUrl)
 }
 
-// destination exists
+// destination is a file
+await writeFile(fileUrl, "foo")
+await writeFile(fileDestinationUrl, "Hello world")
+try {
+  await moveFile(fileUrl, fileDestinationUrl)
+} catch (actual) {
+  const expected = new Error(
+    `cannot move ${urlToFileSystemPath(fileUrl)} at ${urlToFileSystemPath(
+      fileDestinationUrl,
+    )} because destination file exists and overwrite option is disabled`,
+  )
+  assert({ actual, expected })
+  await removeFile(fileDestinationUrl)
+}
+
+// destination is a file and overwrite: true
 {
   await writeFile(fileUrl, "foo")
   await writeFile(fileDestinationUrl, "Hello world")
-  await moveFile(fileUrl, fileDestinationUrl)
+  await moveFile(fileUrl, fileDestinationUrl, { overwrite: true })
   const actual = await readFile(fileDestinationUrl)
   const expected = "foo"
   assert({ actual, expected })
   await removeFile(fileDestinationUrl)
 }
 
-// destination is an empty directory
+// destination is a directory
 await writeFile(fileUrl, "foo")
 try {
-  await moveFile(fileUrl, destinationDirectoryUrl)
+  await moveFile(fileUrl, destinationDirectoryUrl, { overwrite: true })
 } catch (actual) {
   const expected = new Error(
-    `EISDIR: illegal operation on a directory, rename '${urlToFileSystemPath(
-      fileUrl,
-    )}' -> '${urlToFileSystemPath(destinationDirectoryUrl)}'`,
+    `cannot move ${urlToFileSystemPath(fileUrl)} at ${urlToFileSystemPath(
+      destinationDirectoryUrl,
+    )} because destination is a directory`,
   )
-  expected.errno = -21
-  expected.code = "EISDIR"
-  expected.syscall = "rename"
-  expected.path = urlToFileSystemPath(fileUrl)
-  expected.dest = urlToFileSystemPath(destinationDirectoryUrl)
   assert({ actual, expected })
   await removeFile(fileUrl, "foo")
 }

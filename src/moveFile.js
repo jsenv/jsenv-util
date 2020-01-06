@@ -6,7 +6,6 @@ import { copyFile } from "./copyFile.js"
 import { removeFile } from "./removeFile.js"
 import { directoryExists } from "./directoryExists.js"
 import { readLStat } from "./readLStat.js"
-import { removeDirectory } from "./removeDirectory.js"
 
 export const moveFile = async (value, destinationValue, { overwrite = false } = {}) => {
   const fileUrl = assertAndNormalizeFileUrl(value)
@@ -19,20 +18,20 @@ export const moveFile = async (value, destinationValue, { overwrite = false } = 
     throw new Error(`moveFile must be called on a file, found directory at ${filePath}`)
   }
 
-  const stat = await readLStat(fileDestinationPath, { nullIfNotFound: true })
-  if (stat) {
-    if (!overwrite) {
+  const destinationStat = await readLStat(fileDestinationPath, { nullIfNotFound: true })
+  if (destinationStat) {
+    if (destinationStat.isDirectory()) {
       throw new Error(
-        `cannot move ${filePath} at ${fileDestinationPath}, there is already a ${
-          stat.isDirectory() ? "directory" : "file"
-        }`,
+        `cannot move ${filePath} at ${fileDestinationPath} because destination is a directory`,
       )
     }
 
-    if (stat.isDirectory()) {
-      await removeDirectory(fileDestinationUrl, { removeContent: true })
-    } else {
+    if (overwrite) {
       await removeFile(fileDestinationUrl)
+    } else {
+      throw new Error(
+        `cannot move ${filePath} at ${fileDestinationPath} because destination file exists and overwrite option is disabled`,
+      )
     }
   } else {
     await createParentDirectories(fileDestinationUrl)
