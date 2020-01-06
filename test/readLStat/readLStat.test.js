@@ -1,12 +1,11 @@
 import { assert } from "@jsenv/assert"
 import {
-  createDirectory,
+  writeDirectory,
   writeFile,
   resolveUrl,
-  readLStat,
+  readFileSystemNodeStat,
   writePermissions,
-  removeDirectory,
-  removeFile,
+  removeFileSystemNode,
   urlToFileSystemPath,
 } from "../../index.js"
 import { makeBusyFile } from "../testHelpers.js"
@@ -14,19 +13,19 @@ import { makeBusyFile } from "../testHelpers.js"
 const tempDirectoryUrl = import.meta.resolve("./temp/")
 const directoryUrl = resolveUrl("directory/", tempDirectoryUrl)
 const fileUrl = resolveUrl("file.txt", tempDirectoryUrl)
-await createDirectory(tempDirectoryUrl)
+await writeDirectory(tempDirectoryUrl)
 
 // lstat on directory without permission
 {
-  await createDirectory(directoryUrl)
+  await writeDirectory(directoryUrl)
   await writePermissions(directoryUrl, {
     owner: { read: false, write: false, execute: false },
   })
-  const directoryStat = await readLStat(directoryUrl)
+  const directoryStat = await readFileSystemNodeStat(directoryUrl)
   const actual = typeof directoryStat
   const expected = "object"
   assert({ actual, expected })
-  await removeDirectory(directoryUrl)
+  await removeFileSystemNode(directoryUrl)
 }
 
 // lstat on file without permission
@@ -35,16 +34,16 @@ await createDirectory(tempDirectoryUrl)
   await writePermissions(fileUrl, {
     owner: { read: false, write: false, execute: false },
   })
-  const fileStat = await readLStat(fileUrl)
+  const fileStat = await readFileSystemNodeStat(fileUrl)
   const actual = typeof fileStat
   const expected = "object"
   assert({ actual, expected })
-  await removeFile(fileUrl)
+  await removeFileSystemNode(fileUrl)
 }
 
 // lstat on busy file
 await makeBusyFile(fileUrl, async () => {
-  const fileStat = await readLStat(fileUrl)
+  const fileStat = await readFileSystemNodeStat(fileUrl)
   const actual = typeof fileStat
   const expected = "object"
   assert({ actual, expected })
@@ -53,13 +52,13 @@ await makeBusyFile(fileUrl, async () => {
 // lstat on file inside a directory without the read permission (should result in EACCESS)
 {
   const directoryFileUrl = resolveUrl("file.js", directoryUrl)
-  await createDirectory(directoryUrl)
+  await writeDirectory(directoryUrl)
   await writeFile(directoryFileUrl, "")
   await writePermissions(directoryUrl, {
     owner: { read: false, write: false, execute: false },
   })
   try {
-    await readLStat(directoryFileUrl)
+    await readFileSystemNodeStat(directoryFileUrl)
     throw new Error("should throw")
   } catch (actual) {
     const expected = new Error(
@@ -74,33 +73,33 @@ await makeBusyFile(fileUrl, async () => {
     await writePermissions(directoryUrl, {
       owner: { read: true, execute: true },
     })
-    await removeDirectory(directoryUrl, { removeContent: true })
+    await removeFileSystemNode(directoryUrl, { removeContent: true })
   }
 }
 
 // lstat on normal directory
 {
-  await createDirectory(directoryUrl)
-  const directoryStat = await readLStat(directoryUrl)
+  await writeDirectory(directoryUrl)
+  const directoryStat = await readFileSystemNodeStat(directoryUrl)
   const actual = typeof directoryStat
   const expected = "object"
   assert({ actual, expected })
-  await removeDirectory(directoryUrl)
+  await removeFileSystemNode(directoryUrl)
 }
 
 // lstat on normal file
 {
   await writeFile(fileUrl, "")
-  const fileStat = await readLStat(fileUrl)
+  const fileStat = await readFileSystemNodeStat(fileUrl)
   const actual = typeof fileStat
   const expected = "object"
   assert({ actual, expected })
-  await removeFile(fileUrl)
+  await removeFileSystemNode(fileUrl)
 }
 
 // lstat on nothing
 try {
-  await readLStat(fileUrl)
+  await readFileSystemNodeStat(fileUrl)
   throw new Error("should throw")
 } catch (actual) {
   const expected = new Error(
@@ -115,7 +114,7 @@ try {
 
 // lstat on nothing with nullIfNotFound
 {
-  const actual = await readLStat(fileUrl, { nullIfNotFound: true })
+  const actual = await readFileSystemNodeStat(fileUrl, { nullIfNotFound: true })
   const expected = null
   assert({ actual, expected })
 }

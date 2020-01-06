@@ -1,10 +1,10 @@
 import { rename } from "fs"
 import { assertAndNormalizeDirectoryUrl } from "./assertAndNormalizeDirectoryUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
-import { createParentDirectories } from "./createParentDirectories.js"
-import { removeDirectory } from "./removeDirectory.js"
+import { writeParentDirectories } from "./writeParentDirectories.js"
+import { removeFileSystemNode } from "./removeFileSystemNode.js"
 import { copyDirectory } from "./copyDirectory.js"
-import { readLStat } from "./readLStat.js"
+import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
 
 export const moveDirectory = async (
   directoryUrl,
@@ -16,7 +16,7 @@ export const moveDirectory = async (
   const directoryPath = urlToFileSystemPath(directoryUrl)
   const directoryDestinationPath = urlToFileSystemPath(directoryDestinationUrl)
 
-  const sourceStat = await readLStat(directoryUrl, { nullIfNotFound: true })
+  const sourceStat = await readFileSystemNodeStat(directoryUrl, { nullIfNotFound: true })
   if (!sourceStat) {
     throw new Error(
       `moveDirectory must be called on a directory, nothing found at ${directoryPath}`,
@@ -28,7 +28,9 @@ export const moveDirectory = async (
     )
   }
 
-  const destinationStat = await readLStat(directoryDestinationUrl, { nullIfNotFound: true })
+  const destinationStat = await readFileSystemNodeStat(directoryDestinationUrl, {
+    nullIfNotFound: true,
+  })
   if (destinationStat) {
     if (!destinationStat.isDirectory()) {
       throw new Error(
@@ -37,20 +39,20 @@ export const moveDirectory = async (
     }
 
     if (overwrite) {
-      await removeDirectory(directoryDestinationUrl, { removeContent: true })
+      await removeFileSystemNode(directoryDestinationUrl, { recursive: true })
     } else {
       throw new Error(
         `cannot move ${directoryPath} at ${directoryDestinationPath} because there is already a directory and overwrite option is disabled`,
       )
     }
   } else {
-    await createParentDirectories(directoryDestinationUrl)
+    await writeParentDirectories(directoryDestinationUrl)
   }
 
   await moveDirectoryNaive(directoryPath, directoryDestinationPath, {
     handleCrossDeviceError: async () => {
       await copyDirectory(directoryUrl, directoryDestinationUrl, { preserveStat: true })
-      await removeDirectory(directoryUrl, { removeContent: true })
+      await removeFileSystemNode(directoryUrl, { recursive: true })
     },
   })
 }

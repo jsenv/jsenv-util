@@ -120,8 +120,8 @@ try {
   const actual = await readFile(fileDestinationUrl)
   const expected = "foo"
   assert({ actual, expected })
-  await removeFile(fileUrl)
-  await removeFile(fileDestinationUrl)
+  await removeFileSystemNode(fileUrl)
+  await removeFileSystemNode(fileDestinationUrl)
 }
 
 // destination is a directory
