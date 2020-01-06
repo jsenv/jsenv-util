@@ -5,7 +5,7 @@ import { rename } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { writeParentDirectories } from "./writeParentDirectories.js"
-import { copyFile } from "./copyFile.js"
+import { copyFileSystemNode } from "./copyFileSystemNode.js"
 import { removeFileSystemNode } from "./removeFileSystemNode.js"
 import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
 
@@ -44,7 +44,7 @@ export const moveFile = async (source, destination, { overwrite = false } = {}) 
 
   return moveFileNaive(sourcePath, destinationPath, {
     handleCrossDeviceError: async () => {
-      await copyFile(sourceUrl, destinationUrl, { preserveStat: true })
+      await copyFileSystemNode(sourceUrl, destinationUrl, { preserveStat: true })
       await removeFileSystemNode(sourceUrl)
     },
   })

@@ -3,7 +3,7 @@ import { assertAndNormalizeDirectoryUrl } from "./assertAndNormalizeDirectoryUrl
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { writeParentDirectories } from "./writeParentDirectories.js"
 import { removeFileSystemNode } from "./removeFileSystemNode.js"
-import { copyDirectory } from "./copyDirectory.js"
+import { copyFileSystemNode } from "./copyFileSystemNode.js"
 import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
 
 export const moveDirectory = async (
@@ -51,7 +51,7 @@ export const moveDirectory = async (
 
   await moveDirectoryNaive(directoryPath, directoryDestinationPath, {
     handleCrossDeviceError: async () => {
-      await copyDirectory(directoryUrl, directoryDestinationUrl, { preserveStat: true })
+      await copyFileSystemNode(directoryUrl, directoryDestinationUrl, { preserveStat: true })
       await removeFileSystemNode(directoryUrl, { recursive: true })
     },
   })
