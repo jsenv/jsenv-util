@@ -133,3 +133,18 @@ try {
   const expected = false
   assert({ actual, expected })
 }
+
+// directory with subdir and having content
+{
+  const rootDir = resolveUrl("root/", tempDirectoryUrl)
+  const dirA = resolveUrl("dirA/", rootDir)
+  const dirB = resolveUrl("dirA/", rootDir)
+  const fileA = resolveUrl("fileA.js", dirA)
+  const fileB = resolveUrl("fileB.js", dirB)
+  await writeFile(fileA, "contentA")
+  await writeFile(fileB, "contentB")
+  await removeDirectory(rootDir, { removeContent: true })
+  const actual = await directoryExists(rootDir)
+  const expected = false
+  assert({ actual, expected })
+}

@@ -18,7 +18,7 @@ export const removeDirectory = async (url, { removeContent = false } = {}) => {
     }
 
     if (filesystemStat.isDirectory()) {
-      await visitDirectory(url)
+      await visitDirectory(`${url}/`)
     } else if (
       filesystemStat.isFile() ||
       filesystemStat.isCharacterDevice() ||
