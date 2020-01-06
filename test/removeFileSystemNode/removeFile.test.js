@@ -47,13 +47,14 @@ await cleanDirectory(tempDirectoryUrl)
     throw new Error("should throw")
   } catch (actual) {
     const expected = new Error(
-      `EACCES: permission denied, unlink '${urlToFileSystemPath(fileInsideDirectoryUrl)}'`,
+      `EACCES: permission denied, lstat '${urlToFileSystemPath(fileInsideDirectoryUrl)}'`,
     )
     expected.errno = -13
     expected.code = "EACCES"
-    expected.syscall = "unlink"
+    expected.syscall = "lstat"
     expected.path = urlToFileSystemPath(fileInsideDirectoryUrl)
     assert({ actual, expected })
+  } finally {
     await writePermissions(directoryUrl, {
       owner: { read: true, write: true, execute: true },
     })

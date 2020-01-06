@@ -35,7 +35,10 @@ export const removeFileSystemNode = async (
     stat.isCharacterDevice() ||
     stat.isBlockDevice()
   ) {
-    await removeNonDirectory(fileSystemUrl)
+    await removeNonDirectory(
+      fileSystemUrl.endsWith("/") ? fileSystemUrl.slice(0, -1) : fileSystemUrl,
+      { maxRetries, retryDelay },
+    )
   }
 }
 
