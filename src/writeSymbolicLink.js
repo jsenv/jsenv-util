@@ -33,11 +33,11 @@ export const writeSymbolicLink = async (destination, target, { type } = {}) => {
 
   const symbolicLinkPath = urlToFileSystemPath(destinationUrl)
   try {
-    await symlink(targetValue, symbolicLinkPath)
+    await symlink(targetValue, symbolicLinkPath, type)
   } catch (error) {
     if (error.code === "ENOENT") {
       await writeParentDirectories(destinationUrl)
-      await symlink(targetValue, symbolicLinkPath)
+      await symlink(targetValue, symbolicLinkPath, type)
       return
     }
     throw error

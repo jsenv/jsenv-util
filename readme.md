@@ -384,8 +384,8 @@ As explained before jsenv prefer to work with url string. When it comes to url r
 ```js
 import { urlIsInsideOf } from "@jsenv/util"
 
-urlIsInsideOf("file:///directory/file.js", 'file:///directory/') // true
-urlIsInsideOf("file:///file.js", 'file:///directory/') // false
+urlIsInsideOf("file:///directory/file.js", "file:///directory/") // true
+urlIsInsideOf("file:///file.js", "file:///directory/") // false
 ```
 
 — source code at [src/urlIsInsideOf.js](./src/urlIsInsideOf.js).
