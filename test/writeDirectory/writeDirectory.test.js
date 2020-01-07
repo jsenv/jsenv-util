@@ -1,7 +1,7 @@
 import { assert } from "@jsenv/assert"
 import {
   writeDirectory,
-  cleanDirectory,
+  ensureEmptyDirectory,
   writeFileSystemNodePermissions,
   urlToFileSystemPath,
   writeFile,
@@ -10,7 +10,7 @@ import {
 } from "../../index.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
-await cleanDirectory(tempDirectoryUrl)
+await ensureEmptyDirectory(tempDirectoryUrl)
 
 // destination inside parent directory without write permission
 {
@@ -33,7 +33,7 @@ await cleanDirectory(tempDirectoryUrl)
     expected.syscall = "lstat"
     expected.path = urlToFileSystemPath(destinationUrl)
     assert({ actual, expected })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -48,7 +48,7 @@ await cleanDirectory(tempDirectoryUrl)
   } catch (actual) {
     const expected = new Error(`directory already exists at ${urlToFileSystemPath(destinationUrl)}`)
     assert({ actual, expected })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -66,7 +66,7 @@ await cleanDirectory(tempDirectoryUrl)
       `cannot write directory at ${urlToFileSystemPath(directoryUrl)} because there is a file`,
     )
     assert({ actual, expected })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -86,7 +86,7 @@ await cleanDirectory(tempDirectoryUrl)
       )} because there is a symbolic-link`,
     )
     assert({ actual, expected })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 

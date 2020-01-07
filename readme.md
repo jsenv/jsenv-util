@@ -18,26 +18,31 @@ Set of functions often needed when using Node.js.
   - [assertDirectoryExists](#assertDirectoryExists)
   - [assertFileExists](#assertFileExists)
   - [bufferToEtag](#bufferToEtag)
-  - [cleanDirectory](#cleanDirectory)
-  - [createDirectory](#createDirectory)
-  - [createFileDirectories](#createFileDirectories)
-  - [directoryExists](#directoryExists)
-  - [fileExists](#fileExists)
+  - [ensureEmptyDirectory](#ensureEmptyDirectory)
+  - [ensureParentDirectories](#ensureParentDirectories)
+  - [copyFileSystemNode](#copyFileSystemNode)
   - [fileSystemPathToUrl](#fileSystemPathToUrl)
+  - [grantPermissionsOnFileSystemNode](#grantPermissionsOnFileSystemNode)
   - [isFileSystemPath](#isFileSystemPath)
-  - [moveFile](#moveFile)
-  - [readFileModificationTime](#readFileModificationTime)
-  - [readFileContent](#readFileContent)
-  - [readFileStat](#readFileStat)
-  - [removeDirectory](#removeDirectory)
-  - [removeFile](#removeFile)
+  - [moveFileSystemNode](#moveFileSystemNode)
+  - [readFile](#readFile)
+  - [readFileSystemNodeModificationTime](#readFileSystemNodeModificationTime)
+  - [readFileSystemNodePermissions](#readFileSystemNodePermissions)
+  - [readFileSystemNodeStat](#readFileSystemNodeStat)
+  - [readSymbolicLink](#readSymbolicLink)
+  - [removeFileSystemNode](#removeFileSystemNode)
   - [resolveDirectoryUrl](#resolveDirectoryUrl)
   - [resolveUrl](#resolveUrl)
+  - [testFileSystemNodePermissions](#testFileSystemNodePermissions)
+  - [testFileSystemNodePresence](#testFileSystemNodePresence)
   - [urlIsInsideOf](#urlIsInsideOf)
   - [urlToFileSystemPath](#urlToFileSystemPath)
   - [urlToRelativeUrl](#urlToRelativeUrl)
-  - [writeFileContent](#writeFileContent)
-  - [writeFileModificationTime](#writeFileModificationTime)
+  - [writeDirectory](#writeDirectory)
+  - [writeFile](#writeFile)
+  - [writeFileSystemNodeModificationTime](#writeFileSystemNodeModificationTime)
+  - [writeFileSystemNodePermissions](#writeFileSystemNodePermissions)
+  - [writeSymbolicLink](#writeSymbolicLink)
 - [Installation](#Installation)
 
 ## Presentation
@@ -93,7 +98,7 @@ The functions exported by this package are documented in this part.
 ```js
 import { assertAndNormalizeDirectoryUrl } from "@jsenv/util"
 
-assertAndNormalizeDirectoryUrl("/directory")
+assertAndNormalizeDirectoryUrl("/directory") // file:///directory/
 ```
 
 This function is great to make a function accept various values as directory url and normalize it to a standard directory url like `file:///directory/`. Jsenv uses it for every function having a directory url parameter.
@@ -130,7 +135,7 @@ This function is great to assert a directory existence before going further. Jse
 
 ### assertFileExists
 
-> `assertFileExists` is an async function ensuring a file exists.
+> `assertFileExists` is an async function throwing if a file does not exists.
 
 ```js
 import { assertFileExists } from "@jsenv/util"
@@ -160,56 +165,42 @@ This function returns a hash (a small string) representing a file content. You c
 — see [eTag documentation on MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag)<br />
 — source code at [src/bufferToEtag.js](./src/bufferToEtag.js).
 
-### cleanDirectory
+### ensureEmptyDirectory
 
-> `cleanDirectory` is an async function removing all directory content.
+> `ensureEmptyDirectory` is an async function ensuring a directory is empty. It removes a directory content when it exists or create an empty directory.
 
 ```js
-import { cleanDirectory } from "@jsenv/util"
+import { ensureEmptyDirectory } from "@jsenv/util"
 
-await cleanDirectory(`/directory`)
+await ensureEmptyDirectory(`file:///directory`)
 ```
 
 This function was written for testing. It is meant to clean up a directory in case a previous test execution let some files and you want to clean them before running your test. Jsenv uses it in some tests involving the filesystem.
 
-— source code at [src/cleanDirectory.js](./src/cleanDirectory.js).
+— source code at [src/ensureEmptyDirectory.js](./src/ensureEmptyDirectory.js).
 
-### createDirectory
+### writeDirectory
 
-> `createDirectory` is an async function creating a directory.
+> `writeDirectory` is an async function creating a directory on the filesystem.
 
 ```js
-import { createDirectory } from "@jsenv/util"
+import { writeDirectory } from "@jsenv/util"
 
-await createDirectory(`/directory`)
+await writeDirectory(`file:///directory`)
 ```
 
-`createDirectory` is equivalent to [fs.promises.mkdir](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_mkdir_path_options) but accepts url strings as directory path.
+`writeDirectory` is equivalent to [fs.promises.mkdir](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_mkdir_path_options) but accepts url strings as directory path.
 
-— source code at [src/createDirectory.js](./src/createDirectory.js).
+— source code at [src/writeDirectory.js](./src/writeDirectory.js).
 
-### directoryExists
+### ensureParentDirectories
 
-> `directoryExists` is an async function returning a boolean indicating a directory presence on the filesystem.
-
-```js
-import { directoryExists } from "@jsenv/util"
-
-const exists = await directoryExists(`/directory`)
-```
-
-This function was designed to warn in case an important directory is missing.
-
-— source code at [src/directoryExists.js](./src/directoryExists.js).
-
-### createFileDirectories
-
-> `createFileDirectories` is an async function creating every directory leading to a file.
+> `ensureParentDirectories` is an async function creating every directory leading to a file.
 
 ```js
-import { createFileDirectories } from "@jsenv/util"
+import { ensureParentDirectories } from "@jsenv/util"
 
-await createFileDirectories(`/directory/subdirectory/file.js`)
+await ensureParentDirectories(`file:///directory/subdirectory/file.js`)
 ```
 
 This function is useful to ensure a given file directories exists before doing any operation on that file. Jsenv uses it to write file in directories that does not exists yet.

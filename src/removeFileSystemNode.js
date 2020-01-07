@@ -1,7 +1,7 @@
 import { unlink, rmdir } from "fs"
+import { ensureUrlTrailingSlash } from "./internal/ensureUrlTrailingSlash.js"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
-import { ensureUrlTrailingSlash } from "./ensureUrlTrailingSlash.js"
 import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
 import { readDirectory } from "./readDirectory.js"
 import { resolveUrl } from "./resolveUrl.js"

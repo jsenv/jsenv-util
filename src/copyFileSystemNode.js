@@ -1,13 +1,14 @@
 /* eslint-disable import/max-dependencies */
 import { copyFile as copyFileNode } from "fs"
 import { statsToType } from "./internal/statsToType.js"
+import { ensureUrlTrailingSlash } from "./internal/ensureUrlTrailingSlash.js"
 import { resolveUrl } from "./resolveUrl.js"
 import { binaryFlagsToPermissions } from "./internal/permissions.js"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { writeDirectory } from "./writeDirectory.js"
 import { urlToRelativeUrl } from "./urlToRelativeUrl.js"
 import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
-import { writeParentDirectories } from "./writeParentDirectories.js"
+import { ensureParentDirectories } from "./ensureParentDirectories.js"
 import { writeFileSystemNodePermissions } from "./writeFileSystemNodePermissions.js"
 import { writeFileSystemNodeModificationTime } from "./writeFileSystemNodeModificationTime.js"
 import { readDirectory } from "./readDirectory.js"
@@ -16,7 +17,6 @@ import { writeSymbolicLink } from "./writeSymbolicLink.js"
 import { urlIsInsideOf } from "./urlIsInsideOf.js"
 import { removeFileSystemNode } from "./removeFileSystemNode.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
-import { ensureUrlTrailingSlash } from "./ensureUrlTrailingSlash.js"
 
 export const copyFileSystemNode = async (
   source,
@@ -75,7 +75,7 @@ export const copyFileSystemNode = async (
     // remove file, link, directory...
     await removeFileSystemNode(destinationUrl, { recursive: true, allowUseless: true })
   } else {
-    await writeParentDirectories(destinationUrl)
+    await ensureParentDirectories(destinationUrl)
   }
 
   const visit = async (url, stats) => {

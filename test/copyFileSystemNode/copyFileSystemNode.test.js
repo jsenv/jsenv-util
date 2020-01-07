@@ -2,7 +2,7 @@ import { assert } from "@jsenv/assert"
 import {
   writeDirectory,
   resolveUrl,
-  cleanDirectory,
+  ensureEmptyDirectory,
   writeFile,
   copyFileSystemNode,
   readFile,
@@ -17,7 +17,7 @@ import {
 } from "../../index.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
-await cleanDirectory(tempDirectoryUrl)
+await ensureEmptyDirectory(tempDirectoryUrl)
 
 // copy nothing into nothing
 {
@@ -86,7 +86,7 @@ await cleanDirectory(tempDirectoryUrl)
     destinationMtime: sourceMtime,
   }
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // copy file into file and overwrite disabled
@@ -105,7 +105,7 @@ await cleanDirectory(tempDirectoryUrl)
       )} because destination exists and overwrite option is disabled`,
     )
     assert({ actual, expected })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -120,7 +120,7 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = await readFile(destinationUrl)
   const expected = "foo"
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // copy file into directory
@@ -140,7 +140,7 @@ await cleanDirectory(tempDirectoryUrl)
       )} because destination exists and is not a file (it's a directory)`,
     )
     assert({ actual, expected })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -161,7 +161,7 @@ await cleanDirectory(tempDirectoryUrl)
       )} because destination exists and is not a directory (it's a file)`,
     )
     assert({ actual, expected })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -182,7 +182,7 @@ await cleanDirectory(tempDirectoryUrl)
       )} because destination exists and overwrite option is disabled`,
     )
     assert({ actual, expected })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -203,7 +203,7 @@ await cleanDirectory(tempDirectoryUrl)
     destinationPresence: true,
   }
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // copy directory with content into nothing
@@ -225,7 +225,7 @@ await cleanDirectory(tempDirectoryUrl)
     destinationContent: "foo",
   }
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // copy director with content into directory with content and overwrite enabled
@@ -253,7 +253,7 @@ await cleanDirectory(tempDirectoryUrl)
     fileBDestinationPresent: false,
   }
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // copy link into nothing
@@ -272,7 +272,7 @@ await cleanDirectory(tempDirectoryUrl)
     destinationTarget: "./whatever",
   }
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // copy directory with relative link targeting node inside into nothing
@@ -288,7 +288,7 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = await readSymbolicLink(linkDestinationUrl)
   const expected = "./whatever"
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // copy directory with relative link targeting node outside into nothing
@@ -304,7 +304,7 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = await readSymbolicLink(linkDestinationUrl)
   const expected = "../whatever"
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // copy directory with absolute link inside into nothing
@@ -322,7 +322,7 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = await readSymbolicLink(linkDestinationUrl)
   const expected = insideDestinationUrl
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // copy directory with absolute link absolute link outside into nothing
@@ -338,5 +338,5 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = await readSymbolicLink(linkDestinationUrl)
   const expected = tempDirectoryUrl
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }

@@ -2,7 +2,7 @@ import { promises } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { isFileSystemPath } from "./isFileSystemPath.js"
-import { writeParentDirectories } from "./writeParentDirectories.js"
+import { ensureParentDirectories } from "./ensureParentDirectories.js"
 
 // https://nodejs.org/dist/latest-v13.x/docs/api/fs.html#fs_fspromises_symlink_target_path_type
 const { symlink } = promises
@@ -36,7 +36,7 @@ export const writeSymbolicLink = async (destination, target, { type } = {}) => {
     await symlink(targetValue, symbolicLinkPath, type)
   } catch (error) {
     if (error.code === "ENOENT") {
-      await writeParentDirectories(destinationUrl)
+      await ensureParentDirectories(destinationUrl)
       await symlink(targetValue, symbolicLinkPath, type)
       return
     }

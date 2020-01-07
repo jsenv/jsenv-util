@@ -1,8 +1,8 @@
 import { assert } from "@jsenv/assert"
-import { cleanDirectory, writeFile, resolveUrl, readFile } from "../../index.js"
+import { ensureEmptyDirectory, writeFile, resolveUrl, readFile } from "../../index.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
-await cleanDirectory(tempDirectoryUrl)
+await ensureEmptyDirectory(tempDirectoryUrl)
 
 {
   const directoryUrl = resolveUrl("dir/", tempDirectoryUrl)
@@ -11,5 +11,5 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = await readFile(fileUrl)
   const expected = "hello world"
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }

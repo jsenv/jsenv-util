@@ -1,6 +1,6 @@
 import { assert } from "@jsenv/assert"
 import {
-  cleanDirectory,
+  ensureEmptyDirectory,
   writeFileSystemNodeModificationTime,
   readFileSystemNodeModificationTime,
   resolveUrl,
@@ -8,7 +8,7 @@ import {
 } from "../../index.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
-await cleanDirectory(tempDirectoryUrl)
+await ensureEmptyDirectory(tempDirectoryUrl)
 
 {
   const sourceUrl = resolveUrl("file.txt", tempDirectoryUrl)

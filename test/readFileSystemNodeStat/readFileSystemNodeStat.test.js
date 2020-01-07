@@ -1,6 +1,6 @@
 import { assert } from "@jsenv/assert"
 import {
-  cleanDirectory,
+  ensureEmptyDirectory,
   writeDirectory,
   writeFile,
   resolveUrl,
@@ -12,7 +12,7 @@ import {
 import { makeBusyFile } from "../testHelpers.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
-await cleanDirectory(tempDirectoryUrl)
+await ensureEmptyDirectory(tempDirectoryUrl)
 
 // nothing
 {
@@ -40,7 +40,7 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = await readFileSystemNodeStat(sourceUrl, { nullIfNotFound: true })
   const expected = null
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // directory without permission
@@ -55,7 +55,7 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = typeof sourceStats
   const expected = "object"
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // file without permission
@@ -70,7 +70,7 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = typeof sourceStats
   const expected = "object"
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // busy file
@@ -110,7 +110,7 @@ await cleanDirectory(tempDirectoryUrl)
     await writeFileSystemNodePermissions(directoryUrl, {
       owner: { read: true, execute: true },
     })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -123,7 +123,7 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = typeof sourceStats
   const expected = "object"
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // normal file
@@ -135,7 +135,7 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = typeof sourceStats
   const expected = "object"
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // link to nothing
@@ -155,7 +155,7 @@ await cleanDirectory(tempDirectoryUrl)
     expected.syscall = "stat"
     expected.path = urlToFileSystemPath(sourceUrl)
     assert({ actual, expected })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -170,7 +170,7 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = sourceStats.isDirectory()
   const expected = true
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // link to file
@@ -184,7 +184,7 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = sourceStats.isFile()
   const expected = true
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // link to nothing with followSymlink disabled
@@ -196,7 +196,7 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = sourceStats.isSymbolicLink()
   const expected = true
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // link to directory with followSymlink disabled
@@ -210,7 +210,7 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = sourceStats.isSymbolicLink()
   const expected = true
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // link to file with followSymlink disabled
@@ -224,5 +224,5 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = sourceStats.isSymbolicLink()
   const expected = true
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }

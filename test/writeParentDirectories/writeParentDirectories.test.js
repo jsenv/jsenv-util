@@ -2,24 +2,24 @@ import { assert } from "@jsenv/assert"
 import {
   resolveUrl,
   writeDirectory,
-  cleanDirectory,
-  writeParentDirectories,
+  ensureEmptyDirectory,
+  ensureParentDirectories,
   testFileSystemNodePresence,
 } from "../../index.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
-await cleanDirectory(tempDirectoryUrl)
+await ensureEmptyDirectory(tempDirectoryUrl)
 
 // destination parent does not exists
 {
   const parentDirectoryUrl = resolveUrl("dir/", tempDirectoryUrl)
   const destinationUrl = resolveUrl("dir/file.js", tempDirectoryUrl)
 
-  await writeParentDirectories(destinationUrl)
+  await ensureParentDirectories(destinationUrl)
   const actual = await testFileSystemNodePresence(parentDirectoryUrl)
   const expected = true
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // destination parent is a directory
@@ -28,9 +28,9 @@ await cleanDirectory(tempDirectoryUrl)
   const destinationUrl = resolveUrl("dir/file.js", tempDirectoryUrl)
   await writeDirectory(parentDirectoryUrl)
 
-  await writeParentDirectories(destinationUrl)
+  await ensureParentDirectories(destinationUrl)
   const actual = await testFileSystemNodePresence(parentDirectoryUrl)
   const expected = true
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }

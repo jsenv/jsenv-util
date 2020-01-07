@@ -1,8 +1,7 @@
 import { assert } from "@jsenv/assert"
 import {
   removeFileSystemNode,
-  cleanDirectory,
-  fileExists,
+  ensureEmptyDirectory,
   writeFile,
   resolveUrl,
   writeDirectory,
@@ -14,7 +13,7 @@ import {
 import { makeBusyFile } from "../testHelpers.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
-await cleanDirectory(tempDirectoryUrl)
+await ensureEmptyDirectory(tempDirectoryUrl)
 
 // remove nothing
 {
@@ -42,7 +41,7 @@ await cleanDirectory(tempDirectoryUrl)
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   await makeBusyFile(sourceUrl, async () => {
     await removeFileSystemNode(sourceUrl)
-    const actual = await fileExists(sourceUrl)
+    const actual = await testFileSystemNodePresence(sourceUrl)
     const expected = false
     assert({ actual, expected })
   })
@@ -74,7 +73,7 @@ await cleanDirectory(tempDirectoryUrl)
     await writeFileSystemNodePermissions(directoryUrl, {
       owner: { read: true, write: true, execute: true },
     })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -160,7 +159,7 @@ await cleanDirectory(tempDirectoryUrl)
     expected.path = urlToFileSystemPath(`${sourceUrl}/`)
     assert({ actual, expected })
   } finally {
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -201,7 +200,7 @@ await cleanDirectory(tempDirectoryUrl)
     await writeFileSystemNodePermissions(sourceUrl, {
       owner: { read: true, write: true, execute: true },
     })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -293,7 +292,7 @@ await cleanDirectory(tempDirectoryUrl)
     linkPresent: false,
   }
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // remove link to a directory
@@ -314,7 +313,7 @@ await cleanDirectory(tempDirectoryUrl)
     linkPresent: false,
   }
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // remove directory without execute permission and link inside
@@ -341,6 +340,6 @@ await cleanDirectory(tempDirectoryUrl)
     await writeFileSystemNodePermissions(sourceUrl, {
       owner: { read: true, write: true, execute: true },
     })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }

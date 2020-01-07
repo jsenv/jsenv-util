@@ -1,6 +1,6 @@
 import { assert } from "@jsenv/assert"
 import {
-  cleanDirectory,
+  ensureEmptyDirectory,
   resolveUrl,
   writeSymbolicLink,
   testFileSystemNodePresence,
@@ -8,7 +8,7 @@ import {
 } from "../../index.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
-await cleanDirectory(tempDirectoryUrl)
+await ensureEmptyDirectory(tempDirectoryUrl)
 
 // link to nothing
 {
@@ -18,7 +18,7 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = await testFileSystemNodePresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // link to file
@@ -31,7 +31,7 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = await testFileSystemNodePresence(sourceUrl)
   const expected = true
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // link to nothing and followSymlink disabled
@@ -42,5 +42,5 @@ await cleanDirectory(tempDirectoryUrl)
   const actual = await testFileSystemNodePresence(sourceUrl, { followSymbolicLink: false })
   const expected = true
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }

@@ -1,9 +1,9 @@
 import { rename } from "fs"
+import { ensureUrlTrailingSlash } from "./internal/ensureUrlTrailingSlash.js"
 import { statsToType } from "./internal/statsToType.js"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
-import { ensureUrlTrailingSlash } from "./ensureUrlTrailingSlash.js"
-import { writeParentDirectories } from "./writeParentDirectories.js"
+import { ensureParentDirectories } from "./ensureParentDirectories.js"
 import { removeFileSystemNode } from "./removeFileSystemNode.js"
 import { copyFileSystemNode } from "./copyFileSystemNode.js"
 import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
@@ -58,7 +58,7 @@ export const moveFileSystemNode = async (
     // remove file, link, directory...
     await removeFileSystemNode(destinationUrl, { recursive: true })
   } else {
-    await writeParentDirectories(destinationUrl)
+    await ensureParentDirectories(destinationUrl)
   }
 
   await moveNaive(sourcePath, destinationPath, {

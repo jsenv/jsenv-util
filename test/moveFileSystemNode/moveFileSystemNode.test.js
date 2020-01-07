@@ -1,6 +1,6 @@
 import { assert } from "@jsenv/assert"
 import {
-  cleanDirectory,
+  ensureEmptyDirectory,
   resolveUrl,
   writeDirectory,
   writeFile,
@@ -13,7 +13,7 @@ import {
 } from "../../index.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
-await cleanDirectory(tempDirectoryUrl)
+await ensureEmptyDirectory(tempDirectoryUrl)
 
 // move nothing into nothing
 {
@@ -61,7 +61,7 @@ await cleanDirectory(tempDirectoryUrl)
     destinationContent: "foo",
   }
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // move file into file and overwrite disabled
@@ -80,7 +80,7 @@ await cleanDirectory(tempDirectoryUrl)
       )} because destination exists and overwrite option is disabled`,
     )
     assert({ actual, expected })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -102,7 +102,7 @@ await cleanDirectory(tempDirectoryUrl)
       )} because destination exists and is not a file (it's a symbolic-link)`,
     )
     assert({ actual, expected })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -122,7 +122,7 @@ await cleanDirectory(tempDirectoryUrl)
       )} because destination exists and is not a file (it's a directory)`,
     )
     assert({ actual, expected })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -144,7 +144,7 @@ await cleanDirectory(tempDirectoryUrl)
     destinationContent: sourceContent,
   }
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // move directory into nothing
@@ -162,7 +162,7 @@ await cleanDirectory(tempDirectoryUrl)
     destinationPresence: true,
   }
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // move directory into directory and overwrite disabled
@@ -181,7 +181,7 @@ await cleanDirectory(tempDirectoryUrl)
       )} because destination exists and overwrite option is disabled`,
     )
     assert({ actual, expected })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -201,7 +201,7 @@ await cleanDirectory(tempDirectoryUrl)
       )} because destination exists and is not a directory (it's a file)`,
     )
     assert({ actual, expected })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -248,7 +248,7 @@ await cleanDirectory(tempDirectoryUrl)
     destinationTarget: "./whatever",
   }
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // move link into link and overwrite disabled
@@ -267,7 +267,7 @@ await cleanDirectory(tempDirectoryUrl)
       )} because destination exists and overwrite option is disabled`,
     )
     assert({ actual, expected })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
@@ -290,7 +290,7 @@ await cleanDirectory(tempDirectoryUrl)
     destinationTarget: sourceTarget,
   }
   assert({ actual, expected })
-  await cleanDirectory(tempDirectoryUrl)
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // move link into file and overwrite enabled
@@ -309,6 +309,6 @@ await cleanDirectory(tempDirectoryUrl)
       )} because destination exists and is not a symbolic-link (it's a file)`,
     )
     assert({ actual, expected })
-    await cleanDirectory(tempDirectoryUrl)
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
