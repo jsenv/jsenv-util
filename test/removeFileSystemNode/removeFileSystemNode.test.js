@@ -16,245 +16,257 @@ import { makeBusyFile } from "../testHelpers.js"
 const tempDirectoryUrl = import.meta.resolve("./temp/")
 await cleanDirectory(tempDirectoryUrl)
 
-// file does not exists
+// remove nothing
 {
-  const fileUrl = resolveUrl("file.txt", tempDirectoryUrl)
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
 
-  const actual = await removeFileSystemNode(fileUrl)
+  try {
+    await removeFileSystemNode(sourceUrl)
+  } catch (actual) {
+    const expected = new Error(`nothing to remove at ${urlToFileSystemPath(sourceUrl)}`)
+    assert({ actual, expected })
+  }
+}
+
+// remove nothing and allowUseless enabled
+{
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+
+  const actual = await removeFileSystemNode(sourceUrl, { allowUseless: true })
   const expected = undefined
   assert({ actual, expected })
 }
 
-// file is opened
+// remove opened filed
 {
-  const fileUrl = resolveUrl("file.txt", tempDirectoryUrl)
-  await makeBusyFile(fileUrl, async () => {
-    await removeFileSystemNode(fileUrl)
-    const actual = await fileExists(fileUrl)
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  await makeBusyFile(sourceUrl, async () => {
+    await removeFileSystemNode(sourceUrl)
+    const actual = await fileExists(sourceUrl)
     const expected = false
     assert({ actual, expected })
   })
 }
 
-// file inside a directory without execute permission
+// remove file inside a directory without execute permission
 {
   const directoryUrl = resolveUrl("dir/", tempDirectoryUrl)
-  const fileUrl = resolveUrl("link", directoryUrl)
+  const sourceUrl = resolveUrl("dir/link", tempDirectoryUrl)
   await writeDirectory(directoryUrl)
-  await writeFile(fileUrl, "whatever")
+  await writeFile(sourceUrl, "whatever")
   await writeFileSystemNodePermissions(directoryUrl, {
     owner: { read: true, write: true, execute: false },
   })
 
   try {
-    await removeFileSystemNode(fileUrl)
+    await removeFileSystemNode(sourceUrl)
     throw new Error("should throw")
   } catch (actual) {
-    const expected = new Error(`EACCES: permission denied, stat '${urlToFileSystemPath(fileUrl)}'`)
+    const expected = new Error(
+      `EACCES: permission denied, lstat '${urlToFileSystemPath(sourceUrl)}'`,
+    )
     expected.errno = -13
     expected.code = "EACCES"
-    expected.syscall = "stat"
-    expected.path = urlToFileSystemPath(fileUrl)
+    expected.syscall = "lstat"
+    expected.path = urlToFileSystemPath(sourceUrl)
     assert({ actual, expected })
   } finally {
     await writeFileSystemNodePermissions(directoryUrl, {
       owner: { read: true, write: true, execute: true },
     })
-    await removeFileSystemNode(directoryUrl, { recursive: true })
+    await cleanDirectory(tempDirectoryUrl)
   }
 }
 
-// file without permission
+// remove file without permission
 {
-  const fileUrl = resolveUrl("file.txt", tempDirectoryUrl)
-  await writeFile(fileUrl, "noperm")
-  await writeFileSystemNodePermissions(fileUrl, {
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  await writeFile(sourceUrl, "noperm")
+  await writeFileSystemNodePermissions(sourceUrl, {
     owner: { read: false, write: false, execute: false },
   })
 
-  await removeFileSystemNode(fileUrl)
-  const actual = await fileExists(fileUrl)
+  await removeFileSystemNode(sourceUrl)
+  const actual = await testFileSystemNodePresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
 
-// file
+// remove file
 {
-  const fileUrl = resolveUrl("file.txt", tempDirectoryUrl)
-  await writeFile(fileUrl, "normal")
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  await writeFile(sourceUrl, "normal")
 
-  await removeFileSystemNode(fileUrl)
-  const actual = await fileExists(fileUrl)
+  await removeFileSystemNode(sourceUrl)
+  const actual = await testFileSystemNodePresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
 
-// file provided with a trailing slash
+// remove destination with trailing slash being a file
 {
-  const fileUrl = resolveUrl("file.txt", tempDirectoryUrl)
-  const fileUrlWithTrailingSlash = `${fileUrl}/`
-  await writeFile(fileUrl, "trailing")
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const sourceUrlWithTrailingSlash = `${sourceUrl}/`
+  await writeFile(sourceUrl, "trailing")
 
-  await removeFileSystemNode(fileUrlWithTrailingSlash)
-  const actual = await fileExists(fileUrl)
+  await removeFileSystemNode(sourceUrlWithTrailingSlash)
+  const actual = await testFileSystemNodePresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
 
-// empty directory
+// remove directory
 {
-  const directoryUrl = resolveUrl("directory/", tempDirectoryUrl)
-  await writeDirectory(directoryUrl)
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  await writeDirectory(sourceUrl)
 
-  await removeFileSystemNode(directoryUrl)
-  const actual = await testFileSystemNodePresence(directoryUrl)
+  await removeFileSystemNode(sourceUrl)
+  const actual = await testFileSystemNodePresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
 
-// empty directory without permission
+// remove directory without permission
 {
-  const directoryUrl = resolveUrl("directory/", tempDirectoryUrl)
-  await writeDirectory(directoryUrl)
-  await writeFileSystemNodePermissions(directoryUrl, {
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  await writeDirectory(sourceUrl)
+  await writeFileSystemNodePermissions(sourceUrl, {
     other: { read: false, write: false, execute: false },
   })
 
-  await removeFileSystemNode(directoryUrl)
-  const actual = await testFileSystemNodePresence(directoryUrl)
+  await removeFileSystemNode(sourceUrl)
+  const actual = await testFileSystemNodePresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
 
-// directory with content
+// remove directory with a file
 {
-  const directoryUrl = resolveUrl("directory/", tempDirectoryUrl)
-  const fileInsideDirectoryUrl = resolveUrl("file.txt", directoryUrl)
-  await writeDirectory(directoryUrl)
-  await writeFile(fileInsideDirectoryUrl)
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const fileUrl = resolveUrl("source/file", tempDirectoryUrl)
+  await writeDirectory(sourceUrl)
+  await writeFile(fileUrl)
 
   try {
-    await removeFileSystemNode(directoryUrl)
+    await removeFileSystemNode(sourceUrl)
     throw new Error("should throw")
   } catch (actual) {
     const expected = new Error(
-      `ENOTEMPTY: directory not empty, rmdir '${urlToFileSystemPath(directoryUrl)}'`,
+      `ENOTEMPTY: directory not empty, rmdir '${urlToFileSystemPath(`${sourceUrl}/`)}'`,
     )
     expected.errno = -66
     expected.code = "ENOTEMPTY"
     expected.syscall = "rmdir"
-    expected.path = urlToFileSystemPath(directoryUrl)
+    expected.path = urlToFileSystemPath(`${sourceUrl}/`)
     assert({ actual, expected })
   } finally {
     await cleanDirectory(tempDirectoryUrl)
   }
 }
 
-// directory with content and recursive enabled
+// remove directory with a file and recursive enabled
 {
-  const directoryUrl = resolveUrl("directory/", tempDirectoryUrl)
-  const fileInsideDirectoryUrl = resolveUrl("file.txt", directoryUrl)
-  await writeDirectory(directoryUrl)
-  await writeFile(fileInsideDirectoryUrl)
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const fileUrl = resolveUrl("source/file", tempDirectoryUrl)
+  await writeDirectory(sourceUrl)
+  await writeFile(fileUrl)
 
-  await removeFileSystemNode(directoryUrl, { recursive: true })
-  const actual = await testFileSystemNodePresence(directoryUrl)
+  await removeFileSystemNode(sourceUrl, { recursive: true })
+  const actual = await testFileSystemNodePresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
 
-// directory without permission and content and recursive enabled
+// remove directory with content without permission and recursive enabled
 {
-  const directoryUrl = resolveUrl("directory/", tempDirectoryUrl)
-  const fileInsideDirectoryUrl = resolveUrl("file.txt", directoryUrl)
-  await writeDirectory(directoryUrl)
-  await writeFile(fileInsideDirectoryUrl)
-  await writeFileSystemNodePermissions(directoryUrl, {
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const fileUrl = resolveUrl("source/file", tempDirectoryUrl)
+  await writeDirectory(sourceUrl)
+  await writeFile(fileUrl)
+  await writeFileSystemNodePermissions(sourceUrl, {
     owner: { read: true, write: true, execute: false },
   })
 
   try {
-    await removeFileSystemNode(directoryUrl, { recursive: true })
+    await removeFileSystemNode(sourceUrl, { recursive: true })
     throw new Error("should throw")
   } catch (actual) {
-    const expected = new Error(
-      `EACCES: permission denied, stat '${urlToFileSystemPath(fileInsideDirectoryUrl)}'`,
-    )
+    const expected = new Error(`EACCES: permission denied, lstat '${urlToFileSystemPath(fileUrl)}'`)
     expected.errno = -13
     expected.code = "EACCES"
-    expected.syscall = "stat"
-    expected.path = urlToFileSystemPath(fileInsideDirectoryUrl)
+    expected.syscall = "lstat"
+    expected.path = urlToFileSystemPath(fileUrl)
     assert({ actual, expected })
   } finally {
-    await writeFileSystemNodePermissions(directoryUrl, {
+    await writeFileSystemNodePermissions(sourceUrl, {
       owner: { read: true, write: true, execute: true },
     })
-    await cleanDirectory(tempDirectoryUrl, { recursive: true })
+    await cleanDirectory(tempDirectoryUrl)
   }
 }
 
-// directory with a busy file
+// remove directory with a busy file
 {
-  const directoryUrl = resolveUrl("directory/", tempDirectoryUrl)
-  const fileInsideDirectoryUrl = resolveUrl("file.txt", directoryUrl)
-  await writeDirectory(directoryUrl)
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const fileUrl = resolveUrl("source/file", tempDirectoryUrl)
+  await writeDirectory(sourceUrl)
 
-  await makeBusyFile(fileInsideDirectoryUrl, async () => {
-    await removeFileSystemNode(directoryUrl, { recursive: true })
-    const actual = await testFileSystemNodePresence(directoryUrl)
+  await makeBusyFile(fileUrl, async () => {
+    await removeFileSystemNode(sourceUrl, { recursive: true })
+    const actual = await testFileSystemNodePresence(sourceUrl)
     const expected = false
     assert({ actual, expected })
   })
 }
 
-// directory with a file without write permission
+// remove directory with a file without write permission
 {
-  const directoryUrl = resolveUrl("directory/", tempDirectoryUrl)
-  const fileInsideDirectoryUrl = resolveUrl("file.txt", directoryUrl)
-  await writeFile(fileInsideDirectoryUrl)
-  await writeFileSystemNodePermissions(fileInsideDirectoryUrl, {
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const fileUrl = resolveUrl("source/file", tempDirectoryUrl)
+  await writeFile(fileUrl)
+  await writeFileSystemNodePermissions(fileUrl, {
     owner: { read: false, write: false, execute: false },
   })
 
-  await removeFileSystemNode(directoryUrl, { recursive: true })
-  const actual = await testFileSystemNodePresence(directoryUrl)
+  await removeFileSystemNode(sourceUrl, { recursive: true })
+  const actual = await testFileSystemNodePresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
 
-// directory with subdir and having content
+// remove directory with file nested and recursive enabled
 {
-  const rootDir = resolveUrl("root/", tempDirectoryUrl)
-  const dirA = resolveUrl("dirA/", rootDir)
-  const dirB = resolveUrl("dirA/", rootDir)
-  const fileA = resolveUrl("fileA.js", dirA)
-  const fileB = resolveUrl("fileB.js", dirB)
-  await writeFile(fileA, "contentA")
-  await writeFile(fileB, "contentB")
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const fileAUrl = resolveUrl("source/dir/file", tempDirectoryUrl)
+  const fileBUrl = resolveUrl("source/dir2/file", tempDirectoryUrl)
+  await writeFile(fileAUrl, "contentA")
+  await writeFile(fileBUrl, "contentB")
 
-  await removeFileSystemNode(rootDir, { recursive: true })
-  const actual = await testFileSystemNodePresence(rootDir)
+  await removeFileSystemNode(sourceUrl, { recursive: true })
+  const actual = await testFileSystemNodePresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
 
-// link to nothing
+// remove link to nothing
 {
-  const symbolicLinkUrl = resolveUrl("link", tempDirectoryUrl)
-  await writeSymbolicLink(symbolicLinkUrl, "./whatever")
-  await removeFileSystemNode(symbolicLinkUrl)
-  const actual = await testFileSystemNodePresence(symbolicLinkUrl, {
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  await writeSymbolicLink(sourceUrl, "./whatever")
+
+  await removeFileSystemNode(sourceUrl)
+  const actual = await testFileSystemNodePresence(sourceUrl, {
     followSymbolicLink: false,
   })
   const expected = false
   assert({ actual, expected })
 }
 
-// link to nothing inside a dir
+// remove directory with a link to nothing
 {
-  const sourceUrl = resolveUrl("dir/", tempDirectoryUrl)
-  const linkUrl = resolveUrl("link", sourceUrl)
+  const sourceUrl = resolveUrl("source/", tempDirectoryUrl)
+  const linkUrl = resolveUrl("source/link", tempDirectoryUrl)
   await writeSymbolicLink(linkUrl, "./whatever")
+
   await removeFileSystemNode(sourceUrl, { recursive: true })
   const actual = await testFileSystemNodePresence(sourceUrl, {
     followSymbolicLink: false,
@@ -263,16 +275,17 @@ await cleanDirectory(tempDirectoryUrl)
   assert({ actual, expected })
 }
 
-// link to an existing file
+// remove link to a file
 {
-  const fileUrl = resolveUrl("file.txt", tempDirectoryUrl)
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   const linkUrl = resolveUrl("link", tempDirectoryUrl)
   const linkTarget = "./file.txt"
   await writeSymbolicLink(linkUrl, linkTarget)
-  await writeFile(fileUrl)
+  await writeFile(sourceUrl)
+
   await removeFileSystemNode(linkUrl)
   const actual = {
-    filePresent: await testFileSystemNodePresence(fileUrl),
+    filePresent: await testFileSystemNodePresence(sourceUrl),
     linkPresent: await testFileSystemNodePresence(linkUrl, { followSymbolicLink: false }),
   }
   const expected = {
@@ -280,19 +293,20 @@ await cleanDirectory(tempDirectoryUrl)
     linkPresent: false,
   }
   assert({ actual, expected })
-  await removeFileSystemNode(fileUrl)
+  await cleanDirectory(tempDirectoryUrl)
 }
 
-// link to an existing directory
+// remove link to a directory
 {
-  const directoryUrl = resolveUrl("dir/", tempDirectoryUrl)
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   const linkUrl = resolveUrl("link", tempDirectoryUrl)
   const linkTarget = "./dir"
   await writeSymbolicLink(linkUrl, linkTarget)
-  await writeDirectory(directoryUrl)
+  await writeDirectory(sourceUrl)
+
   await removeFileSystemNode(linkUrl)
   const actual = {
-    filePresent: await testFileSystemNodePresence(directoryUrl),
+    filePresent: await testFileSystemNodePresence(sourceUrl),
     linkPresent: await testFileSystemNodePresence(linkUrl, { followSymbolicLink: false }),
   }
   const expected = {
@@ -300,33 +314,33 @@ await cleanDirectory(tempDirectoryUrl)
     linkPresent: false,
   }
   assert({ actual, expected })
-  await removeFileSystemNode(directoryUrl)
+  await cleanDirectory(tempDirectoryUrl)
 }
 
-// link inside a directory without execute permission
+// remove directory without execute permission and link inside
 {
-  const directoryUrl = resolveUrl("dir/", tempDirectoryUrl)
-  const linkUrl = resolveUrl("link", directoryUrl)
-  await writeDirectory(directoryUrl)
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const linkUrl = resolveUrl("source/link", tempDirectoryUrl)
+  await writeDirectory(sourceUrl)
   await writeSymbolicLink(linkUrl, "whatever")
-  await writeFileSystemNodePermissions(directoryUrl, {
+  await writeFileSystemNodePermissions(sourceUrl, {
     owner: { read: true, write: true, execute: false },
   })
 
   try {
-    await removeFileSystemNode(linkUrl)
+    await removeFileSystemNode(sourceUrl, { recursive: true })
     throw new Error("should throw")
   } catch (actual) {
-    const expected = new Error(`EACCES: permission denied, stat '${urlToFileSystemPath(linkUrl)}'`)
+    const expected = new Error(`EACCES: permission denied, lstat '${urlToFileSystemPath(linkUrl)}'`)
     expected.errno = -13
     expected.code = "EACCES"
-    expected.syscall = "stat"
+    expected.syscall = "lstat"
     expected.path = urlToFileSystemPath(linkUrl)
     assert({ actual, expected })
   } finally {
-    await writeFileSystemNodePermissions(directoryUrl, {
+    await writeFileSystemNodePermissions(sourceUrl, {
       owner: { read: true, write: true, execute: true },
     })
-    await removeFileSystemNode(directoryUrl, { recursive: true })
+    await cleanDirectory(tempDirectoryUrl)
   }
 }
