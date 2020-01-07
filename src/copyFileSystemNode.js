@@ -26,24 +26,30 @@ export const copyFileSystemNode = async (
     preserveStat = true,
     preserveMtime = preserveStat,
     preservePermissions = preserveStat,
+    allowUseless = false,
   } = {},
 ) => {
   let sourceUrl = assertAndNormalizeFileUrl(source)
   let destinationUrl = assertAndNormalizeFileUrl(destination)
+  const sourcePath = urlToFileSystemPath(sourceUrl)
+  const destinationPath = urlToFileSystemPath(destinationUrl)
 
   const sourceStats = await readFileSystemNodeStat(sourceUrl, {
     nullIfNotFound: true,
     followSymbolicLink: false,
   })
-  const sourcePath = urlToFileSystemPath(sourceUrl)
-  const destinationPath = urlToFileSystemPath(destinationUrl)
   if (!sourceStats) {
     throw new Error(`nothing to copy at ${sourcePath}`)
   }
-
   if (sourceStats.isDirectory()) {
     sourceUrl = ensureUrlTrailingSlash(sourceUrl)
     destinationUrl = ensureUrlTrailingSlash(destinationUrl)
+  }
+  if (sourceUrl === destinationUrl) {
+    if (allowUseless) {
+      return
+    }
+    throw new Error(`cannot copy ${sourcePath} because destination and source are the same`)
   }
 
   const destinationStats = await readFileSystemNodeStat(destinationUrl, {
@@ -67,7 +73,7 @@ export const copyFileSystemNode = async (
     }
 
     // remove file, link, directory...
-    await removeFileSystemNode(destinationUrl, { recursive: true })
+    await removeFileSystemNode(destinationUrl, { recursive: true, allowUseless: true })
   } else {
     await writeParentDirectories(destinationUrl)
   }

@@ -42,7 +42,6 @@ export const moveFileSystemNode = async (
   })
   if (destinationStats) {
     const sourceType = statsToType(sourceStats)
-
     const destinationType = statsToType(destinationStats)
 
     if (sourceType !== destinationType) {
