@@ -3,7 +3,7 @@ import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
 
-export const assertFile = async (source) => {
+export const assertFilePresence = async (source) => {
   const sourceUrl = assertAndNormalizeFileUrl(source)
   const sourcePath = urlToFileSystemPath(sourceUrl)
 
