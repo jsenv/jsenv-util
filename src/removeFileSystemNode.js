@@ -8,7 +8,7 @@ import { resolveUrl } from "./resolveUrl.js"
 
 export const removeFileSystemNode = async (
   source,
-  { uselessError = false, recursive = false, maxRetries = 3, retryDelay = 100 } = {},
+  { allowUseless = false, recursive = false, maxRetries = 3, retryDelay = 100 } = {},
 ) => {
   const sourceUrl = assertAndNormalizeFileUrl(source)
 
@@ -17,10 +17,10 @@ export const removeFileSystemNode = async (
     followSymbolicLink: false,
   })
   if (!sourceStats) {
-    if (uselessError) {
-      throw new Error(`nothing to remove at ${urlToFileSystemPath(sourceUrl)}`)
+    if (allowUseless) {
+      return
     }
-    return
+    throw new Error(`nothing to remove at ${urlToFileSystemPath(sourceUrl)}`)
   }
 
   // https://nodejs.org/dist/latest-v13.x/docs/api/fs.html#fs_class_fs_stats

@@ -8,7 +8,11 @@ import { removeFileSystemNode } from "./removeFileSystemNode.js"
 import { copyFileSystemNode } from "./copyFileSystemNode.js"
 import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
 
-export const moveFileSystemNode = async (source, destination, { overwrite = false } = {}) => {
+export const moveFileSystemNode = async (
+  source,
+  destination,
+  { overwrite = false, allowUseless = false } = {},
+) => {
   let sourceUrl = assertAndNormalizeFileUrl(source)
   let destinationUrl = assertAndNormalizeFileUrl(destination)
   const sourcePath = urlToFileSystemPath(sourceUrl)
@@ -26,6 +30,9 @@ export const moveFileSystemNode = async (source, destination, { overwrite = fals
     destinationUrl = ensureUrlTrailingSlash(destinationUrl)
   }
   if (sourceUrl === destinationUrl) {
+    if (allowUseless) {
+      return
+    }
     throw new Error(`no move needed for ${sourcePath} because destination and source are the same`)
   }
 
