@@ -15,16 +15,17 @@ Set of functions often needed when using Node.js.
 - [API](#API)
   - [assertAndNormalizeDirectoryUrl](#assertAndNormalizeDirectoryUrl)
   - [assertAndNormalizeFileUrl](#assertAndNormalizeFileUrl)
-  - [assertDirectoryExists](#assertDirectoryExists)
-  - [assertFileExists](#assertFileExists)
+  - [assertDirectoryPresence](#assertDirectoryPresence)
+  - [assertFilePresence](#assertFilePresence)
   - [bufferToEtag](#bufferToEtag)
+  - [copyFileSystemNode](#copyFileSystemNode)
   - [ensureEmptyDirectory](#ensureEmptyDirectory)
   - [ensureParentDirectories](#ensureParentDirectories)
-  - [copyFileSystemNode](#copyFileSystemNode)
   - [fileSystemPathToUrl](#fileSystemPathToUrl)
   - [grantPermissionsOnFileSystemNode](#grantPermissionsOnFileSystemNode)
   - [isFileSystemPath](#isFileSystemPath)
   - [moveFileSystemNode](#moveFileSystemNode)
+  - [readDirectory](#readDirectory)
   - [readFile](#readFile)
   - [readFileSystemNodeModificationTime](#readFileSystemNodeModificationTime)
   - [readFileSystemNodePermissions](#readFileSystemNodePermissions)
@@ -119,33 +120,33 @@ This function is great to make a function accept various values as file url and 
 
 — source code at [src/assertAndNormalizeFileUrl.js](./src/assertAndNormalizeFileUrl.js).
 
-### assertDirectoryExists
+### assertDirectoryPresence
 
-> `assertDirectoryExists` is an async function throwing if directory does not exists.
+> `assertDirectoryPresence` is an async function throwing if directory does not exists on the filesystem.
 
 ```js
-import { assertDirectoryExists } from "@jsenv/util"
+import { assertDirectoryPresence } from "@jsenv/util"
 
-await assertDirectoryExists("file:///Users/directory/")
+await assertDirectoryPresence("file:///Users/directory/")
 ```
 
 This function is great to assert a directory existence before going further. Jsenv uses it to throw early when a directory presence is mandatory for a given function to work properly.
 
-— source code at [src/assertDirectoryExists.js](./src/assertDirectoryExists.js).
+— source code at [src/assertDirectoryPresence.js](./src/assertDirectoryPresence.js).
 
-### assertFileExists
+### assertFilePresence
 
-> `assertFileExists` is an async function throwing if a file does not exists.
+> `assertFilePresence` is an async function throwing if a file does not exists on the filesystem.
 
 ```js
-import { assertFileExists } from "@jsenv/util"
+import { assertFilePresence } from "@jsenv/util"
 
-await assertFileExists("file:///Users/directory/file.js")
+await assertFilePresence("file:///Users/directory/file.js")
 ```
 
 This function is great to assert a file existence before going further. Jsenv uses it to throw early when a file presence is mandatory for a given function to work properly.
 
-— source code at [src/assertFileExists.js](./src/assertFileExists.js).
+— source code at [src/assertFilePresence.js](./src/assertFilePresence.js).
 
 ### bufferToEtag
 
@@ -165,6 +166,19 @@ This function returns a hash (a small string) representing a file content. You c
 — see [eTag documentation on MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag)<br />
 — source code at [src/bufferToEtag.js](./src/bufferToEtag.js).
 
+### copyFileSystemNode
+
+> `copyFileSystemNode` is an async function creating a copy of the filesystem node at a given destination
+
+```js
+import { copyFileSystemNode } from "@jsenv/util"
+
+await copyFileSystemNode(`file:///file.js`, "file:///destination/file.js")
+await copyFileSystemNode(`file:///directory`, "file:///destination/directory")
+```
+
+— source code at [src/copyFileSystemNode.js](./src/copyFileSystemNode.js).
+
 ### ensureEmptyDirectory
 
 > `ensureEmptyDirectory` is an async function ensuring a directory is empty. It removes a directory content when it exists or create an empty directory.
@@ -178,6 +192,20 @@ await ensureEmptyDirectory(`file:///directory`)
 This function was written for testing. It is meant to clean up a directory in case a previous test execution let some files and you want to clean them before running your test. Jsenv uses it in some tests involving the filesystem.
 
 — source code at [src/ensureEmptyDirectory.js](./src/ensureEmptyDirectory.js).
+
+### ensureParentDirectories
+
+> `ensureParentDirectories` is an async function creating every directory leading to a file.
+
+```js
+import { ensureParentDirectories } from "@jsenv/util"
+
+await ensureParentDirectories(`file:///directory/subdirectory/file.js`)
+```
+
+This function is useful to ensure a given file directories exists before doing any operation on that file. Jsenv uses it to write file in directories that does not exists yet.
+
+— source code at [src/ensureParentDirectories.js](./src/ensureParentDirectories.js).
 
 ### writeDirectory
 
@@ -193,33 +221,20 @@ await writeDirectory(`file:///directory`)
 
 — source code at [src/writeDirectory.js](./src/writeDirectory.js).
 
-### ensureParentDirectories
+### grantPermissionsOnFileSystemNode
 
-> `ensureParentDirectories` is an async function creating every directory leading to a file.
-
-```js
-import { ensureParentDirectories } from "@jsenv/util"
-
-await ensureParentDirectories(`file:///directory/subdirectory/file.js`)
-```
-
-This function is useful to ensure a given file directories exists before doing any operation on that file. Jsenv uses it to write file in directories that does not exists yet.
-
-— source code at [src/createFileDirectories.js](./src/createFileDirectories.js).
-
-### fileExists
-
-> `fileExists` is an async function returning a boolean indicating a file presence on the filesystem.
+> `grantPermissionsOnFileSystemNode` is an async function granting permission on a given file system node. It returns an async function restoring the previous permissions.
 
 ```js
-import { fileExists } from "@jsenv/util"
+import { grantPermissionsOnFileSystemNode } from "@jsenv/util"
 
-const exists = await fileExists(`/directory/file.js`)
+const restorePermissions = await grantPermissionsOnFileSystemNode("file:///file.js", {
+  execute: true,
+})
+await restorePermissions()
 ```
 
-This function was designed to warn in case an important file is missing.
-
-— source code at [src/fileExists.js](./src/fileExists.js).
+— source code at [src/grantPermissionsOnFileSystemNode.js](./src/grantPermissionsOnFileSystemNode.js).
 
 ### fileSystemPathToUrl
 
@@ -250,87 +265,108 @@ isFileSystemPath("file:///directory/file.js") // false
 
 — source code at [src/isFileSystemPath.js](./src/isFileSystemPath.js).
 
-### moveFile
+### moveFileSystemNode
 
-> `moveFile` is an async function moving a file from its current location to an other.
-
-```js
-import { moveFile } from "@jsenv/util"
-
-await moveFile("file:///directory/file.js", "file:///destination/file.js")
-```
-
-This function will auto create the destination directories if they do not exists.
-
-— source code at [src/moveFile.js](./src/moveFile.js).
-
-### readFileModificationTime
-
-> `readFileModificationTime` is an async function returning a number of milliseconds representing the date when the file was modified.
+> `moveFileSystemNode` is an async function moving a filesystem node to a destination.
 
 ```js
-import { readFileModificationTime } from "@jsenv/util"
+import { moveFileSystemNode } from "@jsenv/util"
 
-const mtimeMs = await readFileModificationTime("file:///directory/file.js")
+await moveFileSystemNode("file:///file.js", "file:///destination/file.js")
+await moveFileSystemNode("file:///directory", "file:///destination/directory")
 ```
 
-— source code at [src/readFileModificationTime.js](./src/readFileModificationTime.js).
+— source code at [src/moveFileSystemNode.js](./src/moveFileSystemNode.js).
 
-### readFileContent
+### readDirectory
 
-> `readFileContent` is an async function returning the content of a file as string.
+> `readDirectory` is an async function returning an array of string representing all filesystem nodes inside that directory.
 
 ```js
-import { readFileContent } from "@jsenv/util"
+import { readDirectory } from "@jsenv/util"
 
-const content = await readFileContent("file:///directory/file.js")
+const content = await readDirectory("file:///directory")
 ```
 
-— source code at [src/readFileContent.js](./src/readFileContent.js).
+— source code at [src/readDirectory.js](./src/readDirectory.js).
 
-### readFileStat
+### readFileSystemNodeModificationTime
 
-> `readFileStat` is an async function returning a file stats object.
+> `readFileSystemNodeModificationTime` is an async function returning a number of milliseconds representing the date when the file was modified.
 
 ```js
-import { readFileStat } from "@jsenv/util"
+import { readFileSystemNodeModificationTime } from "@jsenv/util"
 
-const stats = await readFileStat("file:///directory/file.js")
+const mtimeMs = await readFileSystemNodeModificationTime("file:///directory/file.js")
 ```
 
-`readFileStat` is equivalent to [fs.promises.stats from Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_stat_path_options) but accepts url strings as file path.
+— source code at [src/readFileSystemNodeModificationTime.js](./src/readFileSystemNodeModificationTime.js).
+
+### readFileSystemNodePermissions
+
+> `readFileSystemNodePermissions` is an async function returning an object representing the permissions of a given filesystem node.
+
+```js
+import { readFileSystemNodePermissions } from "@jsenv/util"
+
+const permissions = await readFileSystemNodePermissions("file:///directory/file.js")
+```
+
+— see also [file modes documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_file_modes)<br />
+— source code at [src/readFileSystemNodePermissions.js](./src/readFileSystemNodePermissions.js).
+
+### readFile
+
+> `readFile` is an async function returning the content of a file as string.
+
+```js
+import { readFile } from "@jsenv/util"
+
+const content = await readFile("file:///directory/file.js")
+```
+
+— source code at [src/readFile.js](./src/readFile.js).
+
+### readFileSystemNodeStat
+
+> `readFileSystemNodeStat` is an async function returning a filesystem node stats object.
+
+```js
+import { readFileSystemNodeStat } from "@jsenv/util"
+
+const stats = await readFileSystemNodeStat("file:///directory/file.js")
+```
+
+`readFileSystemNodeStat` is equivalent to [fs.promises.stats from Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_stat_path_options) but accepts url strings as file path.
 
 — see also [stats object documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_class_fs_stats)<br />
-— source code at [src/readFileStat.js](./src/readFileStat.js).
+— source code at [src/readFileSystemNodeStat.js](./src/readFileSystemNodeStat.js).
 
-### removeDirectory
+### readSymbolicLink
 
-> `removeDirectory` is an async function removing a directory and its content.
-
-```js
-import { removeDirectory } from "@jsenv/util"
-
-await removeDirectory("file:///directory/")
-```
-
-This function is a wrapper around rimraf.
-
-— see [rimraf on github](https://github.com/isaacs/rimraf/tree/312bf555559f2953606268ef72bf4463bd763efc#api)<br />
-— source code at [src/removeDirectory.js](./src/removeDirectory.js).
-
-### removeFile
-
-> `removeFile` is an async function removing a file from the filesystem.
+> `readSymbolicLink` is an async function returning a symbolic link target as url string.
 
 ```js
-import { removeFile } from "@jsenv/util"
+import { readSymbolicLink } from "@jsenv/util"
 
-await removeFile("file:///directory/file.js")
+const targetUrlOrRelativeUrl = await readSymbolicLink("file:///directory/link")
 ```
 
-`removeFile` is equivalent to [fs.promises.unlink from Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_unlink_path) but accepts url strings as file path.
+— see also [symlink documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fs_symlink_target_path_type_callback)<br />
+— source code at [src/readSymbolicLink.js](./src/readSymbolicLink.js).
 
-— source code at [src/removeFile.js](./src/removeFile.js).
+### removeFileSystemNode
+
+> `removeFileSystemNode` is an async function removing a node (directory, file, symbolic link) from the filesystem.
+
+```js
+import { removeFileSystemNode } from "@jsenv/util"
+
+await removeFileSystemNode("file:///file.js")
+await removeFileSystemNode("file:///directory")
+```
+
+— source code at [src/removeFileSystemNode.js](./src/removeFileSystemNode.js).
 
 ### resolveDirectoryUrl
 
@@ -367,6 +403,30 @@ resolveUrl("file.js", "file:///directory/")
 As explained before jsenv prefer to work with url string. When it comes to url resolution it implies to write code like `String(new URL(relativeUrl, url))`. But it makes `relativeUrl` and `url` values less readable in the middle of `String(new URL())`. `resolveUrl` exists just to increase code readability.
 
 — source code at [src/resolveUrl.js](./src/resolveUrl.js).
+
+### testFileSystemNodePermissions
+
+> `testFileSystemNodePermissions` is an async function returning a boolean indicating if current user has read/write/execute permission on the filesystem node.
+
+```js
+import { testFileSystemNodePermissions } from "@jsenv/util"
+
+const allowed = await testFileSystemNodePermissions("file:///file.js", { execute: true })
+```
+
+— source code at [src/testFileSystemNodePermissions.js](./src/testFileSystemNodePermissions.js).
+
+### testFileSystemNodePresence
+
+> `testFileSystemNodePresence` is an async function returning a boolean indicating if the filesystem node exists.
+
+```js
+import { testFileSystemNodePresence } from "@jsenv/util"
+
+const present = await testFileSystemNodePresence("file:///file.js")
+```
+
+— source code at [src/testFileSystemNodePresence.js](./src/testFileSystemNodePresence.js).
 
 ### urlIsInsideOf
 
@@ -410,33 +470,63 @@ urlToRelativeUrl("http://example.com/directory/file.js", "http://example.com/dir
 
 — source code at [src/urlToRelativeUrl.js](./src/urlToRelativeUrl.js).
 
-### writeFileContent
+### writeFile
 
-> `writeFileContent` is an async function writing file and its content on the filesystem.
+> `writeFile` is an async function writing file and its content on the filesystem.
 
 ```js
-import { writeFileContent } from "@jsenv/util"
+import { writeFile } from "@jsenv/util"
 
-await writeFileContent("file:///directory/file.txt", "Hello world")
+await writeFile("file:///directory/file.txt", "Hello world")
 ```
 
 This function auto create file parent directories if they do not exists.
 
-— source code at [src/writeFileContent.js](./src/writeFileContent.js).
+— source code at [src/writeFile.js](./src/writeFile.js).
 
-### writeFileModificationTime
+### writeFileSystemNodeModificationTime
 
-> `writeFileModificationTime` is an async function writing file and its content on the filesystem.
+> `writeFileSystemNodeModificationTime` is an async function writing file and its content on the filesystem.
 
 ```js
-import { writeFileModificationTime } from "@jsenv/util"
+import { writeFileSystemNodeModificationTime } from "@jsenv/util"
 
-await writeFileModificationTime("file:///directory/file.js", Date.now())
+await writeFileSystemNodeModificationTime("file:///directory/file.js", Date.now())
 ```
 
-`writeFileModificationTime` is equivalent to [fs.promises.utimes](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_utimes_path_atime_mtime) but accepts url strings as file path.
+`writeFileSystemNodeModificationTime` is like [fs.promises.utimes](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_utimes_path_atime_mtime) but accepts url strings as file path.
 
-— source code at [src/writeFileModificationTime.js](./src/writeFileModificationTime.js).
+— source code at [src/writeFileSystemNodeModificationTime.js](./src/writeFileSystemNodeModificationTime.js).
+
+### writeFileSystemNodePermissions
+
+> `writeFileSystemNodePermissions` is an async function setting the permissions of a filesystem node.
+
+```js
+import { writeFileSystemNodePermissions } from "@jsenv/util"
+
+await writeFileSystemNodePermissions("file:///directory/file.js", {
+  owner: { read: true, write: true, execute: true },
+  group: { read: true, write: true, execute: false },
+  others: { read: true, write: false, execute: false },
+})
+```
+
+— see also [file modes documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_file_modes)<br />
+— source code at [src/writeFileSystemNodePermissions.js](./src/writeFileSystemNodePermissions.js).
+
+### writeSymbolicLink
+
+> `writeSymbolicLink` is an async function writing a symlink link to a file or directory on the filesystem.
+
+```js
+import { writeSymbolicLink } from "@jsenv/util"
+
+await writeSymbolicLink("file:///foo.js", './bar.js')
+```
+
+— see also [symlink documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fs_symlink_target_path_type_callback)<br />
+— source code at [src/writeSymbolicLink.js](./src/writeSymbolicLink.js).
 
 ## Installation
 
@@ -445,9 +535,9 @@ If you never installed a jsenv package, read [Installing a jsenv package](./docs
 This documentation is up-to-date with a specific version so prefer any of the following commands
 
 ```console
-npm install @jsenv/util@2.0.0
+npm install @jsenv/util@3.0.0
 ```
 
 ```console
-yarn add @jsenv/core@2.0.0
+yarn add @jsenv/core@3.0.0
 ```

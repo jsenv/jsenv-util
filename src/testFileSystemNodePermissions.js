@@ -12,7 +12,7 @@ const {
 
 export const testFileSystemNodePermissions = async (
   source,
-  { read = false, write = false, execute = false, allowIfNotFound = false } = {},
+  { read = false, write = false, execute = false, allowedIfNotFound = false } = {},
 ) => {
   const sourceUrl = assertAndNormalizeFileUrl(source)
   const sourcePath = urlToFileSystemPath(sourceUrl)
@@ -28,7 +28,7 @@ export const testFileSystemNodePermissions = async (
     return true
   } catch (error) {
     if (error.code === "ENOENT") {
-      if (allowIfNotFound) {
+      if (allowedIfNotFound) {
         return true
       }
       throw error
