@@ -16,11 +16,15 @@ export const moveFileSystemNode = async (source, destination, { overwrite = fals
 
   const sourceStats = await readFileSystemNodeStat(sourceUrl, { nullIfNotFound: true })
   if (!sourceStats) {
-    throw new Error(`nothing to move at ${sourcePath}`)
+    throw new Error(`nothing to move from ${sourcePath}`)
   }
   if (sourceStats.isDirectory()) {
     sourceUrl = ensureUrlTrailingSlash(sourceUrl)
     destinationUrl = ensureUrlTrailingSlash(destinationUrl)
+  }
+
+  if (sourceUrl === destinationUrl) {
+    return
   }
 
   const destinationStats = await readFileSystemNodeStat(destinationUrl, {
