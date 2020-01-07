@@ -14,7 +14,10 @@ export const moveFileSystemNode = async (source, destination, { overwrite = fals
   const sourcePath = urlToFileSystemPath(sourceUrl)
   const destinationPath = urlToFileSystemPath(destinationUrl)
 
-  const sourceStats = await readFileSystemNodeStat(sourceUrl, { nullIfNotFound: true })
+  const sourceStats = await readFileSystemNodeStat(sourceUrl, {
+    nullIfNotFound: true,
+    followSymbolicLink: false,
+  })
   if (!sourceStats) {
     throw new Error(`nothing to move from ${sourcePath}`)
   }
@@ -22,9 +25,8 @@ export const moveFileSystemNode = async (source, destination, { overwrite = fals
     sourceUrl = ensureUrlTrailingSlash(sourceUrl)
     destinationUrl = ensureUrlTrailingSlash(destinationUrl)
   }
-
   if (sourceUrl === destinationUrl) {
-    return
+    throw new Error(`no move needed for ${sourcePath} because destination and source are the same`)
   }
 
   const destinationStats = await readFileSystemNodeStat(destinationUrl, {
@@ -33,6 +35,7 @@ export const moveFileSystemNode = async (source, destination, { overwrite = fals
   })
   if (destinationStats) {
     const sourceType = statsToType(sourceStats)
+
     const destinationType = statsToType(destinationStats)
 
     if (sourceType !== destinationType) {
