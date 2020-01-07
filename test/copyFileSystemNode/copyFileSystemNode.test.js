@@ -34,6 +34,20 @@ await cleanDirectory(tempDirectoryUrl)
 }
 
 // copy file into same file
+{
+  const sourceUrl = resolveUrl("file", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("file", tempDirectoryUrl)
+  await writeFile(sourceUrl, "coucou")
+  try {
+    await copyFileSystemNode(sourceUrl, destinationUrl, { overwrite: true })
+    throw new Error("should throw")
+  } catch (actual) {
+    const expected = new Error(
+      `cannot copy ${urlToFileSystemPath(sourceUrl)} because destination and source are the same`,
+    )
+    assert({ actual, expected })
+  }
+}
 
 // copy file into noting
 {
