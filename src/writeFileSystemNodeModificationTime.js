@@ -2,14 +2,16 @@ import { utimes } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 
-export const writeTimestamps = (value, { mtime, atime = mtime }) => {
-  const fileSystemUrl = assertAndNormalizeFileUrl(value)
-  const fileSystemPath = urlToFileSystemPath(fileSystemUrl)
-  const atimeValue = typeof atime === "number" ? new Date(atime) : atime
+export const writeFileSystemNodeModificationTime = (source, mtime) => {
+  const sourceUrl = assertAndNormalizeFileUrl(source)
+  const sourcePath = urlToFileSystemPath(sourceUrl)
   const mtimeValue = typeof mtime === "number" ? new Date(mtime) : mtime
+  // reading atime mutates its value so there is no use case I can think of
+  // where we want to modify it
+  const atimeValue = mtimeValue
 
   return new Promise((resolve, reject) => {
-    utimes(fileSystemPath, atimeValue, mtimeValue, (error) => {
+    utimes(sourcePath, atimeValue, mtimeValue, (error) => {
       if (error) {
         reject(error)
       } else {

@@ -9,7 +9,7 @@ import { urlToRelativeUrl } from "./urlToRelativeUrl.js"
 import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
 import { writeParentDirectories } from "./writeParentDirectories.js"
 import { writeFileSystemNodePermissions } from "./writeFileSystemNodePermissions.js"
-import { writeTimestamps } from "./writeTimestamps.js"
+import { writeFileSystemNodeModificationTime } from "./writeFileSystemNodeModificationTime.js"
 import { readDirectory } from "./readDirectory.js"
 import { readSymbolicLink } from "./readSymbolicLink.js"
 import { writeSymbolicLink } from "./writeSymbolicLink.js"
@@ -25,7 +25,6 @@ export const copyFileSystemNode = async (
     overwrite = false,
     preserveStat = true,
     preserveMtime = preserveStat,
-    preserveAtime = preserveStat,
     preservePermissions = preserveStat,
   } = {},
 ) => {
@@ -127,13 +126,10 @@ export const copyFileSystemNode = async (
   }
 
   const copyStats = async (destinationUrl, stats) => {
-    if (preservePermissions || preserveMtime || preserveAtime) {
-      const { mode, atimeMs, mtimeMs } = stats
-      if (preserveMtime || preserveAtime) {
-        await writeTimestamps(destinationUrl, {
-          ...(preserveMtime ? { mtime: mtimeMs } : {}),
-          ...(preserveAtime ? { atime: atimeMs } : {}),
-        })
+    if (preservePermissions || preserveMtime) {
+      const { mode, mtimeMs } = stats
+      if (preserveMtime) {
+        await writeFileSystemNodeModificationTime(destinationUrl, mtimeMs)
       }
       if (preservePermissions) {
         await writeFileSystemNodePermissions(destinationUrl, binaryFlagsToPermissions(mode))

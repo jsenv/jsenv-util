@@ -7,9 +7,9 @@ import {
   copyFileSystemNode,
   readFile,
   writeFileSystemNodePermissions,
-  writeTimestamps,
+  writeFileSystemNodeModificationTime,
   readFileSystemNodePermissions,
-  readTimestamps,
+  readFileSystemNodeModificationTime,
   urlToFileSystemPath,
 } from "../../index.js"
 
@@ -43,16 +43,16 @@ await cleanDirectory(tempDirectoryUrl)
 
   await writeFile(sourceUrl, "hello")
   await writeFileSystemNodePermissions(sourceUrl, sourcePermissions)
-  await writeTimestamps(sourceUrl, { mtime: sourceMtime })
+  await writeFileSystemNodeModificationTime(sourceUrl, sourceMtime)
   await copyFileSystemNode(sourceUrl, destinationUrl)
 
   const actual = {
     sourceContent: await readFile(sourceUrl),
     sourcePermissions: await readFileSystemNodePermissions(sourceUrl),
-    sourceTimestamps: await readTimestamps(sourceUrl),
+    sourceMtime: await readFileSystemNodeModificationTime(sourceUrl),
     destinationContent: await readFile(destinationUrl),
     destinationPermissions: await readFileSystemNodePermissions(destinationUrl),
-    destinationTimestamps: await readTimestamps(destinationUrl),
+    destinationMtime: await readFileSystemNodeModificationTime(destinationUrl),
   }
   const expected = {
     sourceContent,
@@ -61,18 +61,10 @@ await cleanDirectory(tempDirectoryUrl)
       group: { ...sourcePermissions.group },
       others: { ...sourcePermissions.others },
     },
-    sourceTimestamps: {
-      // reading atime mutates its value, so we cant assert something about it
-      atime: actual.sourceTimestamps.atime,
-      mtime: sourceMtime,
-    },
+    sourceMtime,
     destinationContent: sourceContent,
     destinationPermissions: sourcePermissions,
-    destinationTimestamps: {
-      // reading atime mutates its value, so we cant assert something about it
-      atime: actual.destinationTimestamps.atime,
-      mtime: sourceMtime,
-    },
+    destinationMtime: sourceMtime,
   }
   assert({ actual, expected })
   await cleanDirectory(tempDirectoryUrl)
