@@ -7,24 +7,29 @@ export const writeFileSystemNodePermissions = async (source, permissions) => {
   const sourceUrl = assertAndNormalizeFileUrl(source)
   const sourcePath = urlToFileSystemPath(sourceUrl)
 
-  permissions = {
-    owner: {
-      read: getPermissionOrComputeDefault("read", "owner", permissions),
-      write: getPermissionOrComputeDefault("write", "owner", permissions),
-      execute: getPermissionOrComputeDefault("execute", "owner", permissions),
-    },
-    group: {
-      read: getPermissionOrComputeDefault("read", "group", permissions),
-      write: getPermissionOrComputeDefault("write", "group", permissions),
-      execute: getPermissionOrComputeDefault("execute", "group", permissions),
-    },
-    others: {
-      read: getPermissionOrComputeDefault("read", "others", permissions),
-      write: getPermissionOrComputeDefault("write", "others", permissions),
-      execute: getPermissionOrComputeDefault("execute", "others", permissions),
-    },
+  let binaryFlags
+  if (typeof permissions === "object") {
+    permissions = {
+      owner: {
+        read: getPermissionOrComputeDefault("read", "owner", permissions),
+        write: getPermissionOrComputeDefault("write", "owner", permissions),
+        execute: getPermissionOrComputeDefault("execute", "owner", permissions),
+      },
+      group: {
+        read: getPermissionOrComputeDefault("read", "group", permissions),
+        write: getPermissionOrComputeDefault("write", "group", permissions),
+        execute: getPermissionOrComputeDefault("execute", "group", permissions),
+      },
+      others: {
+        read: getPermissionOrComputeDefault("read", "others", permissions),
+        write: getPermissionOrComputeDefault("write", "others", permissions),
+        execute: getPermissionOrComputeDefault("execute", "others", permissions),
+      },
+    }
+    binaryFlags = permissionsToBinaryFlags(permissions)
+  } else {
+    binaryFlags = permissions
   }
-  const binaryFlags = permissionsToBinaryFlags(permissions)
 
   return chmodNaive(sourcePath, binaryFlags)
 }
