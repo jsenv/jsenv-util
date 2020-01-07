@@ -12,14 +12,16 @@ export const readFileSystemNodeStat = async (
   const sourceUrl = assertAndNormalizeFileUrl(source)
   const sourcePath = urlToFileSystemPath(sourceUrl)
 
+  const handleNotFoundOption = nullIfNotFound
+    ? {
+        handleNotFoundError: () => null,
+      }
+    : {}
+
   return readStat(sourcePath, {
     followSymbolicLink,
-    ...(nullIfNotFound
-      ? {
-          handleNotFoundError: () => null,
-        }
-      : {}),
-    handlePermissionDeniedError: async () => {
+    ...handleNotFoundOption,
+    handlePermissionDeniedError: async (error) => {
       // Windows can EPERM on stat
       const restorePermission = await grantPermissionsOnFileSystemNode(sourceUrl, {
         read: true,
@@ -27,8 +29,15 @@ export const readFileSystemNodeStat = async (
         execute: true,
       })
       try {
-        const stat = await readStat(sourcePath)
-        return stat
+        const stats = await readStat(sourcePath, {
+          followSymbolicLink,
+          ...handleNotFoundOption,
+          // could not fix the permission error, give up and throw original error
+          handlePermissionDeniedError: () => {
+            throw error
+          },
+        })
+        return stats
       } finally {
         await restorePermission()
       }
@@ -37,13 +46,13 @@ export const readFileSystemNodeStat = async (
 }
 
 const readStat = (
-  fileSystemPath,
+  sourcePath,
   { followSymbolicLink, handleNotFoundError = null, handlePermissionDeniedError = null } = {},
 ) => {
   const nodeMethod = followSymbolicLink ? stat : lstat
 
   return new Promise((resolve, reject) => {
-    nodeMethod(fileSystemPath, (error, statsObject) => {
+    nodeMethod(sourcePath, (error, statsObject) => {
       if (error) {
         if (handlePermissionDeniedError && (error.code === "EPERM" || error.code === "EACCES")) {
           resolve(handlePermissionDeniedError(error))

@@ -5,7 +5,7 @@ import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 
 const { mkdir } = promises
 
-export const writeParentDirectories = async (destination, { ignoreExistence = true } = {}) => {
+export const writeParentDirectories = async (destination, { uselessError = false } = {}) => {
   const destinationUrl = assertAndNormalizeFileUrl(destination)
   const destinationPath = urlToFileSystemPath(destinationUrl)
   const destinationParentPath = dirname(destinationPath)
@@ -13,7 +13,7 @@ export const writeParentDirectories = async (destination, { ignoreExistence = tr
   try {
     await mkdir(destinationParentPath, { recursive: true })
   } catch (error) {
-    if (ignoreExistence && error && error.code === "EEXIST") {
+    if (uselessError === false && error && error.code === "EEXIST") {
       return
     }
     throw error

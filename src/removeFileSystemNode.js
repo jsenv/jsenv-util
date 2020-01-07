@@ -8,32 +8,35 @@ import { resolveUrl } from "./resolveUrl.js"
 
 export const removeFileSystemNode = async (
   source,
-  { recursive = false, maxRetries = 3, retryDelay = 100 } = {},
+  { uselessError = false, recursive = false, maxRetries = 3, retryDelay = 100 } = {},
 ) => {
   const sourceUrl = assertAndNormalizeFileUrl(source)
 
-  const stat = await readFileSystemNodeStat(sourceUrl, {
+  const sourceStats = await readFileSystemNodeStat(sourceUrl, {
     nullIfNotFound: true,
     followSymbolicLink: false,
   })
-  if (!stat) {
+  if (!sourceStats) {
+    if (uselessError) {
+      throw new Error(`nothing to remove at ${urlToFileSystemPath(sourceUrl)}`)
+    }
     return
   }
 
   // https://nodejs.org/dist/latest-v13.x/docs/api/fs.html#fs_class_fs_stats
   // FIFO and socket are ignored, not sure what they are exactly and what to do with them
   // other libraries ignore them, let's do the same.
-  if (stat.isDirectory()) {
+  if (sourceStats.isDirectory()) {
     await removeDirectory(ensureUrlTrailingSlash(sourceUrl), {
       recursive,
       maxRetries,
       retryDelay,
     })
   } else if (
-    stat.isFile() ||
-    stat.isSymbolicLink() ||
-    stat.isCharacterDevice() ||
-    stat.isBlockDevice()
+    sourceStats.isFile() ||
+    sourceStats.isSymbolicLink() ||
+    sourceStats.isCharacterDevice() ||
+    sourceStats.isBlockDevice()
   ) {
     await removeNonDirectory(sourceUrl.endsWith("/") ? sourceUrl.slice(0, -1) : sourceUrl, {
       maxRetries,
@@ -90,27 +93,23 @@ const unlinkNaive = (sourcePath, { handleTemporaryError = null } = {}) => {
 }
 
 const removeDirectory = async (rootDirectoryUrl, { maxRetries, retryDelay, recursive }) => {
-  const visit = async (url) => {
-    const filesystemStat = await readFileSystemNodeStat(url, {
+  const visit = async (sourceUrl) => {
+    const sourceStats = await readFileSystemNodeStat(sourceUrl, {
       nullIfNotFound: true,
       followSymbolicLink: false,
     })
 
     // file/directory not found
-    if (filesystemStat === null) {
+    if (sourceStats === null) {
       return
     }
 
-    if (
-      filesystemStat.isFile() ||
-      filesystemStat.isCharacterDevice() ||
-      filesystemStat.isBlockDevice()
-    ) {
-      await visitFile(url)
-    } else if (filesystemStat.isSymbolicLink()) {
-      await visitSymbolicLink(url)
-    } else if (filesystemStat.isDirectory()) {
-      await visitDirectory(`${url}/`)
+    if (sourceStats.isFile() || sourceStats.isCharacterDevice() || sourceStats.isBlockDevice()) {
+      await visitFile(sourceUrl)
+    } else if (sourceStats.isSymbolicLink()) {
+      await visitSymbolicLink(sourceUrl)
+    } else if (sourceStats.isDirectory()) {
+      await visitDirectory(`${sourceUrl}/`)
     }
   }
 
