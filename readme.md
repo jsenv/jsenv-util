@@ -522,7 +522,7 @@ await writeFileSystemNodePermissions("file:///directory/file.js", {
 ```js
 import { writeSymbolicLink } from "@jsenv/util"
 
-await writeSymbolicLink("file:///foo.js", './bar.js')
+await writeSymbolicLink("file:///foo.js", "./bar.js")
 ```
 
 — see also [symlink documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fs_symlink_target_path_type_callback)<br />
