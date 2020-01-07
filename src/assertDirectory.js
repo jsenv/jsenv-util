@@ -3,17 +3,19 @@ import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
 
-export const assertFileExists = async (source) => {
+export const assertDirectory = async (source) => {
   const sourceUrl = assertAndNormalizeFileUrl(source)
   const sourcePath = urlToFileSystemPath(sourceUrl)
 
-  const sourceStats = readFileSystemNodeStat(sourceUrl, {
+  const sourceStats = await readFileSystemNodeStat(sourceUrl, {
     nullIfNotFound: true,
   })
   if (!sourceStats) {
-    throw new Error(`file not found at ${sourcePath}`)
+    throw new Error(`directory not found at ${sourcePath}`)
   }
-  if (!sourceStats.isFile()) {
-    throw new Error(`file expected at ${sourcePath} and found ${statsToType(sourceStats)} instead`)
+  if (!sourceStats.isDirectory()) {
+    throw new Error(
+      `directory expected at ${sourcePath} and found ${statsToType(sourceStats)} instead`,
+    )
   }
 }
