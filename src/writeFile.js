@@ -1,14 +1,23 @@
-import { promisify } from "util"
-import { writeFile as writeFileNode } from "fs"
+import { promises } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { writeParentDirectories } from "./writeParentDirectories.js"
 
-const writeFilePromisified = promisify(writeFileNode)
-export const writeFile = async (value, content) => {
-  const fileUrl = assertAndNormalizeFileUrl(value)
-  await writeParentDirectories(fileUrl)
+// https://nodejs.org/dist/latest-v13.x/docs/api/fs.html#fs_fspromises_writefile_file_data_options
+const { writeFile: writeFileNode } = promises
 
-  const filePath = urlToFileSystemPath(fileUrl)
-  return writeFilePromisified(filePath, content)
+export const writeFile = async (destination, content) => {
+  const destinationUrl = assertAndNormalizeFileUrl(destination)
+
+  const destinationPath = urlToFileSystemPath(destinationUrl)
+  try {
+    await writeFileNode(destinationPath, content)
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      await writeParentDirectories(destinationUrl)
+      await writeFileNode(destinationPath, content)
+      return
+    }
+    throw error
+  }
 }
