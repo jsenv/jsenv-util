@@ -153,7 +153,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
     const expected = new Error(
       `ENOTEMPTY: directory not empty, rmdir '${urlToFileSystemPath(`${sourceUrl}/`)}'`,
     )
-    expected.errno = -66
+    expected.errno = actual.errno
     expected.code = "ENOTEMPTY"
     expected.syscall = "rmdir"
     expected.path = urlToFileSystemPath(`${sourceUrl}/`)
