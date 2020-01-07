@@ -1,21 +1,12 @@
 import { dirname } from "path"
-import { promises } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
+import { writeDirectory } from "./writeDirectory.js"
 
-const { mkdir } = promises
-
-export const writeParentDirectories = async (destination, { allowUseless = false } = {}) => {
+export const writeParentDirectories = async (destination) => {
   const destinationUrl = assertAndNormalizeFileUrl(destination)
   const destinationPath = urlToFileSystemPath(destinationUrl)
   const destinationParentPath = dirname(destinationPath)
 
-  try {
-    await mkdir(destinationParentPath, { recursive: true })
-  } catch (error) {
-    if (allowUseless && error && error.code === "EEXIST") {
-      return
-    }
-    throw error
-  }
+  return writeDirectory(destinationParentPath, { recursive: true, allowUseless: true })
 }

@@ -23,23 +23,29 @@ export const readFileSystemNodeStat = async (
     ...handleNotFoundOption,
     handlePermissionDeniedError: async (error) => {
       // Windows can EPERM on stat
-      const restorePermission = await grantPermissionsOnFileSystemNode(sourceUrl, {
-        read: true,
-        write: true,
-        execute: true,
-      })
       try {
-        const stats = await readStat(sourcePath, {
-          followSymbolicLink,
-          ...handleNotFoundOption,
-          // could not fix the permission error, give up and throw original error
-          handlePermissionDeniedError: () => {
-            throw error
-          },
+        const restorePermission = await grantPermissionsOnFileSystemNode(sourceUrl, {
+          read: true,
+          write: true,
+          execute: true,
         })
-        return stats
-      } finally {
-        await restorePermission()
+
+        try {
+          const stats = await readStat(sourcePath, {
+            followSymbolicLink,
+            ...handleNotFoundOption,
+            // could not fix the permission error, give up and throw original error
+            handlePermissionDeniedError: () => {
+              throw error
+            },
+          })
+          return stats
+        } finally {
+          await restorePermission()
+        }
+      } catch (e) {
+        // failed to grant permissions, throw original error as well
+        throw error
       }
     },
   })

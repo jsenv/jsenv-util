@@ -10,12 +10,12 @@ const {
   X_OK,
 } = constants
 
-export const testPermission = async (
-  url,
-  { read = false, write = false, execute = false } = {},
+export const testFileSystemNodePermissions = async (
+  source,
+  { read = false, write = false, execute = false, allowIfNotFound = false } = {},
 ) => {
-  const fileSystemUrl = assertAndNormalizeFileUrl(url)
-  const fileSystemPath = urlToFileSystemPath(fileSystemUrl)
+  const sourceUrl = assertAndNormalizeFileUrl(source)
+  const sourcePath = urlToFileSystemPath(sourceUrl)
   let binaryFlags = 0
 
   // if (visible) binaryFlags |= F_OK
@@ -24,11 +24,14 @@ export const testPermission = async (
   if (execute) binaryFlags |= X_OK
 
   try {
-    await access(fileSystemPath, binaryFlags)
+    await access(sourcePath, binaryFlags)
     return true
-  } catch (e) {
-    if (e.code === "ENOENT") {
-      return true
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      if (allowIfNotFound) {
+        return true
+      }
+      throw error
     }
     return false
   }

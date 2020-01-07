@@ -1,28 +1,44 @@
-import { mkdir } from "fs"
+import { promises } from "fs"
+import { statsToType } from "./internal/statsToType.js"
 import { assertAndNormalizeDirectoryUrl } from "./assertAndNormalizeDirectoryUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
+import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
 
-export const writeDirectory = (destination, { allowUseless = false } = {}) => {
-  const directoryUrl = assertAndNormalizeDirectoryUrl(destination)
-  const directoryPath = urlToFileSystemPath(directoryUrl)
+// https://nodejs.org/dist/latest-v13.x/docs/api/fs.html#fs_fspromises_mkdir_path_options
+const { mkdir } = promises
 
-  return createDirectoryNaive(directoryPath, {
-    ...(allowUseless ? { handleExistsError: () => undefined } : {}),
+export const writeDirectory = async (
+  destination,
+  { recursive = true, allowUseless = false } = {},
+) => {
+  const destinationUrl = assertAndNormalizeDirectoryUrl(destination)
+  const destinationPath = urlToFileSystemPath(destinationUrl)
+
+  const destinationStats = await readFileSystemNodeStat(destinationUrl, {
+    nullIfNotFound: true,
+    followSymbolicLink: false,
   })
-}
 
-const createDirectoryNaive = (directoryPath, { handleExistsError = null } = {}) => {
-  return new Promise((resolve, reject) => {
-    mkdir(directoryPath, { recursive: true }, (error) => {
-      if (error) {
-        if (handleExistsError && error.code === "EEXIST") {
-          resolve(handleExistsError(error))
-        } else {
-          reject(error)
-        }
-      } else {
-        resolve()
+  if (destinationStats) {
+    if (destinationStats.isDirectory()) {
+      if (allowUseless) {
+        return
       }
-    })
-  })
+      throw new Error(`directory already exists at ${destinationPath}`)
+    }
+
+    const destinationType = statsToType(destinationStats)
+    throw new Error(
+      `cannot write directory at ${destinationPath} because there is a ${destinationType}`,
+    )
+  }
+
+  try {
+    await mkdir(destinationPath, { recursive })
+  } catch (error) {
+    if (allowUseless && error.code === "EEXIST") {
+      return
+    }
+    throw error
+  }
 }
