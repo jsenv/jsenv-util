@@ -22,7 +22,7 @@ export const moveFileSystemNode = async (
 
   const sourceStats = await readFileSystemNodeStat(sourceUrl, {
     nullIfNotFound: true,
-    followLink,
+    followLink: false,
   })
   if (!sourceStats) {
     throw new Error(`nothing to move from ${sourcePath}`)
@@ -30,15 +30,12 @@ export const moveFileSystemNode = async (
 
   let destinationStats = await readFileSystemNodeStat(destinationUrl, {
     nullIfNotFound: true,
+    // we force false here but in fact we will follow the destination link
+    // to know where we will actually move and detect useless move overrite etc..
     followLink: false,
   })
 
-  if (
-    destinationStats &&
-    destinationStats.isSymbolicLink() &&
-    // when source is a symbolic link we want to override the destination symbolic link
-    !sourceStats.isSymbolicLink()
-  ) {
+  if (followLink && destinationStats && destinationStats.isSymbolicLink()) {
     const target = await readSymbolicLink(destinationUrl)
     destinationUrl = resolveUrl(target, destinationUrl)
     destinationStats = await readFileSystemNodeStat(destinationUrl, { nullIfNotFound: true })

@@ -33,22 +33,6 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
-// move link to nothing
-{
-  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
-  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
-  await writeSymbolicLink(sourceUrl, "./whatever")
-
-  try {
-    await moveFileSystemNode(sourceUrl, destinationUrl)
-    throw new Error("should throw")
-  } catch (actual) {
-    const expected = new Error(`nothing to move from ${urlToFileSystemPath(sourceUrl)}`)
-    assert({ actual, expected })
-    await ensureEmptyDirectory(tempDirectoryUrl)
-  }
-}
-
 // move file into same destination
 {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
@@ -109,22 +93,22 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
-// move file into link to nothing
+// move file into link to nothing (link must become effective)
 {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
-  const fileUrl = resolveUrl("whatever", tempDirectoryUrl)
+  const fileUrl = resolveUrl("file", tempDirectoryUrl)
   await writeFile(sourceUrl, "foo")
-  await writeSymbolicLink(destinationUrl, "./whatever")
+  await writeSymbolicLink(destinationUrl, "./file")
 
   await moveFileSystemNode(sourceUrl, destinationUrl)
   const actual = {
-    sourcePresence: await testFilePresence(sourceUrl),
+    fileAtSource: await testFilePresence(sourceUrl),
     fileContent: await readFile(fileUrl),
     destinationContent: await readFile(destinationUrl),
   }
   const expected = {
-    sourcePresence: false,
+    fileAtSource: false,
     fileContent: "foo",
     destinationContent: "foo",
   }
@@ -179,10 +163,10 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
-  const fileUrl = resolveUrl("whatever", tempDirectoryUrl)
+  const fileUrl = resolveUrl("file", tempDirectoryUrl)
   await writeFile(sourceUrl, "content")
   await writeFile(fileUrl, "original")
-  await writeSymbolicLink(destinationUrl, "./whatever")
+  await writeSymbolicLink(destinationUrl, "./file")
 
   await moveFileSystemNode(sourceUrl, destinationUrl, { overwrite: true })
   const actual = {
@@ -375,13 +359,13 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
-// followSymlink disabled: move link to nothing into nothing
+// move link to nothing into nothing
 {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
   await writeSymbolicLink(sourceUrl, "./whatever")
 
-  await moveFileSystemNode(sourceUrl, destinationUrl, { followLink: false })
+  await moveFileSystemNode(sourceUrl, destinationUrl)
   const actual = {
     linkAtSource: await testSymbolicLinkPresence(sourceUrl),
     destinationLinkTarget: await readSymbolicLink(destinationUrl),
@@ -394,7 +378,30 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
-// followSymlink disabled: move link to nothing into link to nothing
+// move link to nothing into link to nothing
+{
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+  const fileUrl = resolveUrl("file", tempDirectoryUrl)
+  await writeSymbolicLink(sourceUrl, "./file")
+  await writeSymbolicLink(destinationUrl, "./file")
+
+  await moveFileSystemNode(sourceUrl, destinationUrl)
+  const actual = {
+    sourceLinkPresence: await testSymbolicLinkPresence(sourceUrl),
+    destinationLinkPresence: await testSymbolicLinkPresence(destinationUrl),
+    linkTarget: await readSymbolicLink(fileUrl),
+  }
+  const expected = {
+    sourceLinkPresence: false,
+    destinationLinkPresence: true,
+    linkTarget: "./file",
+  }
+  assert({ actual, expected })
+  await ensureEmptyDirectory(tempDirectoryUrl)
+}
+
+// move link to nothing into link to nothing with followLink disabled
 {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
@@ -415,7 +422,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
-// followSymlink disabled: move link to nothing into link to nothing and overwrite enabled
+// move link to nothing into link to nothing with followLink disabled and overwrite enabled
 {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
@@ -429,18 +436,18 @@ await ensureEmptyDirectory(tempDirectoryUrl)
     overwrite: true,
   })
   const actual = {
-    sourcePresence: await testFilePresence(sourceUrl),
-    destinationTarget: await readSymbolicLink(destinationUrl),
+    sourceLinkPresence: await testSymbolicLinkPresence(sourceUrl),
+    destinationLinkTarget: await readSymbolicLink(destinationUrl),
   }
   const expected = {
-    sourcePresence: false,
-    destinationTarget: sourceTarget,
+    sourceLinkPresence: false,
+    destinationLinkTarget: sourceTarget,
   }
   assert({ actual, expected })
   await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
-// followSymlink disabled: move link to nothing into file and overwrite enabled
+// move link to nothing into file and overwrite enabled
 {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
@@ -449,7 +456,6 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 
   try {
     await moveFileSystemNode(sourceUrl, destinationUrl, {
-      followLink: false,
       overwrite: true,
     })
   } catch (actual) {
