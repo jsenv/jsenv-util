@@ -5,7 +5,7 @@ import { grantPermissionsOnFileSystemNode } from "./grantPermissionsOnFileSystem
 
 export const readFileSystemNodeStat = async (
   source,
-  { nullIfNotFound = false, followSymbolicLink = true } = {},
+  { nullIfNotFound = false, followLink = true } = {},
 ) => {
   if (source.endsWith("/")) source = source.slice(0, -1)
 
@@ -19,7 +19,7 @@ export const readFileSystemNodeStat = async (
     : {}
 
   return readStat(sourcePath, {
-    followSymbolicLink,
+    followLink,
     ...handleNotFoundOption,
     handlePermissionDeniedError: async (error) => {
       // Windows can EPERM on stat
@@ -32,7 +32,7 @@ export const readFileSystemNodeStat = async (
 
         try {
           const stats = await readStat(sourcePath, {
-            followSymbolicLink,
+            followLink,
             ...handleNotFoundOption,
             // could not fix the permission error, give up and throw original error
             handlePermissionDeniedError: () => {
@@ -53,9 +53,9 @@ export const readFileSystemNodeStat = async (
 
 const readStat = (
   sourcePath,
-  { followSymbolicLink, handleNotFoundError = null, handlePermissionDeniedError = null } = {},
+  { followLink, handleNotFoundError = null, handlePermissionDeniedError = null } = {},
 ) => {
-  const nodeMethod = followSymbolicLink ? stat : lstat
+  const nodeMethod = followLink ? stat : lstat
 
   return new Promise((resolve, reject) => {
     nodeMethod(sourcePath, (error, statsObject) => {

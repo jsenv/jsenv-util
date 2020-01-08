@@ -36,7 +36,7 @@ export const copyFileSystemNode = async (
 
   const sourceStats = await readFileSystemNodeStat(sourceUrl, {
     nullIfNotFound: true,
-    followSymbolicLink: false,
+    followLink: false,
   })
   if (!sourceStats) {
     throw new Error(`nothing to copy at ${sourcePath}`)
@@ -54,7 +54,7 @@ export const copyFileSystemNode = async (
 
   const destinationStats = await readFileSystemNodeStat(destinationUrl, {
     nullIfNotFound: true,
-    followSymbolicLink: false,
+    followLink: false,
   })
 
   if (destinationStats) {
@@ -123,7 +123,7 @@ export const copyFileSystemNode = async (
     // https://nodejs.org/dist/latest-v13.x/docs/api/fs.html#fs_fs_symlink_target_path_type_callback
     const targetStats = await readFileSystemNodeStat(symbolicLinkTargetUrl, {
       nullIfNotFound: true,
-      followSymbolicLink: false,
+      followLink: false,
     })
     const linkType = targetStats && targetStats.isDirectory() ? "dir" : "file"
 
@@ -157,7 +157,7 @@ export const copyFileSystemNode = async (
     await Promise.all(
       names.map(async (name) => {
         const fileSystemNodeUrl = resolveUrl(name, directoryUrl)
-        const stats = await readFileSystemNodeStat(fileSystemNodeUrl, { followSymbolicLink: false })
+        const stats = await readFileSystemNodeStat(fileSystemNodeUrl, { followLink: false })
         await visit(fileSystemNodeUrl, stats)
       }),
     )

@@ -381,7 +381,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
   await writeSymbolicLink(sourceUrl, "./whatever")
 
-  await moveFileSystemNode(sourceUrl, destinationUrl, { followSymbolicLink: false })
+  await moveFileSystemNode(sourceUrl, destinationUrl, { followLink: false })
   const actual = {
     linkAtSource: await testSymbolicLinkPresence(sourceUrl),
     destinationLinkTarget: await readSymbolicLink(destinationUrl),
@@ -402,7 +402,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await writeSymbolicLink(destinationUrl, "./whatever")
 
   try {
-    await moveFileSystemNode(sourceUrl, destinationUrl, { followSymbolicLink: false })
+    await moveFileSystemNode(sourceUrl, destinationUrl, { followLink: false })
     throw new Error("should throw")
   } catch (actual) {
     const expected = new Error(
@@ -425,7 +425,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await writeSymbolicLink(destinationUrl, destinationTarget)
 
   await moveFileSystemNode(sourceUrl, destinationUrl, {
-    followSymbolicLink: false,
+    followLink: false,
     overwrite: true,
   })
   const actual = {
@@ -449,7 +449,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 
   try {
     await moveFileSystemNode(sourceUrl, destinationUrl, {
-      followSymbolicLink: false,
+      followLink: false,
       overwrite: true,
     })
   } catch (actual) {

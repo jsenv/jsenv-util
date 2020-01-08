@@ -258,7 +258,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 
   await removeFileSystemNode(sourceUrl)
   const actual = await testSymbolicLinkPresence(sourceUrl, {
-    followSymbolicLink: false,
+    followLink: false,
   })
   const expected = false
   assert({ actual, expected })
@@ -272,7 +272,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 
   await removeFileSystemNode(sourceUrl, { recursive: true })
   const actual = await testDirectoryPresence(sourceUrl, {
-    followSymbolicLink: false,
+    followLink: false,
   })
   const expected = false
   assert({ actual, expected })

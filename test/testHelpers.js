@@ -33,7 +33,7 @@ export const testFilePresence = async (source) => {
 export const testSymbolicLinkPresence = async (source) => {
   const stats = await readFileSystemNodeStat(source, {
     nullIfNotFound: true,
-    followSymbolicLink: false,
+    followLink: false,
   })
   return Boolean(stats && stats.isSymbolicLink())
 }

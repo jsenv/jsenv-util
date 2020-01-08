@@ -192,7 +192,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   await writeSymbolicLink(sourceUrl, "./whatever")
 
-  const sourceStats = await readFileSystemNodeStat(sourceUrl, { followSymbolicLink: false })
+  const sourceStats = await readFileSystemNodeStat(sourceUrl, { followLink: false })
   const actual = sourceStats.isSymbolicLink()
   const expected = true
   assert({ actual, expected })
@@ -206,7 +206,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await writeDirectory(directoryUrl)
   await writeSymbolicLink(sourceUrl, "./dir")
 
-  const sourceStats = await readFileSystemNodeStat(sourceUrl, { followSymbolicLink: false })
+  const sourceStats = await readFileSystemNodeStat(sourceUrl, { followLink: false })
   const actual = sourceStats.isSymbolicLink()
   const expected = true
   assert({ actual, expected })
@@ -220,7 +220,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await writeFile(fileUrl)
   await writeSymbolicLink(sourceUrl, "./file")
 
-  const sourceStats = await readFileSystemNodeStat(sourceUrl, { followSymbolicLink: false })
+  const sourceStats = await readFileSystemNodeStat(sourceUrl, { followLink: false })
   const actual = sourceStats.isSymbolicLink()
   const expected = true
   assert({ actual, expected })

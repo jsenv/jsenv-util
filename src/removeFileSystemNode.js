@@ -8,13 +8,19 @@ import { resolveUrl } from "./resolveUrl.js"
 
 export const removeFileSystemNode = async (
   source,
-  { allowUseless = false, recursive = false, maxRetries = 3, retryDelay = 100 } = {},
+  {
+    followLink = true,
+    allowUseless = false,
+    recursive = false,
+    maxRetries = 3,
+    retryDelay = 100,
+  } = {},
 ) => {
   const sourceUrl = assertAndNormalizeFileUrl(source)
 
   const sourceStats = await readFileSystemNodeStat(sourceUrl, {
     nullIfNotFound: true,
-    followSymbolicLink: false,
+    followLink,
   })
   if (!sourceStats) {
     if (allowUseless) {
@@ -26,19 +32,20 @@ export const removeFileSystemNode = async (
   // https://nodejs.org/dist/latest-v13.x/docs/api/fs.html#fs_class_fs_stats
   // FIFO and socket are ignored, not sure what they are exactly and what to do with them
   // other libraries ignore them, let's do the same.
-  if (sourceStats.isDirectory()) {
-    await removeDirectory(ensureUrlTrailingSlash(sourceUrl), {
-      recursive,
-      maxRetries,
-      retryDelay,
-    })
-  } else if (
+  if (
     sourceStats.isFile() ||
     sourceStats.isSymbolicLink() ||
     sourceStats.isCharacterDevice() ||
     sourceStats.isBlockDevice()
   ) {
     await removeNonDirectory(sourceUrl.endsWith("/") ? sourceUrl.slice(0, -1) : sourceUrl, {
+      maxRetries,
+      retryDelay,
+    })
+  }
+  else if (sourceStats.isDirectory()) {
+    await removeDirectory(ensureUrlTrailingSlash(sourceUrl), {
+      recursive,
       maxRetries,
       retryDelay,
     })
@@ -96,7 +103,7 @@ const removeDirectory = async (rootDirectoryUrl, { maxRetries, retryDelay, recur
   const visit = async (sourceUrl) => {
     const sourceStats = await readFileSystemNodeStat(sourceUrl, {
       nullIfNotFound: true,
-      followSymbolicLink: false,
+      followLink: false,
     })
 
     // file/directory not found

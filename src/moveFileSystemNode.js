@@ -14,7 +14,7 @@ import { readSymbolicLink } from "./readSymbolicLink.js"
 export const moveFileSystemNode = async (
   source,
   destination,
-  { overwrite = false, allowUseless = false, followSymbolicLink = true } = {},
+  { overwrite = false, allowUseless = false, followLink = true } = {},
 ) => {
   const sourceUrl = assertAndNormalizeFileUrl(source)
   let destinationUrl = assertAndNormalizeFileUrl(destination)
@@ -22,7 +22,7 @@ export const moveFileSystemNode = async (
 
   const sourceStats = await readFileSystemNodeStat(sourceUrl, {
     nullIfNotFound: true,
-    followSymbolicLink,
+    followLink,
   })
   if (!sourceStats) {
     throw new Error(`nothing to move from ${sourcePath}`)
@@ -30,7 +30,7 @@ export const moveFileSystemNode = async (
 
   let destinationStats = await readFileSystemNodeStat(destinationUrl, {
     nullIfNotFound: true,
-    followSymbolicLink: false,
+    followLink: false,
   })
 
   if (

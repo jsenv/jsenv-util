@@ -16,7 +16,7 @@ export const writeDirectory = async (
 
   const destinationStats = await readFileSystemNodeStat(destinationUrl, {
     nullIfNotFound: true,
-    followSymbolicLink: false,
+    followLink: false,
   })
 
   if (destinationStats) {
