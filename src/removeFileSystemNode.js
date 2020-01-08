@@ -8,7 +8,13 @@ import { resolveUrl } from "./resolveUrl.js"
 
 export const removeFileSystemNode = async (
   source,
-  { allowUseless = false, recursive = false, maxRetries = 3, retryDelay = 100 } = {},
+  {
+    allowUseless = false,
+    recursive = false,
+    maxRetries = 3,
+    retryDelay = 100,
+    onlyContent = false,
+  } = {},
 ) => {
   const sourceUrl = assertAndNormalizeFileUrl(source)
 
@@ -41,6 +47,7 @@ export const removeFileSystemNode = async (
       recursive,
       maxRetries,
       retryDelay,
+      onlyContent,
     })
   }
 }
@@ -92,7 +99,10 @@ const unlinkNaive = (sourcePath, { handleTemporaryError = null } = {}) => {
   })
 }
 
-const removeDirectory = async (rootDirectoryUrl, { maxRetries, retryDelay, recursive }) => {
+const removeDirectory = async (
+  rootDirectoryUrl,
+  { maxRetries, retryDelay, recursive, onlyContent },
+) => {
   const visit = async (sourceUrl) => {
     const sourceStats = await readFileSystemNodeStat(sourceUrl, {
       nullIfNotFound: true,
@@ -145,7 +155,11 @@ const removeDirectory = async (rootDirectoryUrl, { maxRetries, retryDelay, recur
     await removeNonDirectory(symbolicLinkUrl, { maxRetries, retryDelay })
   }
 
-  await visitDirectory(rootDirectoryUrl)
+  if (onlyContent) {
+    await removeDirectoryContent(rootDirectoryUrl)
+  } else {
+    await visitDirectory(rootDirectoryUrl)
+  }
 }
 
 const removeDirectoryNaive = (directoryPath, { handleNotEmptyError = null } = {}) => {
