@@ -382,7 +382,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
-  const fileUrl = resolveUrl("file", tempDirectoryUrl)
+  const fileUrl = resolveUrl("desttarget", tempDirectoryUrl)
   await writeSymbolicLink(sourceUrl, "./sourcetarget")
   await writeSymbolicLink(destinationUrl, "./desttarget")
 
