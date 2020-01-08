@@ -35,9 +35,10 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 
 // copy file into same file
 {
-  const sourceUrl = resolveUrl("file", tempDirectoryUrl)
-  const destinationUrl = resolveUrl("file", tempDirectoryUrl)
-  await writeFile(sourceUrl, "coucou")
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("source", tempDirectoryUrl)
+  await writeFile(sourceUrl)
+
   try {
     await copyFileSystemNode(sourceUrl, destinationUrl, { overwrite: true })
     throw new Error("should throw")
@@ -46,13 +47,14 @@ await ensureEmptyDirectory(tempDirectoryUrl)
       `cannot copy ${urlToFileSystemPath(sourceUrl)} because destination and source are the same`,
     )
     assert({ actual, expected })
+    await ensureEmptyDirectory(tempDirectoryUrl)
   }
 }
 
-// copy file into noting
+// copy file into nothing
 {
-  const sourceUrl = resolveUrl("dir/source", tempDirectoryUrl)
-  const destinationUrl = resolveUrl("dest/source", tempDirectoryUrl)
+  const sourceUrl = resolveUrl("source/file", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest/file", tempDirectoryUrl)
   const sourceContent = "hello"
   const sourceMtime = Date.now()
   const sourcePermissions = {
@@ -230,11 +232,11 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 
 // copy directory with content into directory with content and overwrite enabled
 {
-  const sourceUrl = resolveUrl("source/", tempDirectoryUrl)
-  const destinationUrl = resolveUrl("dest/", tempDirectoryUrl)
-  const fileASourceUrl = resolveUrl("a.txt", sourceUrl)
-  const fileADestinationUrl = resolveUrl("a.txt", destinationUrl)
-  const fileBDestinationUrl = resolveUrl("b.txt", destinationUrl)
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+  const fileASourceUrl = resolveUrl("source/a.txt", tempDirectoryUrl)
+  const fileADestinationUrl = resolveUrl("dest/a.txt", tempDirectoryUrl)
+  const fileBDestinationUrl = resolveUrl("dest/b.txt", tempDirectoryUrl)
   await writeDirectory(sourceUrl)
   await writeFile(fileASourceUrl, "sourceA")
   await writeDirectory(destinationUrl)
@@ -256,10 +258,76 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
+// copy directory with relative link targeting node inside into nothing
+{
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+  const linkSourceUrl = resolveUrl("source/link", tempDirectoryUrl)
+  const linkDestinationUrl = resolveUrl("dest/link", tempDirectoryUrl)
+  await writeDirectory(sourceUrl)
+  await writeSymbolicLink(linkSourceUrl, "./whatever")
+
+  await copyFileSystemNode(sourceUrl, destinationUrl)
+  const actual = await readSymbolicLink(linkDestinationUrl)
+  const expected = "./whatever"
+  assert({ actual, expected })
+  await ensureEmptyDirectory(tempDirectoryUrl)
+}
+
+// copy directory with relative link targeting node outside into nothing
+{
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+  const linkSourceUrl = resolveUrl("source/link", tempDirectoryUrl)
+  const linkDestinationUrl = resolveUrl("dest/link", tempDirectoryUrl)
+  await writeDirectory(sourceUrl)
+  await writeSymbolicLink(linkSourceUrl, "../whatever")
+
+  await copyFileSystemNode(sourceUrl, destinationUrl)
+  const actual = await readSymbolicLink(linkDestinationUrl)
+  const expected = "../whatever"
+  assert({ actual, expected })
+  await ensureEmptyDirectory(tempDirectoryUrl)
+}
+
+// copy directory with absolute link inside into nothing
+{
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+  const linkSourceUrl = resolveUrl("source/link", tempDirectoryUrl)
+  const linkDestinationUrl = resolveUrl("dest/link", tempDirectoryUrl)
+  const insideSourceUrl = resolveUrl("source/file", tempDirectoryUrl)
+  const insideDestinationUrl = resolveUrl("dest/file", tempDirectoryUrl)
+  await writeDirectory(sourceUrl)
+  await writeSymbolicLink(linkSourceUrl, insideSourceUrl)
+
+  await copyFileSystemNode(sourceUrl, destinationUrl)
+  const actual = await readSymbolicLink(linkDestinationUrl)
+  const expected = insideDestinationUrl
+  assert({ actual, expected })
+  await ensureEmptyDirectory(tempDirectoryUrl)
+}
+
+// copy directory with absolute link absolute link outside into nothing
+{
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+  const linkSourceUrl = resolveUrl("source/link", tempDirectoryUrl)
+  const linkDestinationUrl = resolveUrl("dest/link", tempDirectoryUrl)
+  await writeDirectory(sourceUrl)
+  await writeSymbolicLink(linkSourceUrl, tempDirectoryUrl)
+
+  await copyFileSystemNode(sourceUrl, destinationUrl)
+  const actual = await readSymbolicLink(linkDestinationUrl)
+  const expected = tempDirectoryUrl
+  assert({ actual, expected })
+  await ensureEmptyDirectory(tempDirectoryUrl)
+}
+
 // copy link into nothing
 {
-  const sourceUrl = resolveUrl("link", tempDirectoryUrl)
-  const destinationUrl = resolveUrl("link-renamed", tempDirectoryUrl)
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
   await writeSymbolicLink(sourceUrl, "./whatever")
 
   await copyFileSystemNode(sourceUrl, destinationUrl)
@@ -275,68 +343,113 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
-// copy directory with relative link targeting node inside into nothing
+// copy link to nothing into link to nothing
 {
-  const sourceUrl = resolveUrl("source/", tempDirectoryUrl)
-  const destinationUrl = resolveUrl("dest/", tempDirectoryUrl)
-  const linkSourceUrl = resolveUrl("link", sourceUrl)
-  const linkDestinationUrl = resolveUrl("link", destinationUrl)
-  await writeDirectory(sourceUrl)
-  await writeSymbolicLink(linkSourceUrl, "./whatever")
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+  const fileUrl = resolveUrl("desttarget", tempDirectoryUrl)
+  await writeSymbolicLink(sourceUrl, "./sourcetarget")
+  await writeSymbolicLink(destinationUrl, "./desttarget")
 
   await copyFileSystemNode(sourceUrl, destinationUrl)
-  const actual = await readSymbolicLink(linkDestinationUrl)
-  const expected = "./whatever"
+  const actual = {
+    sourceLinkTarget: await readSymbolicLink(sourceUrl),
+    destinationLinkTarget: await readSymbolicLink(destinationUrl),
+    linkTarget: await readSymbolicLink(fileUrl),
+  }
+  const expected = {
+    sourceLinkTarget: "./sourcetarget",
+    destinationLinkTarget: "./desttarget",
+    linkTarget: "./sourcetarget",
+  }
   assert({ actual, expected })
   await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
-// copy directory with relative link targeting node outside into nothing
+// copy link to nothing into link to nothing with followLink disabled
 {
-  const sourceUrl = resolveUrl("source/", tempDirectoryUrl)
-  const destinationUrl = resolveUrl("dest/", tempDirectoryUrl)
-  const linkSourceUrl = resolveUrl("link", sourceUrl)
-  const linkDestinationUrl = resolveUrl("link", destinationUrl)
-  await writeDirectory(sourceUrl)
-  await writeSymbolicLink(linkSourceUrl, "../whatever")
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+  await writeSymbolicLink(sourceUrl, "./whatever")
+  await writeSymbolicLink(destinationUrl, "./whatever")
 
-  await copyFileSystemNode(sourceUrl, destinationUrl)
-  const actual = await readSymbolicLink(linkDestinationUrl)
-  const expected = "../whatever"
+  try {
+    await copyFileSystemNode(sourceUrl, destinationUrl, { followLink: false })
+    throw new Error("should throw")
+  } catch (actual) {
+    const expected = new Error(
+      `cannot copy symbolic-link from ${urlToFileSystemPath(sourceUrl)} to ${urlToFileSystemPath(
+        destinationUrl,
+      )} because destination exists and overwrite option is disabled`,
+    )
+    assert({ actual, expected })
+    await ensureEmptyDirectory(tempDirectoryUrl)
+  }
+}
+
+// copy link to nothing into link to nothing with followLink disabled and overwrite enabled
+{
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+  const sourceLinkTarget = "./sourcetarget"
+  const destinationLinkTarget = "./destinationtarget"
+  await writeSymbolicLink(sourceUrl, sourceLinkTarget)
+  await writeSymbolicLink(destinationUrl, destinationLinkTarget)
+
+  await copyFileSystemNode(sourceUrl, destinationUrl, {
+    followLink: false,
+    overwrite: true,
+  })
+  const actual = {
+    sourceLinkTarget: await readSymbolicLink(sourceUrl),
+    destinationLinkTarget: await readSymbolicLink(destinationUrl),
+  }
+  const expected = {
+    sourceLinkTarget,
+    destinationLinkTarget: sourceLinkTarget,
+  }
   assert({ actual, expected })
   await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
-// copy directory with absolute link inside into nothing
+// copy file into link to nothing
 {
-  const sourceUrl = resolveUrl("source/", tempDirectoryUrl)
-  const destinationUrl = resolveUrl("dest/", tempDirectoryUrl)
-  const linkSourceUrl = resolveUrl("link", sourceUrl)
-  const linkDestinationUrl = resolveUrl("link", destinationUrl)
-  const insideSourceUrl = resolveUrl("file", sourceUrl)
-  const insideDestinationUrl = resolveUrl("file", destinationUrl)
-  await writeDirectory(sourceUrl)
-  await writeSymbolicLink(linkSourceUrl, insideSourceUrl)
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+  const fileUrl = resolveUrl("file", tempDirectoryUrl)
+  await writeFile(sourceUrl, "foo")
+  await writeSymbolicLink(destinationUrl, "./file")
 
   await copyFileSystemNode(sourceUrl, destinationUrl)
-  const actual = await readSymbolicLink(linkDestinationUrl)
-  const expected = insideDestinationUrl
+  const actual = {
+    sourceContent: await readFile(sourceUrl),
+    destinationLinkTarget: await readSymbolicLink(destinationUrl),
+    fileContent: await readFile(fileUrl),
+  }
+  const expected = {
+    sourceContent: "foo",
+    destinationLinkTarget: "./file",
+    fileContent: "foo",
+  }
   assert({ actual, expected })
   await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
-// copy directory with absolute link absolute link outside into nothing
+// copy file into link to same file
 {
-  const sourceUrl = resolveUrl("dir/", tempDirectoryUrl)
-  const destinationUrl = resolveUrl("other/", tempDirectoryUrl)
-  const linkSourceUrl = resolveUrl("link", sourceUrl)
-  const linkDestinationUrl = resolveUrl("link", destinationUrl)
-  await writeDirectory(sourceUrl)
-  await writeSymbolicLink(linkSourceUrl, tempDirectoryUrl)
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+  await writeFile(sourceUrl, "foo")
+  await writeSymbolicLink(destinationUrl, "./source")
 
-  await copyFileSystemNode(sourceUrl, destinationUrl)
-  const actual = await readSymbolicLink(linkDestinationUrl)
-  const expected = tempDirectoryUrl
-  assert({ actual, expected })
-  await ensureEmptyDirectory(tempDirectoryUrl)
+  try {
+    await copyFileSystemNode(sourceUrl, destinationUrl, { overwrite: true })
+    throw new Error("should throw")
+  } catch (actual) {
+    const expected = new Error(
+      `cannot copy ${urlToFileSystemPath(sourceUrl)} because destination and source are the same`,
+    )
+    assert({ actual, expected })
+    await ensureEmptyDirectory(tempDirectoryUrl)
+  }
 }

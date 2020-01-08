@@ -1,5 +1,6 @@
 /* eslint-disable import/max-dependencies */
 import { copyFile as copyFileNode } from "fs"
+import { urlTargetsSameFileSystemPath } from "./internal/urlTargetsSameFileSystemPath.js"
 import { statsToType } from "./internal/statsToType.js"
 import { ensureUrlTrailingSlash } from "./internal/ensureUrlTrailingSlash.js"
 import { resolveUrl } from "./resolveUrl.js"
@@ -27,12 +28,12 @@ export const copyFileSystemNode = async (
     preserveMtime = preserveStat,
     preservePermissions = preserveStat,
     allowUseless = false,
+    followLink = true,
   } = {},
 ) => {
-  let sourceUrl = assertAndNormalizeFileUrl(source)
+  const sourceUrl = assertAndNormalizeFileUrl(source)
   let destinationUrl = assertAndNormalizeFileUrl(destination)
   const sourcePath = urlToFileSystemPath(sourceUrl)
-  const destinationPath = urlToFileSystemPath(destinationUrl)
 
   const sourceStats = await readFileSystemNodeStat(sourceUrl, {
     nullIfNotFound: true,
@@ -41,21 +42,27 @@ export const copyFileSystemNode = async (
   if (!sourceStats) {
     throw new Error(`nothing to copy at ${sourcePath}`)
   }
-  if (sourceStats.isDirectory()) {
-    sourceUrl = ensureUrlTrailingSlash(sourceUrl)
-    destinationUrl = ensureUrlTrailingSlash(destinationUrl)
+
+  let destinationStats = await readFileSystemNodeStat(destinationUrl, {
+    nullIfNotFound: true,
+    // we force false here but in fact we will follow the destination link
+    // to know where we will actually move and detect useless move overrite etc..
+    followLink: false,
+  })
+
+  if (followLink && destinationStats && destinationStats.isSymbolicLink()) {
+    const target = await readSymbolicLink(destinationUrl)
+    destinationUrl = resolveUrl(target, destinationUrl)
+    destinationStats = await readFileSystemNodeStat(destinationUrl, { nullIfNotFound: true })
   }
-  if (sourceUrl === destinationUrl) {
+  const destinationPath = urlToFileSystemPath(destinationUrl)
+
+  if (urlTargetsSameFileSystemPath(sourceUrl, destinationUrl)) {
     if (allowUseless) {
       return
     }
     throw new Error(`cannot copy ${sourcePath} because destination and source are the same`)
   }
-
-  const destinationStats = await readFileSystemNodeStat(destinationUrl, {
-    nullIfNotFound: true,
-    followLink: false,
-  })
 
   if (destinationStats) {
     const sourceType = statsToType(sourceStats)
@@ -76,6 +83,10 @@ export const copyFileSystemNode = async (
     await removeFileSystemNode(destinationUrl, { recursive: true, allowUseless: true })
   } else {
     await ensureParentDirectories(destinationUrl)
+  }
+
+  if (sourceStats.isDirectory()) {
+    destinationUrl = ensureUrlTrailingSlash(destinationUrl)
   }
 
   const visit = async (url, stats) => {
