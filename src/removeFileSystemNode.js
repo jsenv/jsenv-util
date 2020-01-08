@@ -8,19 +8,13 @@ import { resolveUrl } from "./resolveUrl.js"
 
 export const removeFileSystemNode = async (
   source,
-  {
-    followLink = true,
-    allowUseless = false,
-    recursive = false,
-    maxRetries = 3,
-    retryDelay = 100,
-  } = {},
+  { allowUseless = false, recursive = false, maxRetries = 3, retryDelay = 100 } = {},
 ) => {
   const sourceUrl = assertAndNormalizeFileUrl(source)
 
   const sourceStats = await readFileSystemNodeStat(sourceUrl, {
     nullIfNotFound: true,
-    followLink,
+    followLink: false,
   })
   if (!sourceStats) {
     if (allowUseless) {
@@ -42,8 +36,7 @@ export const removeFileSystemNode = async (
       maxRetries,
       retryDelay,
     })
-  }
-  else if (sourceStats.isDirectory()) {
+  } else if (sourceStats.isDirectory()) {
     await removeDirectory(ensureUrlTrailingSlash(sourceUrl), {
       recursive,
       maxRetries,

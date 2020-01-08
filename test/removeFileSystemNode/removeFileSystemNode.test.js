@@ -53,10 +53,10 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 
 // remove file inside a directory without execute permission
 {
-  const directoryUrl = resolveUrl("dir/", tempDirectoryUrl)
-  const sourceUrl = resolveUrl("dir/link", tempDirectoryUrl)
+  const sourceUrl = resolveUrl("dir/source", tempDirectoryUrl)
+  const directoryUrl = resolveUrl("dir", tempDirectoryUrl)
   await writeDirectory(directoryUrl)
-  await writeFile(sourceUrl, "whatever")
+  await writeFile(sourceUrl)
   await writeFileSystemNodePermissions(directoryUrl, {
     owner: { read: true, write: true, execute: false },
   })
@@ -68,7 +68,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
     const expected = new Error(
       `EACCES: permission denied, lstat '${urlToFileSystemPath(sourceUrl)}'`,
     )
-    expected.errno = -13
+    expected.errno = actual.errno
     expected.code = "EACCES"
     expected.syscall = "lstat"
     expected.path = urlToFileSystemPath(sourceUrl)
@@ -251,70 +251,64 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   assert({ actual, expected })
 }
 
+// remove directory with a link to nothing
+{
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const linkUrl = resolveUrl("source/link", tempDirectoryUrl)
+  await writeSymbolicLink(linkUrl, "./whatever")
+
+  await removeFileSystemNode(sourceUrl, { recursive: true })
+  const actual = await testDirectoryPresence(sourceUrl)
+  const expected = false
+  assert({ actual, expected })
+}
+
 // remove link to nothing
 {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   await writeSymbolicLink(sourceUrl, "./whatever")
 
   await removeFileSystemNode(sourceUrl)
-  const actual = await testSymbolicLinkPresence(sourceUrl, {
-    followLink: false,
-  })
+  const actual = await testSymbolicLinkPresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
 
-// remove directory with a link to nothing
-{
-  const sourceUrl = resolveUrl("source/", tempDirectoryUrl)
-  const linkUrl = resolveUrl("source/link", tempDirectoryUrl)
-  await writeSymbolicLink(linkUrl, "./whatever")
-
-  await removeFileSystemNode(sourceUrl, { recursive: true })
-  const actual = await testDirectoryPresence(sourceUrl, {
-    followLink: false,
-  })
-  const expected = false
-  assert({ actual, expected })
-}
-
-// remove link to a file
+// remove link to file
 {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
-  const linkUrl = resolveUrl("link", tempDirectoryUrl)
-  const linkTarget = "./file.txt"
-  await writeSymbolicLink(linkUrl, linkTarget)
-  await writeFile(sourceUrl)
+  const fileUrl = resolveUrl("file", tempDirectoryUrl)
+  await writeFile(fileUrl)
+  await writeSymbolicLink(sourceUrl, "./file")
 
-  await removeFileSystemNode(linkUrl)
+  await removeFileSystemNode(sourceUrl)
   const actual = {
-    filePresent: await testFilePresence(sourceUrl),
-    linkPresent: await testSymbolicLinkPresence(sourceUrl),
+    linkPresence: await testSymbolicLinkPresence(sourceUrl),
+    filePresence: await testFilePresence(fileUrl),
   }
   const expected = {
-    filePresent: true,
-    linkPresent: false,
+    linkPresence: false,
+    filePresence: true,
   }
   assert({ actual, expected })
   await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
-// remove link to a directory
+// remove link to directory
 {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
-  const linkUrl = resolveUrl("link", tempDirectoryUrl)
-  const linkTarget = "./dir"
-  await writeSymbolicLink(linkUrl, linkTarget)
-  await writeDirectory(sourceUrl)
+  const directoryUrl = resolveUrl("dir", tempDirectoryUrl)
+  await writeDirectory(directoryUrl)
+  await writeSymbolicLink(sourceUrl, "./dir")
 
-  await removeFileSystemNode(linkUrl)
+  await removeFileSystemNode(sourceUrl)
   const actual = {
-    filePresent: await testFilePresence(sourceUrl),
-    linkPresent: await testSymbolicLinkPresence(linkUrl),
+    linkPresence: await testSymbolicLinkPresence(sourceUrl),
+    directoryPresence: await testDirectoryPresence(directoryUrl),
   }
   const expected = {
-    filePresent: true,
-    linkPresent: false,
+    linkPresence: false,
+    directoryPresence: true,
   }
   assert({ actual, expected })
   await ensureEmptyDirectory(tempDirectoryUrl)
