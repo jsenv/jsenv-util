@@ -1,10 +1,6 @@
 import { assert } from "@jsenv/assert"
-import {
-  ensureEmptyDirectory,
-  resolveUrl,
-  writeFile,
-  testFileSystemNodePresence,
-} from "../../index.js"
+import { ensureEmptyDirectory, resolveUrl, writeFile } from "../../index.js"
+import { testDirectoryPresence, testFilePresence } from "../testHelpers.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
 await ensureEmptyDirectory(tempDirectoryUrl)
@@ -16,8 +12,8 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 
   await ensureEmptyDirectory(sourceUrl)
   const actual = {
-    directoryPresence: await testFileSystemNodePresence(sourceUrl),
-    filePresence: await testFileSystemNodePresence(fileUrl),
+    directoryPresence: await testDirectoryPresence(sourceUrl),
+    filePresence: await testFilePresence(fileUrl),
   }
   const expected = {
     directoryPresence: true,

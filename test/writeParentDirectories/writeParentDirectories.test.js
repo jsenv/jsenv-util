@@ -4,8 +4,8 @@ import {
   writeDirectory,
   ensureEmptyDirectory,
   ensureParentDirectories,
-  testFileSystemNodePresence,
 } from "../../index.js"
+import { testDirectoryPresence } from "../testHelpers.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
 await ensureEmptyDirectory(tempDirectoryUrl)
@@ -16,7 +16,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   const destinationUrl = resolveUrl("dir/file.js", tempDirectoryUrl)
 
   await ensureParentDirectories(destinationUrl)
-  const actual = await testFileSystemNodePresence(parentDirectoryUrl)
+  const actual = await testDirectoryPresence(parentDirectoryUrl)
   const expected = true
   assert({ actual, expected })
   await ensureEmptyDirectory(tempDirectoryUrl)
@@ -29,7 +29,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await writeDirectory(parentDirectoryUrl)
 
   await ensureParentDirectories(destinationUrl)
-  const actual = await testFileSystemNodePresence(parentDirectoryUrl)
+  const actual = await testDirectoryPresence(parentDirectoryUrl)
   const expected = true
   assert({ actual, expected })
   await ensureEmptyDirectory(tempDirectoryUrl)

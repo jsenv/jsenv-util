@@ -11,7 +11,7 @@ import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
 export const moveFileSystemNode = async (
   source,
   destination,
-  { overwrite = false, allowUseless = false } = {},
+  { overwrite = false, allowUseless = false, followSymbolicLink = true } = {},
 ) => {
   let sourceUrl = assertAndNormalizeFileUrl(source)
   let destinationUrl = assertAndNormalizeFileUrl(destination)
@@ -20,7 +20,7 @@ export const moveFileSystemNode = async (
 
   const sourceStats = await readFileSystemNodeStat(sourceUrl, {
     nullIfNotFound: true,
-    followSymbolicLink: false,
+    followSymbolicLink,
   })
   if (!sourceStats) {
     throw new Error(`nothing to move from ${sourcePath}`)
@@ -38,7 +38,7 @@ export const moveFileSystemNode = async (
 
   const destinationStats = await readFileSystemNodeStat(destinationUrl, {
     nullIfNotFound: true,
-    followSymbolicLink: false,
+    followSymbolicLink: true,
   })
   if (destinationStats) {
     const sourceType = statsToType(sourceStats)

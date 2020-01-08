@@ -11,10 +11,10 @@ import {
   readFileSystemNodePermissions,
   readFileSystemNodeModificationTime,
   urlToFileSystemPath,
-  testFileSystemNodePresence,
   writeSymbolicLink,
   readSymbolicLink,
 } from "../../index.js"
+import { testDirectoryPresence, testFilePresence } from "../testHelpers.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
 await ensureEmptyDirectory(tempDirectoryUrl)
@@ -195,12 +195,12 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 
   await copyFileSystemNode(sourceUrl, destinationUrl, { overwrite: true })
   const actual = {
-    sourcePresence: await testFileSystemNodePresence(sourceUrl),
-    destinationPresence: await testFileSystemNodePresence(destinationUrl),
+    directoryAtSource: await testDirectoryPresence(sourceUrl),
+    directoryAtDestination: await testDirectoryPresence(destinationUrl),
   }
   const expected = {
-    sourcePresence: true,
-    destinationPresence: true,
+    directoryAtSource: true,
+    directoryAtDestination: true,
   }
   assert({ actual, expected })
   await ensureEmptyDirectory(tempDirectoryUrl)
@@ -228,7 +228,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
-// copy director with content into directory with content and overwrite enabled
+// copy directory with content into directory with content and overwrite enabled
 {
   const sourceUrl = resolveUrl("source/", tempDirectoryUrl)
   const destinationUrl = resolveUrl("dest/", tempDirectoryUrl)
@@ -245,7 +245,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   const actual = {
     fileASourceContent: await readFile(fileASourceUrl),
     fileADestinationContent: await readFile(fileADestinationUrl),
-    fileBDestinationPresent: await testFileSystemNodePresence(fileBDestinationUrl),
+    fileBDestinationPresent: await testFilePresence(fileBDestinationUrl),
   }
   const expected = {
     fileASourceContent: "sourceA",

@@ -35,7 +35,6 @@ Set of functions often needed when using Node.js.
   - [resolveDirectoryUrl](#resolveDirectoryUrl)
   - [resolveUrl](#resolveUrl)
   - [testFileSystemNodePermissions](#testFileSystemNodePermissions)
-  - [testFileSystemNodePresence](#testFileSystemNodePresence)
   - [urlIsInsideOf](#urlIsInsideOf)
   - [urlToFileSystemPath](#urlToFileSystemPath)
   - [urlToRelativeUrl](#urlToRelativeUrl)
@@ -415,18 +414,6 @@ const allowed = await testFileSystemNodePermissions("file:///file.js", { execute
 ```
 
 — source code at [src/testFileSystemNodePermissions.js](./src/testFileSystemNodePermissions.js).
-
-### testFileSystemNodePresence
-
-> `testFileSystemNodePresence` is an async function returning a boolean indicating if the filesystem node exists.
-
-```js
-import { testFileSystemNodePresence } from "@jsenv/util"
-
-const present = await testFileSystemNodePresence("file:///file.js")
-```
-
-— source code at [src/testFileSystemNodePresence.js](./src/testFileSystemNodePresence.js).
 
 ### urlIsInsideOf
 

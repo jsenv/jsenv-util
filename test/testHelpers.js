@@ -1,6 +1,6 @@
 // import { fork } from "child_process"
 import { promises } from "fs"
-import { removeFileSystemNode, urlToFileSystemPath } from "../index.js"
+import { removeFileSystemNode, urlToFileSystemPath, readFileSystemNodeStat } from "../index.js"
 
 // https://nodejs.org/dist/latest-v13.x/docs/api/fs.html#fs_class_filehandle
 const { open } = promises
@@ -18,4 +18,22 @@ export const makeBusyFile = async (fileUrl, callback) => {
     await filehandle.close()
     await removeFileSystemNode(fileUrl, { allowUseless: true })
   }
+}
+
+export const testDirectoryPresence = async (source) => {
+  const stats = await readFileSystemNodeStat(source, { nullIfNotFound: true })
+  return Boolean(stats && stats.isDirectory())
+}
+
+export const testFilePresence = async (source) => {
+  const stats = await readFileSystemNodeStat(source, { nullIfNotFound: true })
+  return Boolean(stats && stats.isFile())
+}
+
+export const testSymbolicLinkPresence = async (source) => {
+  const stats = await readFileSystemNodeStat(source, {
+    nullIfNotFound: true,
+    followSymbolicLink: false,
+  })
+  return Boolean(stats && stats.isSymbolicLink())
 }

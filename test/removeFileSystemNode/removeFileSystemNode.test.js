@@ -8,9 +8,13 @@ import {
   writeFileSystemNodePermissions,
   urlToFileSystemPath,
   writeSymbolicLink,
-  testFileSystemNodePresence,
 } from "../../index.js"
-import { makeBusyFile } from "../testHelpers.js"
+import {
+  makeBusyFile,
+  testFilePresence,
+  testDirectoryPresence,
+  testSymbolicLinkPresence,
+} from "../testHelpers.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
 await ensureEmptyDirectory(tempDirectoryUrl)
@@ -41,7 +45,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   await makeBusyFile(sourceUrl, async () => {
     await removeFileSystemNode(sourceUrl)
-    const actual = await testFileSystemNodePresence(sourceUrl)
+    const actual = await testFilePresence(sourceUrl)
     const expected = false
     assert({ actual, expected })
   })
@@ -86,7 +90,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   })
 
   await removeFileSystemNode(sourceUrl)
-  const actual = await testFileSystemNodePresence(sourceUrl)
+  const actual = await testFilePresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
@@ -97,7 +101,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await writeFile(sourceUrl, "normal")
 
   await removeFileSystemNode(sourceUrl)
-  const actual = await testFileSystemNodePresence(sourceUrl)
+  const actual = await testFilePresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
@@ -109,7 +113,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await writeFile(sourceUrl, "trailing")
 
   await removeFileSystemNode(sourceUrlWithTrailingSlash)
-  const actual = await testFileSystemNodePresence(sourceUrl)
+  const actual = await testFilePresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
@@ -120,7 +124,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await writeDirectory(sourceUrl)
 
   await removeFileSystemNode(sourceUrl)
-  const actual = await testFileSystemNodePresence(sourceUrl)
+  const actual = await testFilePresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
@@ -134,7 +138,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   })
 
   await removeFileSystemNode(sourceUrl)
-  const actual = await testFileSystemNodePresence(sourceUrl)
+  const actual = await testFilePresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
@@ -171,7 +175,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await writeFile(fileUrl)
 
   await removeFileSystemNode(sourceUrl, { recursive: true })
-  const actual = await testFileSystemNodePresence(sourceUrl)
+  const actual = await testDirectoryPresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
@@ -212,7 +216,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 
   await makeBusyFile(fileUrl, async () => {
     await removeFileSystemNode(sourceUrl, { recursive: true })
-    const actual = await testFileSystemNodePresence(sourceUrl)
+    const actual = await testDirectoryPresence(sourceUrl)
     const expected = false
     assert({ actual, expected })
   })
@@ -228,7 +232,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   })
 
   await removeFileSystemNode(sourceUrl, { recursive: true })
-  const actual = await testFileSystemNodePresence(sourceUrl)
+  const actual = await testDirectoryPresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
@@ -242,7 +246,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await writeFile(fileBUrl, "contentB")
 
   await removeFileSystemNode(sourceUrl, { recursive: true })
-  const actual = await testFileSystemNodePresence(sourceUrl)
+  const actual = await testDirectoryPresence(sourceUrl)
   const expected = false
   assert({ actual, expected })
 }
@@ -253,7 +257,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await writeSymbolicLink(sourceUrl, "./whatever")
 
   await removeFileSystemNode(sourceUrl)
-  const actual = await testFileSystemNodePresence(sourceUrl, {
+  const actual = await testSymbolicLinkPresence(sourceUrl, {
     followSymbolicLink: false,
   })
   const expected = false
@@ -267,7 +271,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await writeSymbolicLink(linkUrl, "./whatever")
 
   await removeFileSystemNode(sourceUrl, { recursive: true })
-  const actual = await testFileSystemNodePresence(sourceUrl, {
+  const actual = await testDirectoryPresence(sourceUrl, {
     followSymbolicLink: false,
   })
   const expected = false
@@ -284,8 +288,8 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 
   await removeFileSystemNode(linkUrl)
   const actual = {
-    filePresent: await testFileSystemNodePresence(sourceUrl),
-    linkPresent: await testFileSystemNodePresence(linkUrl, { followSymbolicLink: false }),
+    filePresent: await testFilePresence(sourceUrl),
+    linkPresent: await testSymbolicLinkPresence(sourceUrl),
   }
   const expected = {
     filePresent: true,
@@ -305,8 +309,8 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 
   await removeFileSystemNode(linkUrl)
   const actual = {
-    filePresent: await testFileSystemNodePresence(sourceUrl),
-    linkPresent: await testFileSystemNodePresence(linkUrl, { followSymbolicLink: false }),
+    filePresent: await testFilePresence(sourceUrl),
+    linkPresent: await testSymbolicLinkPresence(linkUrl),
   }
   const expected = {
     filePresent: true,
