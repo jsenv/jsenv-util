@@ -1,8 +1,8 @@
-import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
+import { fileSystemPathToUrl } from "./fileSystemPathToUrl.js"
 
 const isWindows = process.platform === "win32"
 
-const baseUrlFallback = urlToFileSystemPath(process.cwd())
+const baseUrlFallback = fileSystemPathToUrl(process.cwd())
 
 export const resolveUrl = (specifier, baseUrl) => {
   if (typeof baseUrl === "undefined") {
@@ -24,6 +24,7 @@ export const resolveUrl = (specifier, baseUrl) => {
     -> file:///C:/file.js
 
     This is to be sure we don't loose the drive letter otherwise the url becomes invalid
+    when we try to read the corresponding file later on
     */
     if (url.startsWith("file:///")) {
       const afterProtocol = url.slice("file:///".length)
