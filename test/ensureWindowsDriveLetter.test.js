@@ -33,7 +33,7 @@ if (process.platform === "win32") {
   try {
     ensureWindowsDriveLetter()
   } catch (actual) {
-    const expected = new TypeError(`url must be an absolute url, got undefined`)
+    const expected = new Error(`absolute url expected but got undefined`)
     assert({ actual, expected })
   }
 
@@ -41,7 +41,7 @@ if (process.platform === "win32") {
   try {
     ensureWindowsDriveLetter("./file.js")
   } catch (actual) {
-    const expected = new TypeError(`url must be an absolute url, got ./file.js`)
+    const expected = new Error(`absolute url expected but got ./file.js`)
     assert({ actual, expected })
   }
 
@@ -49,7 +49,9 @@ if (process.platform === "win32") {
   try {
     ensureWindowsDriveLetter("file:///file.js")
   } catch (actual) {
-    const expected = new TypeError(`baseUrl missing to resolve ./file.js`)
+    const expected = new Error(
+      `absolute baseUrl expected but got undefined to ensure windows drive letter on file:///file.js`,
+    )
     assert({ actual, expected })
   }
 
@@ -57,7 +59,9 @@ if (process.platform === "win32") {
   try {
     ensureWindowsDriveLetter("file:///file.js", "./file.js")
   } catch (actual) {
-    const expected = new TypeError(`url must be an absolute url, got ./file.js`)
+    const expected = new Error(
+      `absolute baseUrl expected but got ./file.js to ensure windows drive letter on file:///file.js`,
+    )
     assert({ actual, expected })
   }
 
@@ -66,7 +70,7 @@ if (process.platform === "win32") {
     ensureWindowsDriveLetter("file:///file.js", "file:///dir")
   } catch (actual) {
     const expected = new Error(
-      `cannot ensure windows drive letter on file:///file.js because baseUrl (file:///dir) has no drive letter`,
+      `drive letter expected on baseUrl but got file:///dir to ensure windows drive letter on file:///file.js`,
     )
     assert({ actual, expected })
   }

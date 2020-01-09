@@ -20,7 +20,7 @@ export const ensureWindowsDriveLetter = (url, baseUrl) => {
   try {
     url = String(new URL(url))
   } catch (e) {
-    throw new TypeError(`url must be an absolute url, got ${url}`)
+    throw new Error(`absolute url expected but got ${url}`)
   }
 
   if (!isWindows) {
@@ -30,7 +30,9 @@ export const ensureWindowsDriveLetter = (url, baseUrl) => {
   try {
     baseUrl = String(new URL(baseUrl))
   } catch (e) {
-    throw new TypeError(`baseUrl must be an absolute url, got ${baseUrl}`)
+    throw new Error(
+      `absolute baseUrl expected but got ${baseUrl} to ensure windows drive letter on ${url}`,
+    )
   }
 
   if (!url.startsWith("file://")) {
@@ -47,7 +49,7 @@ export const ensureWindowsDriveLetter = (url, baseUrl) => {
   const driveLetter = extractDriveLetter(baseUrlOrFallback.slice("file://".length))
   if (!driveLetter) {
     throw new Error(
-      `cannot ensure windows drive letter on ${url} because baseUrl (${baseUrl}) has no drive letter`,
+      `drive letter expected on baseUrl but got ${baseUrl} to ensure windows drive letter on ${url}`,
     )
   }
   return `file:///${driveLetter}:${afterProtocol}`
