@@ -29,6 +29,37 @@ if (process.platform === "win32") {
     const expected = "file:///C:/file.js"
     assert({ actual, expected })
   }
+  // url missing
+  try {
+    ensureWindowsDriveLetter()
+  } catch (actual) {
+    const expected = new TypeError(`url must be an absolute url, got undefined`)
+    assert({ actual, expected })
+  }
+
+  // url relative
+  try {
+    ensureWindowsDriveLetter("./file.js")
+  } catch (actual) {
+    const expected = new TypeError(`url must be an absolute url, got ./file.js`)
+    assert({ actual, expected })
+  }
+
+  // url file, baseUrl undefined
+  try {
+    ensureWindowsDriveLetter("file:///file.js")
+  } catch (actual) {
+    const expected = new TypeError(`baseUrl missing to resolve ./file.js`)
+    assert({ actual, expected })
+  }
+
+  // url file, baseUrl relative
+  try {
+    ensureWindowsDriveLetter("file:///file.js", "./file.js")
+  } catch (actual) {
+    const expected = new TypeError(`url must be an absolute url, got ./file.js`)
+    assert({ actual, expected })
+  }
 
   // url file, baseUrl file without drive letter
   try {
@@ -37,38 +68,6 @@ if (process.platform === "win32") {
     const expected = new Error(
       `cannot ensure windows drive letter on file:///file.js because baseUrl (file:///dir) has no drive letter`,
     )
-    assert({ actual, expected })
-  }
-
-  // url missing
-  try {
-    ensureWindowsDriveLetter()
-  } catch (actual) {
-    const expected = new Error(`url must be an absolute url, got undefined`)
-    assert({ actual, expected })
-  }
-
-  // url relative
-  try {
-    ensureWindowsDriveLetter("./file.js")
-  } catch (actual) {
-    const expected = new Error(`url must be an absolute url, got ./file.js`)
-    assert({ actual, expected })
-  }
-
-  // url file, baseUrl undefined
-  try {
-    ensureWindowsDriveLetter("file:///file.js")
-  } catch (actual) {
-    const expected = new Error(`baseUrl missing to resolve ./file.js`)
-    assert({ actual, expected })
-  }
-
-  // url file, baseUrl relative
-  try {
-    ensureWindowsDriveLetter("file:///file.js", "./file.js")
-  } catch (actual) {
-    const expected = new Error(`url must be an absolute url, got ./file.js`)
     assert({ actual, expected })
   }
 } else {
