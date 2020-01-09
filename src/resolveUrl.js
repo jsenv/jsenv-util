@@ -29,7 +29,7 @@ export const resolveUrl = (specifier, baseUrl) => {
     if (url.startsWith("file:///")) {
       const afterProtocol = url.slice("file:///".length)
       // we still have the windows drive letter
-      if (afterProtocol[0].test(/[a-zA-Z]/) && afterProtocol[1] === ":") {
+      if (/[a-zA-Z]/.test(afterProtocol[0]) && afterProtocol[1] === ":") {
         return url
       }
 
