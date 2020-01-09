@@ -1,4 +1,5 @@
 import { readlink } from "fs"
+import { replaceBackSlashesWithSlashes } from "./internal/replaceBackSlashesWithSlashes.js"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { fileSystemPathToUrl } from "./fileSystemPathToUrl.js"
@@ -13,7 +14,11 @@ export const readSymbolicLink = (url) => {
       if (error) {
         reject(error)
       } else {
-        resolve(isFileSystemPath(resolvedPath) ? fileSystemPathToUrl(resolvedPath) : resolvedPath)
+        resolve(
+          isFileSystemPath(resolvedPath)
+            ? fileSystemPathToUrl(resolvedPath)
+            : replaceBackSlashesWithSlashes(resolvedPath),
+        )
       }
     })
   })

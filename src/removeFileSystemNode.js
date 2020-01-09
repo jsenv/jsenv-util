@@ -1,4 +1,4 @@
-import { unlink, rmdir } from "fs"
+import { unlink, rmdir, open, close } from "fs"
 import { ensureUrlTrailingSlash } from "./internal/ensureUrlTrailingSlash.js"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
@@ -125,12 +125,37 @@ const removeDirectory = async (
 
   const visitDirectory = async (directoryUrl) => {
     const directoryPath = urlToFileSystemPath(directoryUrl)
+    const optionsFromRecursive = recursive
+      ? {
+          handleNotEmptyError: async () => {
+            await removeDirectoryContent(directoryUrl)
+            await visitDirectory(directoryUrl)
+          },
+        }
+      : {}
     await removeDirectoryNaive(directoryPath, {
-      ...(recursive
+      ...optionsFromRecursive,
+      // Workaround for https://github.com/joyent/node/issues/4337
+      ...(process.platform === "win32"
         ? {
-            handleNotEmptyError: async () => {
-              await removeDirectoryContent(directoryUrl)
-              await visitDirectory(directoryUrl)
+            handlePermissionError: async (error) => {
+              // try to close an open descriptor to that directory
+              await new Promise((resolve, reject) => {
+                open(directoryPath, "r", (openError, fd) => {
+                  if (fd) {
+                    close(fd, (closeError) => {
+                      if (closeError) {
+                        reject(error)
+                      } else {
+                        resolve()
+                      }
+                    })
+                  } else {
+                    reject(error)
+                  }
+                })
+              })
+              await removeDirectoryNaive(directoryPath, { ...optionsFromRecursive })
             },
           }
         : {}),
@@ -162,20 +187,23 @@ const removeDirectory = async (
   }
 }
 
-const removeDirectoryNaive = (directoryPath, { handleNotEmptyError = null } = {}) => {
+const removeDirectoryNaive = (
+  directoryPath,
+  { handleNotEmptyError = null, handlePermissionError = null } = {},
+) => {
   return new Promise((resolve, reject) => {
     rmdir(directoryPath, (error, lstatObject) => {
       if (error) {
-        if (error.code === "ENOENT") {
+        if (handlePermissionError && error.code === "EPERM") {
+          resolve(handlePermissionError(error))
+        } else if (error.code === "ENOENT") {
           resolve()
         } else if (
           handleNotEmptyError &&
           // linux os
           (error.code === "ENOTEMPTY" ||
             // SunOS
-            error.code === "EEXIST" ||
-            // windows os
-            error.code === "EPERM")
+            error.code === "EEXIST")
         ) {
           resolve(handleNotEmptyError(error))
         } else {

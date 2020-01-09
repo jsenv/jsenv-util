@@ -25,7 +25,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
     const expected = new Error(
       `ENOENT: no such file or directory, stat '${urlToFileSystemPath(sourceUrl)}'`,
     )
-    expected.errno = -2
+    expected.errno = actual.errno
     expected.code = "ENOENT"
     expected.syscall = "stat"
     expected.path = urlToFileSystemPath(sourceUrl)
@@ -101,7 +101,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
     const expected = new Error(
       `EACCES: permission denied, stat '${urlToFileSystemPath(sourceUrl)}'`,
     )
-    expected.errno = -13
+    expected.errno = actual.errno
     expected.code = "EACCES"
     expected.syscall = "stat"
     expected.path = urlToFileSystemPath(sourceUrl)
@@ -150,7 +150,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
     const expected = new Error(
       `ENOENT: no such file or directory, stat '${urlToFileSystemPath(sourceUrl)}'`,
     )
-    expected.errno = -2
+    expected.errno = actual.errno
     expected.code = "ENOENT"
     expected.syscall = "stat"
     expected.path = urlToFileSystemPath(sourceUrl)

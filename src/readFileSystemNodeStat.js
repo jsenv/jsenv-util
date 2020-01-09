@@ -1,7 +1,9 @@
 import { lstat, stat } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
-import { grantPermissionsOnFileSystemNode } from "./grantPermissionsOnFileSystemNode.js"
+import { writeFileSystemNodePermissions } from "./writeFileSystemNodePermissions.js"
+
+const isWindows = process.platform === "win32"
 
 export const readFileSystemNodeStat = async (
   source,
@@ -21,33 +23,31 @@ export const readFileSystemNodeStat = async (
   return readStat(sourcePath, {
     followLink,
     ...handleNotFoundOption,
-    handlePermissionDeniedError: async (error) => {
-      // Windows can EPERM on stat
-      try {
-        const restorePermission = await grantPermissionsOnFileSystemNode(sourceUrl, {
-          read: true,
-          write: true,
-          execute: true,
-        })
-
-        try {
-          const stats = await readStat(sourcePath, {
-            followLink,
-            ...handleNotFoundOption,
-            // could not fix the permission error, give up and throw original error
-            handlePermissionDeniedError: () => {
+    ...(isWindows
+      ? {
+          // Windows can EPERM on stat
+          handlePermissionDeniedError: async (error) => {
+            // unfortunately it means we mutate the permissions
+            // without being able to restore them to the previous value
+            // (because reading current permission would also throw)
+            try {
+              await writeFileSystemNodePermissions(sourceUrl, 0o666)
+              const stats = await readStat(sourcePath, {
+                followLink,
+                ...handleNotFoundOption,
+                // could not fix the permission error, give up and throw original error
+                handlePermissionDeniedError: () => {
+                  throw error
+                },
+              })
+              return stats
+            } catch (e) {
+              // failed to write permission or readState, throw original error as well
               throw error
-            },
-          })
-          return stats
-        } finally {
-          await restorePermission()
+            }
+          },
         }
-      } catch (e) {
-        // failed to grant permissions, throw original error as well
-        throw error
-      }
-    },
+      : {}),
   })
 }
 

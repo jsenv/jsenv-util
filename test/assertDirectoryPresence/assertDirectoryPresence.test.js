@@ -7,10 +7,16 @@ import {
   writeFile,
   writeDirectory,
   writeSymbolicLink,
+  writeFileSystemNodePermissions,
 } from "../../index.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
 await ensureEmptyDirectory(tempDirectoryUrl)
+await writeFileSystemNodePermissions(tempDirectoryUrl, {
+  owner: { read: true, write: true, execute: true },
+  group: { read: true, write: true, execute: true },
+  others: { read: true, write: true, execute: true },
+})
 
 // on nothing
 {
@@ -50,6 +56,25 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   const expected = undefined
   assert({ actual, expected })
   await ensureEmptyDirectory(tempDirectoryUrl)
+}
+
+// on symlink to file
+{
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const fileUrl = resolveUrl("file", tempDirectoryUrl)
+  await writeFile(fileUrl)
+  await writeSymbolicLink(sourceUrl, "./file")
+
+  try {
+    await assertDirectoryPresence(sourceUrl)
+    throw new Error("should throw")
+  } catch (actual) {
+    const expected = new Error(
+      `directory expected at ${urlToFileSystemPath(sourceUrl)} and found file instead`,
+    )
+    assert({ actual, expected })
+    await ensureEmptyDirectory(tempDirectoryUrl)
+  }
 }
 
 // on symlink to nothing

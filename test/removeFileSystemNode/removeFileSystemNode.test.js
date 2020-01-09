@@ -16,6 +16,7 @@ import {
   testSymbolicLinkPresence,
 } from "../testHelpers.js"
 
+const isWindows = process.platform === "win32"
 const tempDirectoryUrl = import.meta.resolve("./temp/")
 await ensureEmptyDirectory(tempDirectoryUrl)
 
@@ -41,7 +42,8 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // remove opened filed
-{
+if (!isWindows) {
+  // on windows it woul EPERM
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   await makeBusyFile(sourceUrl, async () => {
     await removeFileSystemNode(sourceUrl)
@@ -52,7 +54,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // remove file inside a directory without execute permission
-{
+if (!isWindows) {
   const sourceUrl = resolveUrl("dir/source", tempDirectoryUrl)
   const directoryUrl = resolveUrl("dir", tempDirectoryUrl)
   await writeDirectory(directoryUrl)
@@ -82,7 +84,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // remove file without permission
-{
+if (!isWindows) {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   await writeFile(sourceUrl, "noperm")
   await writeFileSystemNodePermissions(sourceUrl, {
@@ -130,7 +132,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // remove directory without permission
-{
+if (!isWindows) {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   await writeDirectory(sourceUrl)
   await writeFileSystemNodePermissions(sourceUrl, {
@@ -155,12 +157,12 @@ await ensureEmptyDirectory(tempDirectoryUrl)
     throw new Error("should throw")
   } catch (actual) {
     const expected = new Error(
-      `ENOTEMPTY: directory not empty, rmdir '${urlToFileSystemPath(`${sourceUrl}/`)}'`,
+      `ENOTEMPTY: directory not empty, rmdir '${urlToFileSystemPath(sourceUrl)}'`,
     )
     expected.errno = actual.errno
     expected.code = "ENOTEMPTY"
     expected.syscall = "rmdir"
-    expected.path = urlToFileSystemPath(`${sourceUrl}/`)
+    expected.path = urlToFileSystemPath(sourceUrl)
     assert({ actual, expected })
   } finally {
     await ensureEmptyDirectory(tempDirectoryUrl)
@@ -181,7 +183,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // remove directory with content without permission and recursive enabled
-{
+if (!isWindows) {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   const fileUrl = resolveUrl("source/file", tempDirectoryUrl)
   await writeDirectory(sourceUrl)
@@ -209,7 +211,8 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // remove directory with a busy file
-{
+if (!isWindows) {
+  // on windows it would EPERM
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   const fileUrl = resolveUrl("source/file", tempDirectoryUrl)
   await writeDirectory(sourceUrl)
@@ -223,7 +226,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // remove directory with a file without write permission
-{
+if (!isWindows) {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   const fileUrl = resolveUrl("source/file", tempDirectoryUrl)
   await writeFile(fileUrl)
@@ -315,7 +318,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // remove directory without execute permission and link inside
-{
+if (!isWindows) {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   const linkUrl = resolveUrl("source/link", tempDirectoryUrl)
   await writeDirectory(sourceUrl)
