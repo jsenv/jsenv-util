@@ -35,7 +35,7 @@ if (process.platform === "win32") {
   // specifier scheme relative
   {
     const actual = resolveUrlPreservingWindowsDriveLetter(
-      "//dir/file.js",
+      "///dir/file.js",
       "file:///C:/directory/file.js",
     )
     const expected = "file:///C:/dir/file.js"
