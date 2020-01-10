@@ -1,4 +1,5 @@
 import { assert } from "@jsenv/assert"
+import { ensureUrlTrailingSlash } from "../../src/internal/ensureUrlTrailingSlash.js"
 import {
   writeDirectory,
   resolveUrl,
@@ -21,181 +22,181 @@ const tempDirectoryUrl = import.meta.resolve("./temp/")
 await ensureEmptyDirectory(tempDirectoryUrl)
 
 // copy nothing into nothing
-// {
-//   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
-//   const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+{
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
 
-//   try {
-//     await copyFileSystemNode(sourceUrl, destinationUrl)
-//     throw new Error("should throw")
-//   } catch (actual) {
-//     const expected = new Error(`nothing to copy at ${urlToFileSystemPath(sourceUrl)}`)
-//     assert({ actual, expected })
-//   }
-// }
+  try {
+    await copyFileSystemNode(sourceUrl, destinationUrl)
+    throw new Error("should throw")
+  } catch (actual) {
+    const expected = new Error(`nothing to copy at ${urlToFileSystemPath(sourceUrl)}`)
+    assert({ actual, expected })
+  }
+}
 
-// // copy file into same file
-// {
-//   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
-//   const destinationUrl = resolveUrl("source", tempDirectoryUrl)
-//   await writeFile(sourceUrl)
+// copy file into same file
+{
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("source", tempDirectoryUrl)
+  await writeFile(sourceUrl)
 
-//   try {
-//     await copyFileSystemNode(sourceUrl, destinationUrl, { overwrite: true })
-//     throw new Error("should throw")
-//   } catch (actual) {
-//     const expected = new Error(
-//       `cannot copy ${urlToFileSystemPath(sourceUrl)} because destination and source are the same`,
-//     )
-//     assert({ actual, expected })
-//     await ensureEmptyDirectory(tempDirectoryUrl)
-//   }
-// }
+  try {
+    await copyFileSystemNode(sourceUrl, destinationUrl, { overwrite: true })
+    throw new Error("should throw")
+  } catch (actual) {
+    const expected = new Error(
+      `cannot copy ${urlToFileSystemPath(sourceUrl)} because destination and source are the same`,
+    )
+    assert({ actual, expected })
+    await ensureEmptyDirectory(tempDirectoryUrl)
+  }
+}
 
-// // copy file into nothing
-// {
-//   const sourceUrl = resolveUrl("source/file", tempDirectoryUrl)
-//   const destinationUrl = resolveUrl("dest/file", tempDirectoryUrl)
-//   const sourceContent = "hello"
-//   const sourceMtime = Date.now()
-//   const sourcePermissions = {
-//     owner: { read: true, write: false, execute: false },
-//     group: { read: false, write: false, execute: false },
-//     others: { read: false, write: false, execute: false },
-//   }
-//   await writeFile(sourceUrl, "hello")
-//   await writeFileSystemNodePermissions(sourceUrl, sourcePermissions)
-//   await writeFileSystemNodeModificationTime(sourceUrl, sourceMtime)
+// copy file into nothing
+{
+  const sourceUrl = resolveUrl("source/file", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest/file", tempDirectoryUrl)
+  const sourceContent = "hello"
+  const sourceMtime = Date.now()
+  const sourcePermissions = {
+    owner: { read: true, write: false, execute: false },
+    group: { read: false, write: false, execute: false },
+    others: { read: false, write: false, execute: false },
+  }
+  await writeFile(sourceUrl, "hello")
+  await writeFileSystemNodePermissions(sourceUrl, sourcePermissions)
+  await writeFileSystemNodeModificationTime(sourceUrl, sourceMtime)
 
-//   await copyFileSystemNode(sourceUrl, destinationUrl)
-//   const actual = {
-//     sourceContent: await readFile(sourceUrl),
-//     sourceMtime: await readFileSystemNodeModificationTime(sourceUrl),
-//     destinationContent: await readFile(destinationUrl),
-//     destinationMtime: await readFileSystemNodeModificationTime(destinationUrl),
-//   }
-//   const expected = {
-//     sourceContent,
-//     sourceMtime,
-//     destinationContent: sourceContent,
-//     destinationMtime: sourceMtime,
-//   }
-//   assert({ actual, expected })
-//   // on windows permissions are not reliable
-//   if (!isWindows) {
-//     const actual = {
-//       sourcePermissions: await readFileSystemNodePermissions(sourceUrl),
-//       destinationPermissions: await readFileSystemNodePermissions(destinationUrl),
-//     }
-//     const expected = {
-//       sourcePermissions: {
-//         owner: { ...sourcePermissions.owner },
-//         group: { ...sourcePermissions.group },
-//         others: { ...sourcePermissions.others },
-//       },
-//       destinationPermissions: sourcePermissions,
-//     }
-//     assert({ actual, expected })
-//   }
-//   await ensureEmptyDirectory(tempDirectoryUrl)
-// }
+  await copyFileSystemNode(sourceUrl, destinationUrl)
+  const actual = {
+    sourceContent: await readFile(sourceUrl),
+    sourceMtime: await readFileSystemNodeModificationTime(sourceUrl),
+    destinationContent: await readFile(destinationUrl),
+    destinationMtime: await readFileSystemNodeModificationTime(destinationUrl),
+  }
+  const expected = {
+    sourceContent,
+    sourceMtime,
+    destinationContent: sourceContent,
+    destinationMtime: sourceMtime,
+  }
+  assert({ actual, expected })
+  // on windows permissions are not reliable
+  if (!isWindows) {
+    const actual = {
+      sourcePermissions: await readFileSystemNodePermissions(sourceUrl),
+      destinationPermissions: await readFileSystemNodePermissions(destinationUrl),
+    }
+    const expected = {
+      sourcePermissions: {
+        owner: { ...sourcePermissions.owner },
+        group: { ...sourcePermissions.group },
+        others: { ...sourcePermissions.others },
+      },
+      destinationPermissions: sourcePermissions,
+    }
+    assert({ actual, expected })
+  }
+  await ensureEmptyDirectory(tempDirectoryUrl)
+}
 
-// // copy file into file and overwrite disabled
-// {
-//   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
-//   const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
-//   await writeFile(sourceUrl)
-//   await writeFile(destinationUrl)
+// copy file into file and overwrite disabled
+{
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+  await writeFile(sourceUrl)
+  await writeFile(destinationUrl)
 
-//   try {
-//     await copyFileSystemNode(sourceUrl, destinationUrl)
-//   } catch (actual) {
-//     const expected = new Error(
-//       `cannot copy file from ${urlToFileSystemPath(sourceUrl)} to ${urlToFileSystemPath(
-//         destinationUrl,
-//       )} because destination exists and overwrite option is disabled`,
-//     )
-//     assert({ actual, expected })
-//     await ensureEmptyDirectory(tempDirectoryUrl)
-//   }
-// }
+  try {
+    await copyFileSystemNode(sourceUrl, destinationUrl)
+  } catch (actual) {
+    const expected = new Error(
+      `cannot copy file from ${urlToFileSystemPath(sourceUrl)} to ${urlToFileSystemPath(
+        destinationUrl,
+      )} because destination exists and overwrite option is disabled`,
+    )
+    assert({ actual, expected })
+    await ensureEmptyDirectory(tempDirectoryUrl)
+  }
+}
 
-// // copy file into file and overwrite enabled
-// {
-//   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
-//   const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
-//   await writeFile(sourceUrl, "foo")
-//   await writeFile(destinationUrl, "bar")
+// copy file into file and overwrite enabled
+{
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+  await writeFile(sourceUrl, "foo")
+  await writeFile(destinationUrl, "bar")
 
-//   await copyFileSystemNode(sourceUrl, destinationUrl, { overwrite: true })
-//   const actual = await readFile(destinationUrl)
-//   const expected = "foo"
-//   assert({ actual, expected })
-//   await ensureEmptyDirectory(tempDirectoryUrl)
-// }
+  await copyFileSystemNode(sourceUrl, destinationUrl, { overwrite: true })
+  const actual = await readFile(destinationUrl)
+  const expected = "foo"
+  assert({ actual, expected })
+  await ensureEmptyDirectory(tempDirectoryUrl)
+}
 
-// // copy file into directory
-// {
-//   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
-//   const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
-//   await writeFile(sourceUrl, "foo")
-//   await writeDirectory(destinationUrl)
+// copy file into directory
+{
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+  await writeFile(sourceUrl, "foo")
+  await writeDirectory(destinationUrl)
 
-//   try {
-//     await copyFileSystemNode(sourceUrl, destinationUrl, { overwrite: true })
-//     throw new Error("should throw")
-//   } catch (actual) {
-//     const expected = new Error(
-//       `cannot copy file from ${urlToFileSystemPath(sourceUrl)} to ${urlToFileSystemPath(
-//         destinationUrl,
-//       )} because destination exists and is not a file (it's a directory)`,
-//     )
-//     assert({ actual, expected })
-//     await ensureEmptyDirectory(tempDirectoryUrl)
-//   }
-// }
+  try {
+    await copyFileSystemNode(sourceUrl, destinationUrl, { overwrite: true })
+    throw new Error("should throw")
+  } catch (actual) {
+    const expected = new Error(
+      `cannot copy file from ${urlToFileSystemPath(sourceUrl)} to ${urlToFileSystemPath(
+        destinationUrl,
+      )} because destination exists and is not a file (it's a directory)`,
+    )
+    assert({ actual, expected })
+    await ensureEmptyDirectory(tempDirectoryUrl)
+  }
+}
 
-// // copy directory into file
-// {
-//   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
-//   const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
-//   await writeDirectory(sourceUrl)
-//   await writeFile(destinationUrl)
+// copy directory into file
+{
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+  await writeDirectory(sourceUrl)
+  await writeFile(destinationUrl)
 
-//   try {
-//     await copyFileSystemNode(sourceUrl, destinationUrl)
-//     throw new Error("should throw")
-//   } catch (actual) {
-//     const expected = new Error(
-//       `cannot copy directory from ${urlToFileSystemPath(sourceUrl)} to ${urlToFileSystemPath(
-//         destinationUrl,
-//       )} because destination exists and is not a directory (it's a file)`,
-//     )
-//     assert({ actual, expected })
-//     await ensureEmptyDirectory(tempDirectoryUrl)
-//   }
-// }
+  try {
+    await copyFileSystemNode(sourceUrl, destinationUrl)
+    throw new Error("should throw")
+  } catch (actual) {
+    const expected = new Error(
+      `cannot copy directory from ${urlToFileSystemPath(sourceUrl)} to ${urlToFileSystemPath(
+        destinationUrl,
+      )} because destination exists and is not a directory (it's a file)`,
+    )
+    assert({ actual, expected })
+    await ensureEmptyDirectory(tempDirectoryUrl)
+  }
+}
 
-// // copy directory into directory and overwrite disabled
-// {
-//   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
-//   const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
-//   await writeDirectory(sourceUrl)
-//   await writeDirectory(destinationUrl)
+// copy directory into directory and overwrite disabled
+{
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const destinationUrl = resolveUrl("dest", tempDirectoryUrl)
+  await writeDirectory(sourceUrl)
+  await writeDirectory(destinationUrl)
 
-//   try {
-//     await copyFileSystemNode(sourceUrl, destinationUrl)
-//     throw new Error("should throw")
-//   } catch (actual) {
-//     const expected = new Error(
-//       `cannot copy directory from ${urlToFileSystemPath(sourceUrl)} to ${urlToFileSystemPath(
-//         destinationUrl,
-//       )} because destination exists and overwrite option is disabled`,
-//     )
-//     assert({ actual, expected })
-//     await ensureEmptyDirectory(tempDirectoryUrl)
-//   }
-// }
+  try {
+    await copyFileSystemNode(sourceUrl, destinationUrl)
+    throw new Error("should throw")
+  } catch (actual) {
+    const expected = new Error(
+      `cannot copy directory from ${urlToFileSystemPath(sourceUrl)} to ${urlToFileSystemPath(
+        destinationUrl,
+      )} because destination exists and overwrite option is disabled`,
+    )
+    assert({ actual, expected })
+    await ensureEmptyDirectory(tempDirectoryUrl)
+  }
+}
 
 // copy directory into directory and overwrite enabled
 {
@@ -214,9 +215,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
     directoryAtDestination: true,
   }
   assert({ actual, expected })
-  debugger
   await ensureEmptyDirectory(tempDirectoryUrl)
-  debugger
 }
 
 // copy directory with content into nothing
@@ -329,7 +328,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await writeSymbolicLink(linkSourceUrl, tempDirectoryUrl)
 
   await copyFileSystemNode(sourceUrl, destinationUrl)
-  const actual = await readSymbolicLink(linkDestinationUrl)
+  const actual = ensureUrlTrailingSlash(await readSymbolicLink(linkDestinationUrl))
   const expected = tempDirectoryUrl
   assert({ actual, expected })
   await ensureEmptyDirectory(tempDirectoryUrl)

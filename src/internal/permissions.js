@@ -1,20 +1,35 @@
+// https://github.com/coderaiser/cloudcmd/issues/63#issuecomment-195478143
 // https://nodejs.org/api/fs.html#fs_file_modes
 // https://github.com/TooTallNate/stat-mode
 
-import { constants } from "fs"
+// cannot get from fs.constants because they are not available on windows
+const S_IRUSR = 256 /* 0000400 read permission, owner */
+const S_IWUSR = 128 /* 0000200 write permission, owner */
+const S_IXUSR = 64 /* 0000100 execute/search permission, owner */
+const S_IRGRP = 32 /* 0000040 read permission, group */
+const S_IWGRP = 16 /* 0000020 write permission, group */
+const S_IXGRP = 8 /* 0000010 execute/search permission, group */
+const S_IROTH = 4 /* 0000004 read permission, others */
+const S_IWOTH = 2 /* 0000002 write permission, others */
+const S_IXOTH = 1 /* 0000001 execute/search permission, others */
 
-const {
-  S_IRUSR,
-  S_IWUSR,
-  S_IXUSR,
-  S_IRGRP,
-  S_IWGRP,
-  S_IXGRP,
-  S_IROTH,
-  S_IWOTH,
-  S_IXOTH,
-} = constants
+/*
+here we could warn that on windows only 0o444 or 0o666 will work
 
+0o444 (readonly)
+{
+  owner: {read: true, write: false, execute: false},
+  group: {read: true, write: false, execute: false},
+  others: {read: true, write: false, execute: false},
+}
+
+0o666 (read and write)
+{
+  owner: {read: true, write: true, execute: false},
+  group: {read: true, write: true, execute: false},
+  others: {read: true, write: true, execute: false},
+}
+*/
 export const binaryFlagsToPermissions = (binaryFlags) => {
   const owner = {
     read: Boolean(binaryFlags & S_IRUSR),

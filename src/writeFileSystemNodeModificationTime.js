@@ -5,7 +5,7 @@ import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 export const writeFileSystemNodeModificationTime = (source, mtime) => {
   const sourceUrl = assertAndNormalizeFileUrl(source)
   const sourcePath = urlToFileSystemPath(sourceUrl)
-  const mtimeValue = typeof mtime === "number" ? new Date(mtime) : mtime
+  const mtimeValue = typeof mtime === "number" ? new Date(Math.floor(mtime)) : mtime
   // reading atime mutates its value so there is no use case I can think of
   // where we want to modify it
   const atimeValue = mtimeValue

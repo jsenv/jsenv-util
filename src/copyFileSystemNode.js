@@ -145,11 +145,11 @@ export const copyFileSystemNode = async (
   const copyStats = async (destinationUrl, stats) => {
     if (preservePermissions || preserveMtime) {
       const { mode, mtimeMs } = stats
-      if (preserveMtime) {
-        await writeFileSystemNodeModificationTime(destinationUrl, mtimeMs)
-      }
       if (preservePermissions) {
         await writeFileSystemNodePermissions(destinationUrl, binaryFlagsToPermissions(mode))
+      }
+      if (preserveMtime) {
+        await writeFileSystemNodeModificationTime(destinationUrl, mtimeMs)
       }
     }
   }
