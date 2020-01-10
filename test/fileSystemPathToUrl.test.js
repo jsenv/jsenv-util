@@ -1,7 +1,13 @@
 import { assert } from "@jsenv/assert"
 import { fileSystemPathToUrl } from "../index.js"
 
-{
+const isWindows = process.platform === "win32"
+
+if (isWindows) {
+  const actual = fileSystemPathToUrl("C:/Users/file.js")
+  const expected = "file:///C:/Users/file.js"
+  assert({ actual, expected })
+} else {
   const actual = fileSystemPathToUrl("/Users/file.js")
   const expected = "file:///Users/file.js"
   assert({ actual, expected })

@@ -1,6 +1,8 @@
 import { assert } from "@jsenv/assert"
 import { assertAndNormalizeFileUrl } from "../index.js"
 
+const isWindows = process.platform === "win32"
+
 try {
   assertAndNormalizeFileUrl()
   throw new Error("should throw")
@@ -23,7 +25,11 @@ try {
   assert({ actual, expected })
 }
 
-{
+if (isWindows) {
+  const actual = assertAndNormalizeFileUrl("C:/directory/file.js")
+  const expected = "file:///C:/directory/file.js"
+  assert({ actual, expected })
+} else {
   const actual = assertAndNormalizeFileUrl("/directory/file.js")
   const expected = "file:///directory/file.js"
   assert({ actual, expected })
