@@ -13,7 +13,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest]
-        max-parallel: 1 # to ensure windows failure can prevent ubuntu from publishing package
+        max-parallel: "1" # to ensure windows failure can prevent ubuntu from publishing package
     runs-on: ${{ matrix.os }}
     name: node 12 on ${{ matrix.os }}
     env:
