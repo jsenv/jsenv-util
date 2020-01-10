@@ -13,6 +13,7 @@ import {
   readFileSystemNodeModificationTime,
 } from "../../index.js"
 
+const isWindows = process.platform === "win32"
 const tempDirectoryUrl = import.meta.resolve("./temp/")
 await ensureEmptyDirectory(tempDirectoryUrl)
 
@@ -82,7 +83,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // directory permissions preserved (mtime cannot when there is a file inside)
-{
+if (!isWindows) {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   const fileUrl = resolveUrl("source/file", tempDirectoryUrl)
   const permissions = {
