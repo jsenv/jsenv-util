@@ -37,3 +37,9 @@ export const testSymbolicLinkPresence = async (source) => {
   })
   return Boolean(stats && stats.isSymbolicLink())
 }
+
+export const toSecondsPrecision = (ms) => {
+  const date = new Date(ms)
+  date.setMilliseconds(0)
+  return Number(date)
+}

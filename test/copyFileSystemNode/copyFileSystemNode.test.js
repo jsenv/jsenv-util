@@ -15,7 +15,7 @@ import {
   writeSymbolicLink,
   readSymbolicLink,
 } from "../../index.js"
-import { testDirectoryPresence, testFilePresence } from "../testHelpers.js"
+import { testDirectoryPresence, testFilePresence, toSecondsPrecision } from "../testHelpers.js"
 
 const isWindows = process.platform === "win32"
 const tempDirectoryUrl = import.meta.resolve("./temp/")
@@ -58,7 +58,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   const sourceUrl = resolveUrl("source/file", tempDirectoryUrl)
   const destinationUrl = resolveUrl("dest/file", tempDirectoryUrl)
   const sourceContent = "hello"
-  const sourceMtime = Date.now()
+  const sourceMtime = toSecondsPrecision(Date.now())
   const sourcePermissions = {
     owner: { read: true, write: false, execute: false },
     group: { read: false, write: false, execute: false },
@@ -71,9 +71,9 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   await copyFileSystemNode(sourceUrl, destinationUrl)
   const actual = {
     sourceContent: await readFile(sourceUrl),
-    sourceMtime: await readFileSystemNodeModificationTime(sourceUrl),
+    sourceMtime: toSecondsPrecision(await readFileSystemNodeModificationTime(sourceUrl)),
     destinationContent: await readFile(destinationUrl),
-    destinationMtime: await readFileSystemNodeModificationTime(destinationUrl),
+    destinationMtime: toSecondsPrecision(await readFileSystemNodeModificationTime(destinationUrl)),
   }
   const expected = {
     sourceContent,

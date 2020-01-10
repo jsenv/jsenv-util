@@ -9,11 +9,12 @@ import {
   resolveUrl,
 } from "../../index.js"
 
+const isWindows = process.platform === "win32"
 const tempDirectoryUrl = import.meta.resolve("./temp/")
 await ensureEmptyDirectory(tempDirectoryUrl)
 
 // destination inside parent directory without write permission
-{
+if (!isWindows) {
   const parentDirectoryUrl = resolveUrl("dir/", tempDirectoryUrl)
   const destinationUrl = resolveUrl("dest", parentDirectoryUrl)
   await writeDirectory(parentDirectoryUrl)
