@@ -2,7 +2,7 @@
 /.vscode/settings.json
 /coverage/
 /node_modules/
-/test/moveFile/directory/
+/test/**/temp/
 /importMap.json
 /jsconfig.json
 /package-lock.json

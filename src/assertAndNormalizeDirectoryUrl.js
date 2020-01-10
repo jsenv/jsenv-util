@@ -1,6 +1,6 @@
+import { ensureUrlTrailingSlash } from "./internal/ensureUrlTrailingSlash.js"
 import { isFileSystemPath } from "./isFileSystemPath.js"
 import { fileSystemPathToUrl } from "./fileSystemPathToUrl.js"
-import { ensureUrlTrailingSlash } from "./ensureUrlTrailingSlash.js"
 
 export const assertAndNormalizeDirectoryUrl = (value) => {
   let urlString

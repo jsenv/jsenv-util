@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { ensureUrlTrailingSlash } from "../index.js"
+import { ensureUrlTrailingSlash } from "../src/internal/ensureUrlTrailingSlash.js"
 
 {
   const actual = ensureUrlTrailingSlash("file:///directory/file.js")
