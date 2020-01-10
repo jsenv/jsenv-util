@@ -11,6 +11,7 @@ import {
 } from "../../index.js"
 import { makeBusyFile } from "../testHelpers.js"
 
+const isWindows = process.platform === "win32"
 const tempDirectoryUrl = import.meta.resolve("./temp/")
 await ensureEmptyDirectory(tempDirectoryUrl)
 
@@ -44,7 +45,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // directory without permission
-{
+if (!isWindows) {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   await writeDirectory(sourceUrl)
   await writeFileSystemNodePermissions(sourceUrl, {
@@ -59,7 +60,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // file without permission
-{
+if (!isWindows) {
   const sourceUrl = resolveUrl("source", tempDirectoryUrl)
   await writeFile(sourceUrl, "coucou")
   await writeFileSystemNodePermissions(sourceUrl, {
@@ -85,7 +86,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // file inside directory without execute or read permission
-{
+if (!isWindows) {
   const directoryUrl = resolveUrl("dir/", tempDirectoryUrl)
   const sourceUrl = resolveUrl("source", directoryUrl)
   await writeDirectory(directoryUrl)
