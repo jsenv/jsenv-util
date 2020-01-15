@@ -9,11 +9,16 @@ export const createWatcher = (sourcePath, options) => {
     watcher.on("error", async (error) => {
       // https://github.com/joyent/node/issues/4337
       if (error.code === "EPERM") {
-        const err = await new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
           open(sourcePath, "r", (openError, fd) => {
+            if (openError) {
+              console.error(`error while fixing windows eperm: ${openError.stack}`)
+            }
+
             if (fd) {
               close(fd, (closeError) => {
                 if (closeError) {
+                  console.error(`error while fixing windows eperm: ${closeError.stack}`)
                   reject(error)
                 } else {
                   resolve()
@@ -24,7 +29,8 @@ export const createWatcher = (sourcePath, options) => {
             }
           })
         })
-        console.error(err)
+      } else {
+        throw error
       }
     })
   }
