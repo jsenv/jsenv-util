@@ -43,3 +43,9 @@ export const toSecondsPrecision = (ms) => {
   date.setMilliseconds(0)
   return Number(date)
 }
+
+export const wait = (ms) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
