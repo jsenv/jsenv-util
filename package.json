@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/util",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Set of functions often needed when using Node.js.",
   "license": "MIT",
   "repository": {
@@ -43,7 +43,10 @@
     "postpublish": "node ./script/transform-package/restore-postinstall.js",
     "git-hook-pre-commit": "npm run prettier-format-stage"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@jsenv/cancellation": "1.3.0",
+    "@jsenv/url-meta": "5.1.0"
+  },
   "devDependencies": {
     "@jsenv/assert": "1.2.1",
     "@jsenv/codecov-upload": "3.1.0",

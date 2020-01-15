@@ -19,6 +19,8 @@ Set of functions often needed when using Node.js.
   - [assertDirectoryPresence](#assertDirectoryPresence)
   - [assertFilePresence](#assertFilePresence)
   - [bufferToEtag](#bufferToEtag)
+  - [collectFiles](#collectFiles)
+  - [comparePathnames](#comparePathnames)
   - [copyFileSystemNode](#copyFileSystemNode)
   - [ensureEmptyDirectory](#ensureEmptyDirectory)
   - [ensureParentDirectories](#ensureParentDirectories)
@@ -158,6 +160,41 @@ eTag === otherEtag
 — see [Buffer documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/buffer.html)<br />
 — see [eTag documentation on MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag)<br />
 — source code at [src/bufferToEtag.js](./src/bufferToEtag.js).
+
+### collectFiles
+
+`collectFiles` is an async function collectings a subset of files inside a directory.
+
+```js
+import { collectFiles } from "@jsenv/util"
+
+const files = await collectFiles({
+  directoryUrl: "file:///Users/you/directory",
+  specifierMetaMap: {
+    "./**/*.js": {
+      whatever: 42,
+    },
+  },
+  predicate: (meta) => {
+    return meta.whatever === 42
+  },
+})
+```
+
+— source code at [src/collectFiles.js](./src/collectFiles.js).
+
+### comparePathnames
+
+`comparePathnames` is a function compare two pathnames and returning which pathnames comes first in a filesystem.
+
+```js
+import { comparePathnames } from "@jsenv/util"
+
+const pathnames = ["a/b.js", "a.js"]
+pathnames.sort(comparePathnames)
+```
+
+— source code at [src/comparePathnames.js](./src/comparePathnames.js).
 
 ### copyFileSystemNode
 
