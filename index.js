@@ -30,6 +30,7 @@ export { readFileSystemNodePermissions } from "./src/readFileSystemNodePermissio
 export { readFileSystemNodeStat } from "./src/readFileSystemNodeStat.js"
 export { readSymbolicLink } from "./src/readSymbolicLink.js"
 export { registerDirectoryLifecycle } from "./src/registerDirectoryLifecycle.js"
+export { registerFileLifecycle } from "./src/registerFileLifecycle.js"
 export { removeFileSystemNode } from "./src/removeFileSystemNode.js"
 export { resolveDirectoryUrl } from "./src/resolveDirectoryUrl.js"
 export { resolveUrl } from "./src/resolveUrl.js"

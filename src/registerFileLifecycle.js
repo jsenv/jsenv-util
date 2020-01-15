@@ -5,7 +5,7 @@ import { trackRessources } from "./internal/trackRessources.js"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 
-export const registerFileLifecycle = async (
+export const registerFileLifecycle = (
   source,
   { added, updated, removed, notifyExistent = false, keepProcessAlive = true },
 ) => {
