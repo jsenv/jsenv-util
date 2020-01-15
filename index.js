@@ -1,8 +1,21 @@
+// we won't internalize @jsenv/url-meta
+// so that @jsenv/url-meta does not becomes nodejs specific
+// but there functions could be inside this repository
+export {
+  applySpecifierPatternMatching,
+  metaMapToSpecifierMetaMap,
+  normalizeSpecifierMetaMap,
+  urlCanContainsMetaMatching,
+  urlToMeta,
+} from "@jsenv/url-meta"
+
 export { assertAndNormalizeDirectoryUrl } from "./src/assertAndNormalizeDirectoryUrl.js"
 export { assertAndNormalizeFileUrl } from "./src/assertAndNormalizeFileUrl.js"
 export { assertDirectoryPresence } from "./src/assertDirectoryPresence.js"
 export { assertFilePresence } from "./src/assertFilePresence.js"
 export { bufferToEtag } from "./src/bufferToEtag.js"
+export { collectFiles } from "./src/collectFiles.js"
+export { comparePathnames } from "./src/comparePathnames.js"
 export { ensureEmptyDirectory } from "./src/ensureEmptyDirectory.js"
 export { ensureWindowsDriveLetter } from "./src/ensureWindowsDriveLetter.js"
 export { copyFileSystemNode } from "./src/copyFileSystemNode.js"
