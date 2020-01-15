@@ -1,4 +1,4 @@
-import { watch, open, close } from "fs"
+import { watch, openSync, closeSync } from "fs"
 
 const isWindows = process.platform === "win32"
 
@@ -9,26 +9,13 @@ export const createWatcher = (sourcePath, options) => {
     watcher.on("error", async (error) => {
       // https://github.com/joyent/node/issues/4337
       if (error.code === "EPERM") {
-        await new Promise((resolve, reject) => {
-          open(sourcePath, "r", (openError, fd) => {
-            if (openError) {
-              console.error(`error while fixing windows eperm: ${openError.stack}`)
-            }
-
-            if (fd) {
-              close(fd, (closeError) => {
-                if (closeError) {
-                  console.error(`error while fixing windows eperm: ${closeError.stack}`)
-                  reject(error)
-                } else {
-                  resolve()
-                }
-              })
-            } else {
-              reject(error)
-            }
-          })
-        })
+        try {
+          const fd = openSync(sourcePath, "r")
+          closeSync(fd)
+        } catch (e) {
+          console.error(`error while fixing windows eperm: ${e.stack}`)
+          throw error
+        }
       } else {
         throw error
       }
