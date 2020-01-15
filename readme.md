@@ -34,6 +34,8 @@ Set of functions often needed when using Node.js.
   - [readFileSystemNodePermissions](#readFileSystemNodePermissions)
   - [readFileSystemNodeStat](#readFileSystemNodeStat)
   - [readSymbolicLink](#readSymbolicLink)
+  - [registerDirectoryLifecycle](#registerDirectoryLifecycle)
+  - [registerFileLifecycle](#registerFileLifecycle)
   - [removeFileSystemNode](#removeFileSystemNode)
   - [resolveDirectoryUrl](#resolveDirectoryUrl)
   - [resolveUrl](#resolveUrl)
@@ -375,6 +377,58 @@ const targetUrlOrRelativeUrl = await readSymbolicLink("file:///directory/link")
 
 — see also [symlink documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fs_symlink_target_path_type_callback)<br />
 — source code at [src/readSymbolicLink.js](./src/readSymbolicLink.js).
+
+### registerDirectoryLifecycle
+
+`registerDirectoryLifecycle` is a function watching a directory at a given path and calling `added`, `updated`, `removed` according to what is happening inside that directory. Usually, filesystem takes less than 100ms to notify something has changed.
+
+```js
+import { registerDirectoryLifecycle } from "@jsenv/util"
+
+const contentMap = {}
+const unregister = registerDirectoryLifecycle("file:///directory", {
+  added: ({ relativeUrl, type }) => {
+    contentMap[relativeUrl] = type
+  },
+  removed: ({ relativeUrl }) => {
+    delete contentMap[relativeUrl]
+  },
+})
+
+// you can call unregister when you want to stop watching the directory
+unregister()
+```
+
+— source code at [src/registerDirectoryLifecycle.js](./src/registerDirectoryLifecycle.js).
+
+### registerFileLifecycle
+
+`registerFileLifecycle` is a function watching a file and calling `added`, `updated`, `removed` according to what is happening to that file. Usually, filesystem takes less than 100ms to notify something has changed.
+
+```js
+import { readFileSync } from "fs"
+import { registerFileLifecycle } from "@jsenv/file-watcher"
+
+const filePath = "/file.config.json"
+let currentConfig = null
+const unregister = registerFileLifecycle(filePath, {
+  added: () => {
+    currentConfig = JSON.parse(String(readFileSync(filePath)))
+  },
+  updated: () => {
+    currentConfig = JSON.parse(String(readFileSync(filePath)))
+  },
+  removed: () => {
+    currentConfig = null
+  },
+  notifyExistent: true,
+})
+
+// you can call unregister() when you want to stop watching the file
+unregister()
+```
+
+— source code at [src/registerFileLifecycle.js](./src/registerFileLifecycle.js).
 
 ### removeFileSystemNode
 
