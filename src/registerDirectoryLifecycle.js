@@ -31,6 +31,7 @@ export const registerDirectoryLifecycle = (
     },
     notifyExistent = false,
     keepProcessAlive = true,
+    recursive = false,
   },
 ) => {
   const sourceUrl = ensureUrlTrailingSlash(assertAndNormalizeFileUrl(source))
@@ -87,7 +88,7 @@ export const registerDirectoryLifecycle = (
 
       let relativeUrlCandidateArray = Object.keys(contentMap)
 
-      if (!fsWatchSupportsRecursive) {
+      if (recursive && !fsWatchSupportsRecursive) {
         relativeUrlCandidateArray = relativeUrlCandidateArray.filter((relativeUrlCandidate) => {
           if (!directoryRelativeUrl) {
             // ensure entry is top level
@@ -231,7 +232,7 @@ export const registerDirectoryLifecycle = (
   })
 
   const watcher = createWatcher(urlToFileSystemPath(sourceUrl), {
-    recursive: fsWatchSupportsRecursive,
+    recursive: recursive && fsWatchSupportsRecursive,
     persistent: keepProcessAlive,
   })
   tracker.registerCleanupCallback(() => {

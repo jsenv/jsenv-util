@@ -56,6 +56,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
       mutations.push({ name: "updated", ...data })
     },
     keepProcessAlive: false,
+    recursive: true,
   })
   await writeDirectory(directoryUrl)
   await wait(200)
@@ -150,6 +151,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
       mutations.push({ name: "removed", ...data })
     },
     keepProcessAlive: false,
+    recursive: true,
   })
   await removeFileSystemNode(fileUrl)
   await removeFileSystemNode(directoryUrl)
