@@ -65,17 +65,28 @@ const packageFilePath = urlToFileSystemPath(packageFileUrl)
 const packageFileBuffer = readFileSync(packageFilePath)
 ```
 
-With times more functions were added, all util are documented in the [API](#API) part.
+With times more functions were added, all util are documented in the [Documentation](#Documentation) part.
 
 # Installation
 
 ```console
-npm install @jsenv/util@3.1.0
+npm install @jsenv/util@3.3.0
 ```
 
 # Documentation
 
-## Why prefer url string ?
+## Url preference over path
+
+```js
+const url = "file:///directory/file.js"
+const filesystemPath = "/directory/file.js"
+```
+
+In this package functions working with files prefer to receive an url string instead of a filesystem path.
+
+This allows function to manipulate a value that is the same across operating systems. Because on windows a filesystem path looks like `C:\\directory\\file.js` while linux/mac equivalent looks like `/directory/file.js`. Also url are standard. A standard is more robust and knowledge acquired on a standard is reusable.
+
+## Url string preference over url instances
 
 ```js
 const urlString = "file:///directory/file.js"
@@ -87,17 +98,6 @@ In this package functions working with urls prefer to receive url string or retu
 This is a deliberate choice because over time it appeared that an url string is easier to work with in general than an url object. It is probably because a string is a well known primitive while an url object is a more complex structure.
 
 For jsenv, choosing to work with strings simplified the codebase.
-
-## Why prefer url over filesystem path ?
-
-```js
-const url = "file:///directory/file.js"
-const filesystemPath = "/directory/file.js"
-```
-
-In this package functions working with files prefer to receive an url string instead of a filesystem path.
-
-This allows function to manipulate a value that is the same across operating systems. Because on windows a filesystem path looks like `C:\\directory\\file.js` while linux/mac equivalent looks like `/directory/file.js`. Also url are standard. A standard is more robust and knowledge acquired on a standard is reusable.
 
 ### assertAndNormalizeDirectoryUrl
 
