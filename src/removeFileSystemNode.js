@@ -1,4 +1,4 @@
-import { unlink, rmdir, open, close } from "fs"
+import { unlink, rmdir, openSync, closeSync } from "fs"
 import { ensureUrlTrailingSlash } from "./internal/ensureUrlTrailingSlash.js"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
@@ -139,22 +139,22 @@ const removeDirectory = async (
       ...(process.platform === "win32"
         ? {
             handlePermissionError: async (error) => {
-              // try to close an open descriptor to that directory
-              await new Promise((resolve, reject) => {
-                open(directoryPath, "r", (openError, fd) => {
-                  if (fd) {
-                    close(fd, (closeError) => {
-                      if (closeError) {
-                        reject(error)
-                      } else {
-                        resolve()
-                      }
-                    })
-                  } else {
-                    reject(error)
-                  }
-                })
-              })
+              let openOrCloseError
+              try {
+                const fd = openSync(directoryPath)
+                closeSync(fd)
+              } catch (e) {
+                openOrCloseError = e
+              }
+
+              if (openOrCloseError) {
+                if (openOrCloseError.code === "ENOENT") {
+                  return
+                }
+                console.error(`error while trying to fix windows EPERM: ${openOrCloseError.stack}`)
+                throw error
+              }
+
               await removeDirectoryNaive(directoryPath, { ...optionsFromRecursive })
             },
           }

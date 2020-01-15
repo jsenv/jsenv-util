@@ -13,6 +13,9 @@ export const createWatcher = (sourcePath, options) => {
           const fd = openSync(sourcePath, "r")
           closeSync(fd)
         } catch (e) {
+          if (e.code === "ENOENT") {
+            return
+          }
           console.error(`error while fixing windows eperm: ${e.stack}`)
           throw error
         }
