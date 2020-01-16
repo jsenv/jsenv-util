@@ -12,8 +12,7 @@ Set of functions often needed when using Node.js.
 - [Presentation](#Presentation)
 - [Installation](#Installation)
 - [Documentation](#API)
-  - [Why prefer url string?](#Why-prefer-url-string)
-  - [Why prefer url over filesystem path?](#Why-prefer-url-over-filesystem-path)
+  - [Url preference](#Url-preference)
   - [assertAndNormalizeDirectoryUrl](#assertAndNormalizeDirectoryUrl)
   - [assertAndNormalizeFileUrl](#assertAndNormalizeFileUrl)
   - [assertDirectoryPresence](#assertDirectoryPresence)
@@ -75,29 +74,23 @@ npm install @jsenv/util@3.3.0
 
 # Documentation
 
-## Url preference over path
+## Url preference
+
+In this package functions working with files prefer to receive an url string instead of a filesystem path.
 
 ```js
 const url = "file:///directory/file.js"
 const filesystemPath = "/directory/file.js"
 ```
 
-In this package functions working with files prefer to receive an url string instead of a filesystem path.
-
 This allows function to manipulate a value that is the same across operating systems. Because on windows a filesystem path looks like `C:\\directory\\file.js` while linux/mac equivalent looks like `/directory/file.js`. Also url are standard. A standard is more robust and knowledge acquired on a standard is reusable.
 
-## Url string preference over url instances
+You might also notice a slight preference for url string over url object in the documentation or codebase. This is a deliberate choice because over time it appeared that an url string are easier to work with. Certainly because a string is a well known primitive while an url object is a more complex structure.
 
 ```js
 const urlString = "file:///directory/file.js"
 const urlObject = new URL("file:///directory/file.js")
 ```
-
-In this package functions working with urls prefer to receive url string or return url string and not url object.
-
-This is a deliberate choice because over time it appeared that an url string is easier to work with in general than an url object. It is probably because a string is a well known primitive while an url object is a more complex structure.
-
-For jsenv, choosing to work with strings simplified the codebase.
 
 ### assertAndNormalizeDirectoryUrl
 
