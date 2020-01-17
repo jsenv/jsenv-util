@@ -1,11 +1,10 @@
 import { assert } from "@jsenv/assert"
-import { ensureEmptyDirectory, resolveUrl, collectFiles } from "../../index.js"
-import { writeFile } from "@jsenv/util/src/writeFile.js"
+import { ensureEmptyDirectory, resolveUrl, collectFiles, writeFile } from "../../index.js"
 
 const tempDirectoryUrl = import.meta.resolve("./temp/")
-await ensureEmptyDirectory(tempDirectoryUrl)
 
 {
+  await ensureEmptyDirectory(tempDirectoryUrl)
   const eUrl = resolveUrl("a/aa/e.js", tempDirectoryUrl)
   const dUrl = resolveUrl("a/d.js", tempDirectoryUrl)
   const cUrl = resolveUrl("b/c.js", tempDirectoryUrl)
@@ -16,7 +15,6 @@ await ensureEmptyDirectory(tempDirectoryUrl)
       source: true,
     },
   }
-
   await writeFile(eUrl)
   await writeFile(dUrl)
   await writeFile(cUrl)
@@ -31,5 +29,4 @@ await ensureEmptyDirectory(tempDirectoryUrl)
   const actual = matchingFileResultArray.map(({ relativeUrl }) => relativeUrl)
   const expected = ["a/aa/e.js", "a/d.js", "b/c.js", "a.js", "b.js"]
   assert({ actual, expected })
-  await ensureEmptyDirectory(tempDirectoryUrl)
 }
