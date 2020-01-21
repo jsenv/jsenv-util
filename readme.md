@@ -69,7 +69,7 @@ With times more functions were added, all util are documented in the [Documentat
 # Installation
 
 ```console
-npm install @jsenv/util@3.3.0
+npm install @jsenv/util@3.3.3
 ```
 
 # Documentation

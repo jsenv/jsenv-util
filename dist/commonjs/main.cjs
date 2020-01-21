@@ -100,9 +100,16 @@ const applyPatternMatching = (pattern, string) => {
 
     if (remainingPattern === "/") {
       // pass because trailing slash matches remaining
-      return pass({
-        patternIndex: patternIndex + 1,
-        index: string.length
+      if (remainingString[0] === "/") {
+        return pass({
+          patternIndex: patternIndex + 1,
+          index: string.length
+        });
+      }
+
+      return fail({
+        patternIndex,
+        index
       });
     } // fast path trailing '**'
 
@@ -2595,4 +2602,4 @@ exports.writeFile = writeFile;
 exports.writeFileSystemNodeModificationTime = writeFileSystemNodeModificationTime;
 exports.writeFileSystemNodePermissions = writeFileSystemNodePermissions;
 exports.writeSymbolicLink = writeSymbolicLink;
-//# sourceMappingURL=main.js.map
+//# sourceMappingURL=main.cjs.map
