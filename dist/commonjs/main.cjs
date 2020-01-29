@@ -2051,7 +2051,7 @@ const registerDirectoryLifecycle = (source, {
     throw new TypeError(`added must be a function or undefined, got ${added}`);
   }
 
-  if (!undefinedOrFunction(added)) {
+  if (!undefinedOrFunction(updated)) {
     throw new TypeError(`updated must be a function or undefined, got ${updated}`);
   }
 
