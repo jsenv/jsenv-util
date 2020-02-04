@@ -10,5 +10,6 @@ executeTestPlan({
       },
     },
   },
+  completedExecutionLogAbbreviation: true,
   coverage: process.argv.includes("--coverage"),
 })
