@@ -18,9 +18,11 @@ Set of functions often needed when using Node.js.
   - [assertDirectoryPresence](#assertDirectoryPresence)
   - [assertFilePresence](#assertFilePresence)
   - [bufferToEtag](#bufferToEtag)
+  - [callCancellable](#catchCancellation)
   - [collectFiles](#collectFiles)
   - [comparePathnames](#comparePathnames)
   - [copyFileSystemNode](#copyFileSystemNode)
+  - [createCancellationTokenForProcess](#createCancellationTokenForProcess)
   - [ensureEmptyDirectory](#ensureEmptyDirectory)
   - [ensureParentDirectories](#ensureParentDirectories)
   - [fileSystemPathToUrl](#fileSystemPathToUrl)
@@ -69,7 +71,7 @@ With times more functions were added, all util are documented in the [Documentat
 # Installation
 
 ```console
-npm install @jsenv/util@3.3.3
+npm install @jsenv/util@3.5.0
 ```
 
 # Documentation
@@ -156,6 +158,48 @@ eTag === otherEtag
 — see [eTag documentation on MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag)<br />
 — source code at [src/bufferToEtag.js](./src/bufferToEtag.js).
 
+### catchCancellation
+
+`catchCancellation` is a function receiving an async function and immediatly calling it and catching cancelError to avoid unhandled rejection.
+
+Considering that cancelling a function rejects it rejected with a cancel error.
+
+```js
+import { createCancellationSource, isCancelError } from "@jsenv/cancellation"
+
+const fn = async ({ cancellationToken }) => {
+  cancellationToken.throwIfRequested()
+}
+
+const cancelSource = createCancellationSource()
+cancelSource.cancel()
+
+try {
+  await fn({ cancellationToken: cancelSource.token })
+} catch (e) {
+  isCancelError(e) // true
+}
+```
+
+You have to catch the cancel errors to avoid unhandled rejection inside Node.js. `catchCancellation` resolves with the cancel error instead of rejecting with it to avoid the unhandledRejection. You can still detect the cancellation using isCancelError(result) but cancellation means you're no longer interested in the result so you shoud not need this at all.
+
+```js
+import { catchCancellation } from "@jsenv/util"
+import { createCancellationSource, isCancelError } from "@jsenv/cancellation"
+
+const fn = async ({ cancellationToken }) => {
+  cancellationToken.throwIfRequested()
+}
+
+const cancelSource = createCancellationSource()
+cancelSource.cancel()
+
+const result = await catchCancellation(() => fn({ cancellationToken: cancelSource.token }))
+isCancelError(result) // true
+```
+
+— source code at [src/catchCancellation.js](./src/catchCancellation.js).
+
 ### collectFiles
 
 `collectFiles` is an async function collectings a subset of files inside a directory.
@@ -203,6 +247,23 @@ await copyFileSystemNode(`file:///directory`, "file:///destination/directory")
 ```
 
 — source code at [src/copyFileSystemNode.js](./src/copyFileSystemNode.js).
+
+### createCancellationTokenForProcess
+
+`createCancellationTokenForProcess` is a function returning a cancellation token cancelled just before process exits. Can be used to close a server before a process exists for instance.
+
+```js
+import { createCancellationTokenForProcess } from "@jsenv/util"
+import { startServer } from "somewhere"
+
+const cancellationToken = createCancellationTokenForProcess()
+const server = await startServer()
+cancellationToken.register(() => {
+  server.stop()
+})
+```
+
+— source code at [src/createCancellationTokenForProcess.js](./src/createCancellationTokenForProcess.js).
 
 ### ensureEmptyDirectory
 
