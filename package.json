@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/util",
-  "version": "3.5.0",
+  "version": "3.5.1",
   "description": "Set of functions often needed when using Node.js.",
   "license": "MIT",
   "repository": {
@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "@jsenv/cancellation": "1.4.1",
-    "@jsenv/node-signals": "2.0.0",
+    "@jsenv/node-signals": "2.0.1",
     "@jsenv/url-meta": "5.2.2"
   },
   "devDependencies": {
