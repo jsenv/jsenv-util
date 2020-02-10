@@ -11,44 +11,44 @@ Set of functions often needed when using Node.js.
 
 - [Presentation](#Presentation)
 - [Installation](#Installation)
-- [Documentation](#API)
-  - [Url preference](#Url-preference)
-  - [assertAndNormalizeDirectoryUrl](#assertAndNormalizeDirectoryUrl)
-  - [assertAndNormalizeFileUrl](#assertAndNormalizeFileUrl)
-  - [assertDirectoryPresence](#assertDirectoryPresence)
-  - [assertFilePresence](#assertFilePresence)
-  - [bufferToEtag](#bufferToEtag)
-  - [callCancellable](#catchCancellation)
-  - [collectFiles](#collectFiles)
-  - [comparePathnames](#comparePathnames)
-  - [copyFileSystemNode](#copyFileSystemNode)
-  - [createCancellationTokenForProcess](#createCancellationTokenForProcess)
-  - [ensureEmptyDirectory](#ensureEmptyDirectory)
-  - [ensureParentDirectories](#ensureParentDirectories)
-  - [fileSystemPathToUrl](#fileSystemPathToUrl)
-  - [grantPermissionsOnFileSystemNode](#grantPermissionsOnFileSystemNode)
-  - [isFileSystemPath](#isFileSystemPath)
-  - [moveFileSystemNode](#moveFileSystemNode)
-  - [readDirectory](#readDirectory)
-  - [readFile](#readFile)
-  - [readFileSystemNodeModificationTime](#readFileSystemNodeModificationTime)
-  - [readFileSystemNodePermissions](#readFileSystemNodePermissions)
-  - [readFileSystemNodeStat](#readFileSystemNodeStat)
-  - [readSymbolicLink](#readSymbolicLink)
-  - [registerDirectoryLifecycle](#registerDirectoryLifecycle)
-  - [registerFileLifecycle](#registerFileLifecycle)
-  - [removeFileSystemNode](#removeFileSystemNode)
-  - [resolveDirectoryUrl](#resolveDirectoryUrl)
-  - [resolveUrl](#resolveUrl)
-  - [testFileSystemNodePermissions](#testFileSystemNodePermissions)
-  - [urlIsInsideOf](#urlIsInsideOf)
-  - [urlToFileSystemPath](#urlToFileSystemPath)
-  - [urlToRelativeUrl](#urlToRelativeUrl)
-  - [writeDirectory](#writeDirectory)
-  - [writeFile](#writeFile)
-  - [writeFileSystemNodeModificationTime](#writeFileSystemNodeModificationTime)
-  - [writeFileSystemNodePermissions](#writeFileSystemNodePermissions)
-  - [writeSymbolicLink](#writeSymbolicLink)
+- [Url preference](#Url-preference)
+- [assertAndNormalizeDirectoryUrl](#assertAndNormalizeDirectoryUrl)
+- [assertAndNormalizeFileUrl](#assertAndNormalizeFileUrl)
+- [assertDirectoryPresence](#assertDirectoryPresence)
+- [assertFilePresence](#assertFilePresence)
+- [bufferToEtag](#bufferToEtag)
+- [callCancellable](#catchCancellation)
+- [collectFiles](#collectFiles)
+- [comparePathnames](#comparePathnames)
+- [copyFileSystemNode](#copyFileSystemNode)
+- [createCancellationTokenForProcess](#createCancellationTokenForProcess)
+- [ensureEmptyDirectory](#ensureEmptyDirectory)
+- [ensureParentDirectories](#ensureParentDirectories)
+- [fileSystemPathToUrl](#fileSystemPathToUrl)
+- [grantPermissionsOnFileSystemNode](#grantPermissionsOnFileSystemNode)
+- [isFileSystemPath](#isFileSystemPath)
+- [memoize](#memoize)
+- [moveFileSystemNode](#moveFileSystemNode)
+- [readDirectory](#readDirectory)
+- [readFile](#readFile)
+- [readFileSystemNodeModificationTime](#readFileSystemNodeModificationTime)
+- [readFileSystemNodePermissions](#readFileSystemNodePermissions)
+- [readFileSystemNodeStat](#readFileSystemNodeStat)
+- [readSymbolicLink](#readSymbolicLink)
+- [registerDirectoryLifecycle](#registerDirectoryLifecycle)
+- [registerFileLifecycle](#registerFileLifecycle)
+- [removeFileSystemNode](#removeFileSystemNode)
+- [resolveDirectoryUrl](#resolveDirectoryUrl)
+- [resolveUrl](#resolveUrl)
+- [testFileSystemNodePermissions](#testFileSystemNodePermissions)
+- [urlIsInsideOf](#urlIsInsideOf)
+- [urlToFileSystemPath](#urlToFileSystemPath)
+- [urlToRelativeUrl](#urlToRelativeUrl)
+- [writeDirectory](#writeDirectory)
+- [writeFile](#writeFile)
+- [writeFileSystemNodeModificationTime](#writeFileSystemNodeModificationTime)
+- [writeFileSystemNodePermissions](#writeFileSystemNodePermissions)
+- [writeSymbolicLink](#writeSymbolicLink)
 
 # Presentation
 
@@ -74,11 +74,9 @@ With times more functions were added, all util are documented in the [Documentat
 npm install @jsenv/util@3.5.0
 ```
 
-# Documentation
+# Url preference
 
-## Url preference
-
-In this package functions working with files prefer to receive an url string instead of a filesystem path.
+In this package functions related to filesystem work with url string instead of a filesystem path.
 
 ```js
 const url = "file:///directory/file.js"
@@ -94,7 +92,7 @@ const urlString = "file:///directory/file.js"
 const urlObject = new URL("file:///directory/file.js")
 ```
 
-### assertAndNormalizeDirectoryUrl
+# assertAndNormalizeDirectoryUrl
 
 `assertAndNormalizeDirectoryUrl` is a function ensuring the received value can be normalized to a directory url string. This function is great to make a function accept various values as directory url and normalize it to a standard directory url like `file:///directory/`. Jsenv uses it for every function having a directory url parameter.
 
@@ -106,7 +104,7 @@ assertAndNormalizeDirectoryUrl("/directory") // file:///directory/
 
 — source code at [src/assertAndNormalizeDirectoryUrl.js](./src/assertAndNormalizeDirectoryUrl.js).
 
-### assertAndNormalizeFileUrl
+# assertAndNormalizeFileUrl
 
 `assertAndNormalizeFileUrl` is a function ensuring the received value can be normalized to a file url string. This function is great to make a function accept various values as file url and normalize it to a standard file url like `file:///directory/file.js`. Jsenv uses it for every function having a file url parameter.
 
@@ -118,7 +116,7 @@ assertAndNormalizeFileUrl("/directory/file.js")
 
 — source code at [src/assertAndNormalizeFileUrl.js](./src/assertAndNormalizeFileUrl.js).
 
-### assertDirectoryPresence
+# assertDirectoryPresence
 
 `assertDirectoryPresence` is an async function throwing if directory does not exists on the filesystem. This function is great to assert a directory existence before going further. Jsenv uses it to throw early when a directory presence is mandatory for a given function to work properly.
 
@@ -130,7 +128,7 @@ await assertDirectoryPresence("file:///Users/directory/")
 
 — source code at [src/assertDirectoryPresence.js](./src/assertDirectoryPresence.js).
 
-### assertFilePresence
+# assertFilePresence
 
 `assertFilePresence` is an async function throwing if a file does not exists on the filesystem. This function is great to assert a file existence before going further. Jsenv uses it to throw early when a file presence is mandatory for a given function to work properly.
 
@@ -142,7 +140,7 @@ await assertFilePresence("file:///Users/directory/file.js")
 
 — source code at [src/assertFilePresence.js](./src/assertFilePresence.js).
 
-### bufferToEtag
+# bufferToEtag
 
 `bufferToEtag` is a function receiving a buffer and converting it into an eTag. This function returns a hash (a small string) representing a file content. You can later check if the file content has changed by comparing a previously generated eTag with the current file content. Jsenv uses it to generate eTag headers and to know if a file content has changed in specific scenarios.
 
@@ -158,7 +156,7 @@ eTag === otherEtag
 — see [eTag documentation on MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag)<br />
 — source code at [src/bufferToEtag.js](./src/bufferToEtag.js).
 
-### catchCancellation
+# catchCancellation
 
 `catchCancellation` is a function receiving an async function and immediatly calling it and catching cancelError to avoid unhandled rejection.
 
@@ -200,7 +198,7 @@ isCancelError(result) // true
 
 — source code at [src/catchCancellation.js](./src/catchCancellation.js).
 
-### collectFiles
+# collectFiles
 
 `collectFiles` is an async function collectings a subset of files inside a directory.
 
@@ -222,7 +220,7 @@ const files = await collectFiles({
 
 — source code at [src/collectFiles.js](./src/collectFiles.js).
 
-### comparePathnames
+# comparePathnames
 
 `comparePathnames` is a function compare two pathnames and returning which pathnames comes first in a filesystem.
 
@@ -235,7 +233,7 @@ pathnames.sort(comparePathnames)
 
 — source code at [src/comparePathnames.js](./src/comparePathnames.js).
 
-### copyFileSystemNode
+# copyFileSystemNode
 
 `copyFileSystemNode` is an async function creating a copy of the filesystem node at a given destination
 
@@ -248,7 +246,7 @@ await copyFileSystemNode(`file:///directory`, "file:///destination/directory")
 
 — source code at [src/copyFileSystemNode.js](./src/copyFileSystemNode.js).
 
-### createCancellationTokenForProcess
+# createCancellationTokenForProcess
 
 `createCancellationTokenForProcess` is a function returning a cancellation token cancelled just before process exits. Can be used to close a server before a process exists for instance.
 
@@ -265,7 +263,7 @@ cancellationToken.register(() => {
 
 — source code at [src/createCancellationTokenForProcess.js](./src/createCancellationTokenForProcess.js).
 
-### ensureEmptyDirectory
+# ensureEmptyDirectory
 
 `ensureEmptyDirectory` is an async function ensuring a directory is empty. It removes a directory content when it exists or create an empty directory.
 This function was written for testing. It is meant to clean up a directory in case a previous test execution let some files and you want to clean them before running your test. Jsenv uses it in some tests involving the filesystem.
@@ -278,7 +276,7 @@ await ensureEmptyDirectory(`file:///directory`)
 
 — source code at [src/ensureEmptyDirectory.js](./src/ensureEmptyDirectory.js).
 
-### ensureParentDirectories
+# ensureParentDirectories
 
 `ensureParentDirectories` is an async function creating every directory leading to a file. This function is useful to ensure a given file directories exists before doing any operation on that file. Jsenv uses it to write file in directories that does not exists yet.
 
@@ -290,7 +288,7 @@ await ensureParentDirectories(`file:///directory/subdirectory/file.js`)
 
 — source code at [src/ensureParentDirectories.js](./src/ensureParentDirectories.js).
 
-### writeDirectory
+# writeDirectory
 
 `writeDirectory` is an async function creating a directory on the filesystem. `writeDirectory` is equivalent to [fs.promises.mkdir](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_mkdir_path_options) but accepts url strings as directory path.
 
@@ -302,7 +300,7 @@ await writeDirectory(`file:///directory`)
 
 — source code at [src/writeDirectory.js](./src/writeDirectory.js).
 
-### grantPermissionsOnFileSystemNode
+# grantPermissionsOnFileSystemNode
 
 `grantPermissionsOnFileSystemNode` is an async function granting permission on a given file system node. It returns an async function restoring the previous permissions.
 
@@ -317,7 +315,7 @@ await restorePermissions()
 
 — source code at [src/grantPermissionsOnFileSystemNode.js](./src/grantPermissionsOnFileSystemNode.js).
 
-### fileSystemPathToUrl
+# fileSystemPathToUrl
 
 `fileSystemPathToUrl` is a function returning a filesystem path from an url string. `fileSystemPathToUrl` is equivalent to [pathToFileURL from Node.js](https://nodejs.org/docs/latest-v13.x/api/url.html#url_url_pathtofileurl_path) but returns string instead of url objects.
 
@@ -329,7 +327,7 @@ fileSystemPathToUrl("/directory/file.js")
 
 — source code at [src/fileSystemPathToUrl.js](./src/fileSystemPathToUrl.js).
 
-### isFileSystemPath
+# isFileSystemPath
 
 `isFileSystemPath` is a function returning a filesystem path from an url string.
 
@@ -344,7 +342,32 @@ isFileSystemPath("file:///directory/file.js") // false
 
 — source code at [src/isFileSystemPath.js](./src/isFileSystemPath.js).
 
-### moveFileSystemNode
+# memoize
+
+`memoize` is a function wrapping an other function to ensure it is called once.
+
+```js
+import { memoize } from "@jsenv/util"
+
+let callCount = 0
+
+const fn = memoize(async () => {
+  callCount++
+  const value = await Promise.resolve("hello")
+  return value
+})
+
+const firstCallValue = await fn()
+const secondCallValue = await fn()
+
+firstCallValue // "hello"
+secondCallValue // "hello"
+callCount // 1
+```
+
+— source code at [src/memoize.js](./src/memoize.js).
+
+# moveFileSystemNode
 
 `moveFileSystemNode` is an async function moving a filesystem node to a destination.
 
@@ -357,7 +380,7 @@ await moveFileSystemNode("file:///directory", "file:///destination/directory")
 
 — source code at [src/moveFileSystemNode.js](./src/moveFileSystemNode.js).
 
-### readDirectory
+# readDirectory
 
 `readDirectory` is an async function returning an array of string representing all filesystem nodes inside that directory.
 
@@ -369,7 +392,7 @@ const content = await readDirectory("file:///directory")
 
 — source code at [src/readDirectory.js](./src/readDirectory.js).
 
-### readFileSystemNodeModificationTime
+# readFileSystemNodeModificationTime
 
 `readFileSystemNodeModificationTime` is an async function returning a number of milliseconds representing the date when the file was modified.
 
@@ -381,7 +404,7 @@ const mtimeMs = await readFileSystemNodeModificationTime("file:///directory/file
 
 — source code at [src/readFileSystemNodeModificationTime.js](./src/readFileSystemNodeModificationTime.js).
 
-### readFileSystemNodePermissions
+# readFileSystemNodePermissions
 
 `readFileSystemNodePermissions` is an async function returning an object representing the permissions of a given filesystem node.
 
@@ -394,7 +417,7 @@ const permissions = await readFileSystemNodePermissions("file:///directory/file.
 — see also [file modes documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_file_modes)<br />
 — source code at [src/readFileSystemNodePermissions.js](./src/readFileSystemNodePermissions.js).
 
-### readFile
+# readFile
 
 `readFile` is an async function returning the content of a file as string.
 
@@ -406,7 +429,7 @@ const content = await readFile("file:///directory/file.js")
 
 — source code at [src/readFile.js](./src/readFile.js).
 
-### readFileSystemNodeStat
+# readFileSystemNodeStat
 
 `readFileSystemNodeStat` is an async function returning a filesystem node stats object. `readFileSystemNodeStat` is equivalent to [fs.promises.stats from Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_stat_path_options) but accepts url strings as file path.
 
@@ -419,7 +442,7 @@ const stats = await readFileSystemNodeStat("file:///directory/file.js")
 — see also [stats object documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_class_fs_stats)<br />
 — source code at [src/readFileSystemNodeStat.js](./src/readFileSystemNodeStat.js).
 
-### readSymbolicLink
+# readSymbolicLink
 
 `readSymbolicLink` is an async function returning a symbolic link target as url string.
 
@@ -432,7 +455,7 @@ const targetUrlOrRelativeUrl = await readSymbolicLink("file:///directory/link")
 — see also [symlink documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fs_symlink_target_path_type_callback)<br />
 — source code at [src/readSymbolicLink.js](./src/readSymbolicLink.js).
 
-### registerDirectoryLifecycle
+# registerDirectoryLifecycle
 
 `registerDirectoryLifecycle` is a function watching a directory at a given path and calling `added`, `updated`, `removed` according to what is happening inside that directory. Usually, filesystem takes less than 100ms to notify something has changed.
 
@@ -455,7 +478,7 @@ unregister()
 
 — source code at [src/registerDirectoryLifecycle.js](./src/registerDirectoryLifecycle.js).
 
-### registerFileLifecycle
+# registerFileLifecycle
 
 `registerFileLifecycle` is a function watching a file and calling `added`, `updated`, `removed` according to what is happening to that file. Usually, filesystem takes less than 100ms to notify something has changed.
 
@@ -484,7 +507,7 @@ unregister()
 
 — source code at [src/registerFileLifecycle.js](./src/registerFileLifecycle.js).
 
-### removeFileSystemNode
+# removeFileSystemNode
 
 `removeFileSystemNode` is an async function removing a node (directory, file, symbolic link) from the filesystem.
 
@@ -497,7 +520,7 @@ await removeFileSystemNode("file:///directory")
 
 — source code at [src/removeFileSystemNode.js](./src/removeFileSystemNode.js).
 
-### resolveDirectoryUrl
+# resolveDirectoryUrl
 
 `resolveDirectoryUrl` is a function resolving a relative url to an absolute directory url string. This function applies url resolution and ensure the returned url ends with a slash. Enforcing the trailing slash indicates explicitely that the url is a directory. `file:///directory/whatever/` shows `whatever` is a directory while `file:///directory/whatever` is ambiguous. This specificity helps url resolution against a directory as shown in the code below.
 
@@ -517,7 +540,7 @@ resolveDirectoryUrl("src", "file:///directory")
 
 — source code at [src/resolveDirectoryUrl.js](./src/resolveDirectoryUrl.js).
 
-### resolveUrl
+# resolveUrl
 
 `resolveUrl` is a function resolving a relative url to an absolute url string. As explained before jsenv prefer to work with url string. When it comes to url resolution it implies to write code like `String(new URL(relativeUrl, url))`. But it makes `relativeUrl` and `url` values less readable in the middle of `String(new URL())`. `resolveUrl` exists just to increase code readability.
 
@@ -529,7 +552,7 @@ resolveUrl("file.js", "file:///directory/")
 
 — source code at [src/resolveUrl.js](./src/resolveUrl.js).
 
-### testFileSystemNodePermissions
+# testFileSystemNodePermissions
 
 `testFileSystemNodePermissions` is an async function returning a boolean indicating if current user has read/write/execute permission on the filesystem node.
 
@@ -541,7 +564,7 @@ const allowed = await testFileSystemNodePermissions("file:///file.js", { execute
 
 — source code at [src/testFileSystemNodePermissions.js](./src/testFileSystemNodePermissions.js).
 
-### urlIsInsideOf
+# urlIsInsideOf
 
 `urlIsInsideOf` is a function returning a boolean indicating if an url is inside an other url.
 
@@ -554,7 +577,7 @@ urlIsInsideOf("file:///file.js", "file:///directory/") // false
 
 — source code at [src/urlIsInsideOf.js](./src/urlIsInsideOf.js).
 
-### urlToFileSystemPath
+# urlToFileSystemPath
 
 `urlToFileSystemPath` is a function returning a filesystem path from an url. `urlToFileSystemPath` is equivalent to [pathToFileURL from Node.js](https://nodejs.org/docs/latest-v13.x/api/url.html#url_url_pathtofileurl_path) but returns string instead of url objects.
 
@@ -566,7 +589,7 @@ urlToFileSystemPath("file:///directory/file.js")
 
 — source code at [src/urlToFileSystemPath.js](./src/urlToFileSystemPath.js).
 
-### urlToRelativeUrl
+# urlToRelativeUrl
 
 `urlToRelativeUrl` is a function receiving two absolute urls and returning the first url relative to the second one. `urlToRelativeUrl` is the url equivalent to [path.relative from Node.js](https://nodejs.org/docs/latest-v13.x/api/path.html#path_path_relative_from_to).
 
@@ -579,7 +602,7 @@ urlToRelativeUrl("http://example.com/directory/file.js", "http://example.com/dir
 
 — source code at [src/urlToRelativeUrl.js](./src/urlToRelativeUrl.js).
 
-### writeFile
+# writeFile
 
 `writeFile` is an async function writing file and its content on the filesystem. This function auto create file parent directories if they do not exists.
 
@@ -591,7 +614,7 @@ await writeFile("file:///directory/file.txt", "Hello world")
 
 — source code at [src/writeFile.js](./src/writeFile.js).
 
-### writeFileSystemNodeModificationTime
+# writeFileSystemNodeModificationTime
 
 `writeFileSystemNodeModificationTime` is an async function writing file and its content on the filesystem. `writeFileSystemNodeModificationTime` is like [fs.promises.utimes](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fspromises_utimes_path_atime_mtime) but accepts url strings as file path.
 
@@ -603,7 +626,7 @@ await writeFileSystemNodeModificationTime("file:///directory/file.js", Date.now(
 
 — source code at [src/writeFileSystemNodeModificationTime.js](./src/writeFileSystemNodeModificationTime.js).
 
-### writeFileSystemNodePermissions
+# writeFileSystemNodePermissions
 
 `writeFileSystemNodePermissions` is an async function setting the permissions of a filesystem node.
 
@@ -620,7 +643,7 @@ await writeFileSystemNodePermissions("file:///directory/file.js", {
 — see also [file modes documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_file_modes)<br />
 — source code at [src/writeFileSystemNodePermissions.js](./src/writeFileSystemNodePermissions.js).
 
-### writeSymbolicLink
+# writeSymbolicLink
 
 `writeSymbolicLink` is an async function writing a symlink link to a file or directory on the filesystem.
 

@@ -24,6 +24,7 @@ export { createCancellationTokenForProcess } from "./src/createCancellationToken
 export { fileSystemPathToUrl } from "./src/fileSystemPathToUrl.js"
 export { grantPermissionsOnFileSystemNode } from "./src/grantPermissionsOnFileSystemNode.js"
 export { isFileSystemPath } from "./src/isFileSystemPath.js"
+export { memoize } from "./src/memoize.js"
 export { moveFileSystemNode } from "./src/moveFileSystemNode.js"
 export { readDirectory } from "./src/readDirectory.js"
 export { readFile } from "./src/readFile.js"
