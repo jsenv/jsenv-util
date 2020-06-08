@@ -48,6 +48,9 @@ const installUnhandledRejectionStrict = () => {
   }
   process.once("unhandledRejection", onUnhandledRejection)
   return () => {
-    process.removeListener("unhandledRejection", onUnhandledRejection)
+    // don't remove it immediatly to let nodejs emit the unhandled rejection
+    setTimeout(() => {
+      process.removeListener("unhandledRejection", onUnhandledRejection)
+    })
   }
 }
