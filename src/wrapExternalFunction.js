@@ -29,9 +29,14 @@ export const wrapExternalFunction = (
       const uninstall = installUnhandledRejectionStrict()
       try {
         const value = await previousFn()
-        return value
-      } finally {
         uninstall()
+        return value
+      } catch (e) {
+        // don't remove it immediatly to let nodejs emit the unhandled rejection
+        setTimeout(() => {
+          uninstall()
+        })
+        throw e
       }
     }
   }
@@ -48,9 +53,6 @@ const installUnhandledRejectionStrict = () => {
   }
   process.once("unhandledRejection", onUnhandledRejection)
   return () => {
-    // don't remove it immediatly to let nodejs emit the unhandled rejection
-    setTimeout(() => {
-      process.removeListener("unhandledRejection", onUnhandledRejection)
-    })
+    process.removeListener("unhandledRejection", onUnhandledRejection)
   }
 }
