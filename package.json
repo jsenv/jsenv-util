@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/util",
-  "version": "3.5.2",
+  "version": "3.6.0",
   "description": "Set of functions often needed when using Node.js.",
   "license": "MIT",
   "repository": {
@@ -29,9 +29,9 @@
   ],
   "scripts": {
     "test": "node ./script/test/test.js",
-    "test-with-coverage": "node ./script/test/test.js --coverage",
-    "eslint-check": "eslint .",
-    "prettier-format": "node ./script/prettier-format/prettier-format.js",
+    "test-with-coverage": "npm run test -- --coverage",
+    "eslint-check": "node ./node_modules/eslint/bin/eslint.js .",
+    "prettier-format": "node --no-warnings ./script/prettier-format/prettier-format.js",
     "prettier-format-stage": "npm run prettier-format -- --staged",
     "prettier-check": "npm run prettier-format -- --dry-run",
     "upload-coverage": "node ./script/upload-coverage/upload-coverage.js",
@@ -39,29 +39,27 @@
     "generate-import-map": "node ./script/generate-import-map/generate-import-map.js",
     "install-git-hooks": "node ./script/install-git-hooks/install-git-hooks.js",
     "dist": "npm run generate-commonjs-bundle",
-    "postinstall": "npm run generate-import-map && npm run install-git-hooks",
+    "postinstall": "npm run generate-import-map",
     "prepublishOnly": "node ./script/transform-package/remove-postinstall.js && npm run dist",
-    "postpublish": "node ./script/transform-package/restore-postinstall.js",
-    "git-hook-pre-commit": "npm run prettier-format-stage"
+    "postpublish": "node ./script/transform-package/restore-postinstall.js"
   },
   "dependencies": {
     "@jsenv/cancellation": "1.4.1",
     "@jsenv/node-signals": "2.0.1",
-    "@jsenv/url-meta": "5.2.2"
+    "@jsenv/url-meta": "5.2.3"
   },
   "devDependencies": {
-    "@jsenv/assert": "1.2.2",
-    "@jsenv/codecov-upload": "3.2.0",
-    "@jsenv/core": "11.6.1",
-    "@jsenv/eslint-config": "12.3.1",
-    "@jsenv/git-hooks": "1.3.1",
-    "@jsenv/github-release-package": "1.2.0",
-    "@jsenv/node-module-import-map": "11.0.0",
-    "@jsenv/package-publish": "1.5.0",
-    "@jsenv/prettier-check-project": "5.4.0",
+    "@jsenv/assert": "2.2.0",
+    "@jsenv/codecov-upload": "3.4.1",
+    "@jsenv/core": "13.3.1",
+    "@jsenv/eslint-config": "12.4.1",
+    "@jsenv/github-release-package": "1.2.2",
+    "@jsenv/node-module-import-map": "11.1.1",
+    "@jsenv/package-publish": "1.5.1",
+    "@jsenv/prettier-check-project": "5.6.0",
     "@jsenv/prettier-config": "1.2.0",
     "babel-eslint": "11.0.0-beta.0",
-    "eslint": "6.8.0",
-    "prettier": "1.19.1"
+    "eslint": "7.2.0",
+    "prettier": "2.0.5"
   }
 }
