@@ -1,6 +1,6 @@
 // we won't internalize @jsenv/url-meta
 // so that @jsenv/url-meta does not becomes nodejs specific
-// but there functions could be inside this repository
+// but these functions could be inside this repository
 export {
   applySpecifierPatternMatching,
   metaMapToSpecifierMetaMap,
@@ -18,6 +18,7 @@ export { catchCancellation } from "./src/catchCancellation.js"
 export { collectFiles } from "./src/collectFiles.js"
 export { comparePathnames } from "./src/comparePathnames.js"
 export { ensureEmptyDirectory } from "./src/ensureEmptyDirectory.js"
+export { ensureParentDirectories } from "./src/ensureParentDirectories.js"
 export { ensureWindowsDriveLetter } from "./src/ensureWindowsDriveLetter.js"
 export { copyFileSystemNode } from "./src/copyFileSystemNode.js"
 export { createCancellationTokenForProcess } from "./src/createCancellationTokenForProcess.js"
@@ -41,9 +42,9 @@ export { testFileSystemNodePermissions } from "./src/testFileSystemNodePermissio
 export { urlIsInsideOf } from "./src/urlIsInsideOf.js"
 export { urlToFileSystemPath } from "./src/urlToFileSystemPath.js"
 export { urlToRelativeUrl } from "./src/urlToRelativeUrl.js"
+export { wrapExternalFunction } from "./src/wrapExternalFunction.js"
 export { writeDirectory } from "./src/writeDirectory.js"
 export { writeFile } from "./src/writeFile.js"
-export { ensureParentDirectories } from "./src/ensureParentDirectories.js"
 export { writeFileSystemNodeModificationTime } from "./src/writeFileSystemNodeModificationTime.js"
 export { writeFileSystemNodePermissions } from "./src/writeFileSystemNodePermissions.js"
 export { writeSymbolicLink } from "./src/writeSymbolicLink.js"

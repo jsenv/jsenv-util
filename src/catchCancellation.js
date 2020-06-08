@@ -1,13 +1,4 @@
-import { isCancelError } from "@jsenv/cancellation"
+import { wrapExternalFunction } from "./wrapExternalFunction.js"
 
-export const catchCancellation = (asyncFn) => {
-  return asyncFn().catch((error) => {
-    if (isCancelError(error)) {
-      // it means consume of the function will resolve with a cancelError
-      // but when you cancel it means you're not interested in the result anymore
-      // thanks to this it avoid unhandledRejection
-      return error
-    }
-    throw error
-  })
-}
+export const catchCancellation = (asyncFn) =>
+  wrapExternalFunction(asyncFn, { catchCancellation: true })
