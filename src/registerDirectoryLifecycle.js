@@ -73,7 +73,7 @@ export const registerDirectoryLifecycle = (
 
   const tracker = trackRessources()
 
-  const contentMap = {}
+  const contentMap = new Map()
 
   const handleDirectoryEvent = ({ directoryRelativeUrl, filename, eventType }) => {
     if (filename) {
@@ -86,7 +86,7 @@ export const registerDirectoryLifecycle = (
       // we might receive `rename` without filename
       // in that case we try to find ourselves which file was removed.
 
-      let relativeUrlCandidateArray = Object.keys(contentMap)
+      let relativeUrlCandidateArray = Array.from(contentMap.keys())
 
       if (recursive && !fsWatchSupportsRecursive) {
         relativeUrlCandidateArray = relativeUrlCandidateArray.filter((relativeUrlCandidate) => {
@@ -116,7 +116,7 @@ export const registerDirectoryLifecycle = (
       if (removedEntryRelativeUrl) {
         handleEntryLost({
           relativeUrl: removedEntryRelativeUrl,
-          type: contentMap[removedEntryRelativeUrl],
+          type: contentMap.get(removedEntryRelativeUrl),
         })
       }
     }
@@ -124,7 +124,7 @@ export const registerDirectoryLifecycle = (
 
   const handleChange = (relativeUrl) => {
     const entryUrl = resolveUrl(relativeUrl, sourceUrl)
-    const previousType = contentMap[relativeUrl]
+    const previousType = contentMap.get(relativeUrl)
     const type = fileSystemNodeToTypeOrNull(entryUrl)
 
     if (!entryShouldBeWatched({ relativeUrl, type })) {
@@ -174,7 +174,7 @@ export const registerDirectoryLifecycle = (
       return
     }
 
-    contentMap[relativeUrl] = type
+    contentMap.set(relativeUrl, type)
 
     const entryUrl = resolveUrl(relativeUrl, sourceUrl)
 
@@ -218,7 +218,7 @@ export const registerDirectoryLifecycle = (
   }
 
   const handleEntryLost = ({ relativeUrl, type }) => {
-    delete contentMap[relativeUrl]
+    contentMap.delete(relativeUrl)
     if (removed) {
       removed({ relativeUrl, type })
     }
