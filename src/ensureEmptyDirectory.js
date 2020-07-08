@@ -9,7 +9,7 @@ export const ensureEmptyDirectory = async (source) => {
   const stats = await readFileSystemNodeStat(source, { nullIfNotFound: true, followLink: false })
   if (stats === null) {
     // if there is nothing, create a directory
-    return writeDirectory(source)
+    return writeDirectory(source, { allowUseless: true })
   }
   if (stats.isDirectory()) {
     // if there is a directory remove its content and done
