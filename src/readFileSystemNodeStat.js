@@ -1,4 +1,4 @@
-import { lstat, stat } from "fs"
+import { lstat, stat, existsSync } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { writeFileSystemNodePermissions } from "./writeFileSystemNodePermissions.js"
@@ -60,10 +60,16 @@ const readStat = (
   return new Promise((resolve, reject) => {
     nodeMethod(sourcePath, (error, statsObject) => {
       if (error) {
-        if (handlePermissionDeniedError && (error.code === "EPERM" || error.code === "EACCES")) {
-          resolve(handlePermissionDeniedError(error))
-        } else if (handleNotFoundError && error.code === "ENOENT") {
+        if (
+          handleNotFoundError &&
+          (error.code === "ENOENT" || (error.code === "EPERM" && !existsSync(sourcePath)))
+        ) {
           resolve(handleNotFoundError(error))
+        } else if (
+          handlePermissionDeniedError &&
+          (error.code === "EPERM" || error.code === "EACCES")
+        ) {
+          resolve(handlePermissionDeniedError(error))
         } else {
           reject(error)
         }
