@@ -139,6 +139,8 @@ const removeDirectory = async (
       ...(process.platform === "win32"
         ? {
             handlePermissionError: async (error) => {
+              console.error(`trying to fix windows EPERM after readir on ${directoryPath}`)
+
               let openOrCloseError
               try {
                 const fd = openSync(directoryPath)
@@ -151,7 +153,9 @@ const removeDirectory = async (
                 if (openOrCloseError.code === "ENOENT") {
                   return
                 }
-                console.error(`error while trying to fix windows EPERM: ${openOrCloseError.stack}`)
+                console.error(
+                  `error while trying to fix windows EPERM after readir on ${directoryPath}: ${openOrCloseError.stack}`,
+                )
                 throw error
               }
 

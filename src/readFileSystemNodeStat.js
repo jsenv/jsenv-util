@@ -1,4 +1,4 @@
-import { lstat, stat, existsSync } from "fs"
+import { lstat, stat } from "fs"
 import { assertAndNormalizeFileUrl } from "./assertAndNormalizeFileUrl.js"
 import { urlToFileSystemPath } from "./urlToFileSystemPath.js"
 import { writeFileSystemNodePermissions } from "./writeFileSystemNodePermissions.js"
@@ -27,22 +27,27 @@ export const readFileSystemNodeStat = async (
       ? {
           // Windows can EPERM on stat
           handlePermissionDeniedError: async (error) => {
-            // unfortunately it means we mutate the permissions
-            // without being able to restore them to the previous value
-            // (because reading current permission would also throw)
+            console.error(`trying to fix windows EPERM after stats on ${sourcePath}`)
+
             try {
+              // unfortunately it means we mutate the permissions
+              // without being able to restore them to the previous value
+              // (because reading current permission would also throw)
               await writeFileSystemNodePermissions(sourceUrl, 0o666)
               const stats = await readStat(sourcePath, {
                 followLink,
                 ...handleNotFoundOption,
                 // could not fix the permission error, give up and throw original error
                 handlePermissionDeniedError: () => {
+                  console.error(`still got EPERM after stats on ${sourcePath}`)
                   throw error
                 },
               })
               return stats
             } catch (e) {
-              // failed to write permission or readState, throw original error as well
+              console.error(
+                `error while trying to fix windows EPERM after stats on ${sourcePath}: ${e.stack}`,
+              )
               throw error
             }
           },
@@ -60,10 +65,7 @@ const readStat = (
   return new Promise((resolve, reject) => {
     nodeMethod(sourcePath, (error, statsObject) => {
       if (error) {
-        if (
-          handleNotFoundError &&
-          (error.code === "ENOENT" || (error.code === "EPERM" && !existsSync(sourcePath)))
-        ) {
+        if (handleNotFoundError && error.code === "ENOENT") {
           resolve(handleNotFoundError(error))
         } else if (
           handlePermissionDeniedError &&
