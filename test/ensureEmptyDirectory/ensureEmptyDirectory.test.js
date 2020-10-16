@@ -14,7 +14,7 @@ import {
 } from "../../index.js"
 
 const isWindows = process.platform === "win32"
-const tempDirectoryUrl = import.meta.resolve("./temp/")
+const tempDirectoryUrl = resolveUrl("./temp/", import.meta.url)
 await ensureEmptyDirectory(tempDirectoryUrl)
 
 // on nothing
@@ -80,6 +80,20 @@ await ensureEmptyDirectory(tempDirectoryUrl)
     assert({ actual, expected })
     await ensureEmptyDirectory(tempDirectoryUrl)
   }
+}
+
+// a file with an hash inside
+if (!isWindows) {
+  const sourceUrl = resolveUrl("source", tempDirectoryUrl)
+  const fileUrl = resolveUrl("source/file#toto", tempDirectoryUrl)
+  await writeDirectory(sourceUrl)
+  await writeFile(fileUrl)
+
+  await ensureEmptyDirectory(sourceUrl)
+  const actual = await readDirectory(sourceUrl)
+  const expected = []
+  assert({ actual, expected })
+  await ensureEmptyDirectory(tempDirectoryUrl)
 }
 
 // directory permissions preserved (mtime cannot when there is a file inside)
