@@ -12,7 +12,6 @@ Set of functions often needed when using Node.js.
 - [Presentation](#Presentation)
 - [Installation](#Installation)
 - [Url preference](#Url-preference)
-- [File permissions and Windows](#file-permissions-and-windows)
 - [assertAndNormalizeDirectoryUrl](#assertAndNormalizeDirectoryUrl)
 - [assertAndNormalizeFileUrl](#assertAndNormalizeFileUrl)
 - [assertDirectoryPresence](#assertDirectoryPresence)
@@ -25,14 +24,12 @@ Set of functions often needed when using Node.js.
 - [ensureEmptyDirectory](#ensureEmptyDirectory)
 - [ensureParentDirectories](#ensureParentDirectories)
 - [fileSystemPathToUrl](#fileSystemPathToUrl)
-- [grantPermissionsOnFileSystemNode](#grantPermissionsOnFileSystemNode)
 - [isFileSystemPath](#isFileSystemPath)
 - [memoize](#memoize)
 - [moveFileSystemNode](#moveFileSystemNode)
 - [readDirectory](#readDirectory)
 - [readFile](#readFile)
 - [readFileSystemNodeModificationTime](#readFileSystemNodeModificationTime)
-- [readFileSystemNodePermissions](#readFileSystemNodePermissions)
 - [readFileSystemNodeStat](#readFileSystemNodeStat)
 - [readSymbolicLink](#readSymbolicLink)
 - [registerDirectoryLifecycle](#registerDirectoryLifecycle)
@@ -40,15 +37,14 @@ Set of functions often needed when using Node.js.
 - [removeFileSystemNode](#removeFileSystemNode)
 - [resolveDirectoryUrl](#resolveDirectoryUrl)
 - [resolveUrl](#resolveUrl)
-- [testFileSystemNodePermissions](#testFileSystemNodePermissions)
 - [urlIsInsideOf](#urlIsInsideOf)
 - [urlToFileSystemPath](#urlToFileSystemPath)
 - [urlToRelativeUrl](#urlToRelativeUrl)
 - [writeDirectory](#writeDirectory)
 - [writeFile](#writeFile)
 - [writeFileSystemNodeModificationTime](#writeFileSystemNodeModificationTime)
-- [writeFileSystemNodePermissions](#writeFileSystemNodePermissions)
 - [writeSymbolicLink](#writeSymbolicLink)
+- [Advanced api](#Advanced-api)
 
 # Presentation
 
@@ -91,18 +87,6 @@ You might also notice a slight preference for url string over url object in the 
 const urlString = "file:///directory/file.js"
 const urlObject = new URL("file:///directory/file.js")
 ```
-
-# File permissions and Windows
-
-Three functions are using file permissions. This concept comes from linux and works only on operating system using this approach. (To my knowledge linux and MacOS). It means you cannot use [grantPermissionsOnFileSystemNode](#grantPermissionsOnFileSystemNode), [readFileSystemNodePermissions](#readFileSystemNodePermissions) and [writeFileSystemNodePermissions](#writeFileSystemNodePermissions).
-
-This limitation is directly inherited from Node.js. The following is quoted from Node.js documentation
-
-> Caveats: on Windows only the write permission can be changed, and the distinction among the permissions of group, owner or others is not implemented.
-
-In other words it's unusable.
-
-— See [File modes documentation on Node.js](https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_fs_chmodsync_path_mode)<br />
 
 # assertAndNormalizeDirectoryUrl
 
@@ -270,23 +254,6 @@ await writeDirectory(`file:///directory`)
 
 — source code at [src/writeDirectory.js](./src/writeDirectory.js).
 
-# grantPermissionsOnFileSystemNode
-
-`grantPermissionsOnFileSystemNode` is an async function granting permission on a given file system node. It returns an async function restoring the previous permissions.
-
-> Do not use on Windows because of [file permissions caveat](#file-permissions-and-windows)
-
-```js
-import { grantPermissionsOnFileSystemNode } from "@jsenv/util"
-
-const restorePermissions = await grantPermissionsOnFileSystemNode("file:///file.js", {
-  execute: true,
-})
-await restorePermissions()
-```
-
-— source code at [src/grantPermissionsOnFileSystemNode.js](./src/grantPermissionsOnFileSystemNode.js).
-
 # fileSystemPathToUrl
 
 `fileSystemPathToUrl` is a function returning a filesystem path from an url string. `fileSystemPathToUrl` is equivalent to [pathToFileURL from Node.js](https://nodejs.org/docs/latest-v13.x/api/url.html#url_url_pathtofileurl_path) but returns string instead of url objects.
@@ -375,21 +342,6 @@ const mtimeMs = await readFileSystemNodeModificationTime("file:///directory/file
 ```
 
 — source code at [src/readFileSystemNodeModificationTime.js](./src/readFileSystemNodeModificationTime.js).
-
-# readFileSystemNodePermissions
-
-`readFileSystemNodePermissions` is an async function returning an object representing the permissions of a given filesystem node.
-
-> Do not use on Windows because of [file permissions caveat](#file-permissions-and-windows)
-
-```js
-import { readFileSystemNodePermissions } from "@jsenv/util"
-
-const permissions = await readFileSystemNodePermissions("file:///directory/file.js")
-```
-
-— see also [file modes documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_file_modes)<br />
-— source code at [src/readFileSystemNodePermissions.js](./src/readFileSystemNodePermissions.js).
 
 # readFile
 
@@ -529,18 +481,6 @@ resolveUrl("file.js", "file:///directory/")
 
 — source code at [src/resolveUrl.js](./src/resolveUrl.js).
 
-# testFileSystemNodePermissions
-
-`testFileSystemNodePermissions` is an async function returning a boolean indicating if current user has read/write/execute permission on the filesystem node.
-
-```js
-import { testFileSystemNodePermissions } from "@jsenv/util"
-
-const allowed = await testFileSystemNodePermissions("file:///file.js", { execute: true })
-```
-
-— source code at [src/testFileSystemNodePermissions.js](./src/testFileSystemNodePermissions.js).
-
 # urlIsInsideOf
 
 `urlIsInsideOf` is a function returning a boolean indicating if an url is inside an other url.
@@ -603,25 +543,6 @@ await writeFileSystemNodeModificationTime("file:///directory/file.js", Date.now(
 
 — source code at [src/writeFileSystemNodeModificationTime.js](./src/writeFileSystemNodeModificationTime.js).
 
-# writeFileSystemNodePermissions
-
-`writeFileSystemNodePermissions` is an async function setting the permissions of a filesystem node.
-
-> Do not use on Windows because of [file permissions caveat](#file-permissions-and-windows)
-
-```js
-import { writeFileSystemNodePermissions } from "@jsenv/util"
-
-await writeFileSystemNodePermissions("file:///directory/file.js", {
-  owner: { read: true, write: true, execute: true },
-  group: { read: true, write: true, execute: false },
-  others: { read: true, write: false, execute: false },
-})
-```
-
-— see also [file modes documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_file_modes)<br />
-— source code at [src/writeFileSystemNodePermissions.js](./src/writeFileSystemNodePermissions.js).
-
 # writeSymbolicLink
 
 `writeSymbolicLink` is an async function writing a symlink link to a file or directory on the filesystem.
@@ -634,3 +555,7 @@ await writeSymbolicLink("file:///foo.js", "./bar.js")
 
 — see also [symlink documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fs_symlink_target_path_type_callback)<br />
 — source code at [src/writeSymbolicLink.js](./src/writeSymbolicLink.js).
+
+# Advanced api
+
+There is a few more functions but they are more specific, you probably don't need them: [Advanced api](./docs/internal-api.md)
