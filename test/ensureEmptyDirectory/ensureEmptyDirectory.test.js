@@ -8,9 +8,7 @@ import {
   readDirectory,
   writeSymbolicLink,
   writeFileSystemNodePermissions,
-  writeFileSystemNodeModificationTime,
   readFileSystemNodePermissions,
-  readFileSystemNodeModificationTime,
 } from "../../index.js"
 
 const isWindows = process.platform === "win32"
@@ -105,22 +103,13 @@ if (!isWindows) {
     group: { read: false, write: false, execute: true },
     others: { read: false, write: false, execute: false },
   }
-  const mtime = Date.now()
   await writeDirectory(sourceUrl)
   await writeFile(fileUrl)
   await writeFileSystemNodePermissions(sourceUrl, permissions)
-  await writeFileSystemNodeModificationTime(sourceUrl, mtime)
 
   await ensureEmptyDirectory(sourceUrl)
   const permissionsAfter = await readFileSystemNodePermissions(sourceUrl)
-  const mtimeAfter = await readFileSystemNodeModificationTime(sourceUrl)
-  const actual = {
-    permissions: permissionsAfter,
-    mtimeModified: mtimeAfter !== mtime,
-  }
-  const expected = {
-    permissions,
-    mtimeModified: true,
-  }
+  const actual = permissionsAfter
+  const expected = permissions
   assert({ actual, expected })
 }
