@@ -145,8 +145,9 @@ export const registerDirectoryLifecycle = (
       return
     }
 
-    // it existed but was replaced by something else
-    // it's not really an update
+    // it existed and was replaced by something else
+    // we don't handle this as an update. We rather say the ressource
+    // is lost and something else is found (call removed() then added())
     if (previousType !== type) {
       handleEntryLost({ relativeUrl, type: previousType })
       handleEntryFound({ relativeUrl, type })
@@ -161,9 +162,16 @@ export const registerDirectoryLifecycle = (
       return
     }
 
-    // right same type, and the file existed and was not deleted
-    // it's likely an update ?
-    // but are we sure it's an update ?
+    // something has changed at this relativeUrl (the file existed and was not deleted)
+    // it's possible to get there and there is no real update
+    // (file content is the same and file mtime is the same).
+    // In short filesystem is sometimes "lying"
+    // Not trying to guard against that because:
+    // - hurt perfs a lot
+    // - it happens very rarely
+    // - it's not really a concern in practice
+    // - filesystem did not send an event out of nowhere:
+    // something occured but we don't know what with the information we have.
     if (updated) {
       updated({ relativeUrl, type })
     }
