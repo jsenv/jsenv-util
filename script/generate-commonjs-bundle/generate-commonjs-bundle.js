@@ -5,6 +5,5 @@ generateBundle({
   ...jsenvConfig,
   format: "commonjs",
   babelPluginMap: getBabelPluginMapForNode(),
-  manifestFile: true,
   bundleDirectoryClean: true,
 })
