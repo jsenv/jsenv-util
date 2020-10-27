@@ -1,8 +1,10 @@
-import { generateCommonJsBundleForNode } from "@jsenv/core"
+import { generateBundle, getBabelPluginMapForNode } from "@jsenv/core"
 import * as jsenvConfig from "../../jsenv.config.js"
 
-generateCommonJsBundleForNode({
+generateBundle({
   ...jsenvConfig,
+  format: "commonjs",
+  babelPluginMap: getBabelPluginMapForNode(),
   manifestFile: true,
   bundleDirectoryClean: true,
 })

@@ -1,6 +1,6 @@
 {
   "name": "@jsenv/util",
-  "version": "3.9.0",
+  "version": "3.9.1",
   "description": "Set of functions often needed when using Node.js.",
   "license": "MIT",
   "repository": {
@@ -51,15 +51,15 @@
   "devDependencies": {
     "@jsenv/assert": "2.2.1",
     "@jsenv/codecov-upload": "3.4.2",
-    "@jsenv/core": "15.0.1",
-    "@jsenv/eslint-config": "12.5.0",
+    "@jsenv/core": "16.2.3",
+    "@jsenv/eslint-config": "12.6.0",
     "@jsenv/github-release-package": "1.2.2",
-    "@jsenv/node-module-import-map": "12.0.2",
+    "@jsenv/node-module-import-map": "12.1.0",
     "@jsenv/package-publish": "1.5.1",
     "@jsenv/prettier-check-project": "5.6.1",
     "@jsenv/prettier-config": "1.2.0",
     "babel-eslint": "11.0.0-beta.0",
-    "eslint": "7.9.0",
+    "eslint": "7.12.1",
     "prettier": "2.1.2"
   }
 }
