@@ -1,11 +1,7 @@
-export const pathnameToDirectoryPathname = (pathname) => {
-  if (pathname.endsWith("/")) {
-    return pathname
-  }
-
+export const pathnameToParentPathname = (pathname) => {
   const slashLastIndex = pathname.lastIndexOf("/")
   if (slashLastIndex === -1) {
-    return ""
+    return "/"
   }
 
   return pathname.slice(0, slashLastIndex + 1)

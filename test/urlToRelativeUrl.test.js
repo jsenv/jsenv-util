@@ -4,6 +4,13 @@ import { urlToRelativeUrl } from "../index.js"
 // https://github.com/medialize/URI.js/blob/73c10412ce97b760d1cb143080bee25e99d12f5b/test/test.js#L1511
 // https://github.com/nodejs/node/blob/e12f48ef07e837553ea9c537b08d3e4a44d3fad2/test/parallel/test-path-relative.js
 
+// directory url
+{
+  const actual = urlToRelativeUrl("file:///project/test/bar.js", "file:///project/test/dist/")
+  const expected = "../bar.js"
+  assert({ actual, expected })
+}
+
 // different protocols
 {
   const actual = urlToRelativeUrl(

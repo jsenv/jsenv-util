@@ -1,5 +1,5 @@
 import { getCommonPathname } from "./internal/getCommonPathname.js"
-import { pathnameToDirectoryPathname } from "./internal/pathnameToDirectoryPathname.js"
+import { pathnameToParentPathname } from "./internal/pathnameToParentPathname.js"
 
 export const urlToRelativeUrl = (urlArg, baseUrlArg) => {
   const url = new URL(urlArg)
@@ -31,9 +31,10 @@ export const urlToRelativeUrl = (urlArg, baseUrlArg) => {
 
   const specificPathname = pathname.slice(commonPathname.length)
   const baseSpecificPathname = basePathname.slice(commonPathname.length)
-  const baseSpecificDirectoryPathname = pathnameToDirectoryPathname(baseSpecificPathname)
-  const relativeDirectoriesNotation = baseSpecificDirectoryPathname.replace(/.*?\//g, "../")
-
-  const relativePathname = `${relativeDirectoriesNotation}${specificPathname}`
-  return `${relativePathname}${search}${hash}`
+  if (baseSpecificPathname.includes("/")) {
+    const baseSpecificParentPathname = pathnameToParentPathname(baseSpecificPathname)
+    const relativeDirectoriesNotation = baseSpecificParentPathname.replace(/.*?\//g, "../")
+    return `${relativeDirectoriesNotation}${specificPathname}${search}${hash}`
+  }
+  return `${specificPathname}${search}${hash}`
 }
