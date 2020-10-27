@@ -209,6 +209,7 @@ await ensureEmptyDirectory(tempDirectoryUrl)
 {
   const fileUrl = resolveUrl("file", tempDirectoryUrl)
   await writeFile(fileUrl)
+  await wait(200)
   const mutations = []
 
   const unregister = registerDirectoryLifecycle(tempDirectoryUrl, {

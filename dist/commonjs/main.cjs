@@ -765,22 +765,25 @@ const readFileSystemNodeStat = async (source, {
     ...(isWindows ? {
       // Windows can EPERM on stat
       handlePermissionDeniedError: async error => {
-        // unfortunately it means we mutate the permissions
-        // without being able to restore them to the previous value
-        // (because reading current permission would also throw)
+        console.error(`trying to fix windows EPERM after stats on ${sourcePath}`);
+
         try {
+          // unfortunately it means we mutate the permissions
+          // without being able to restore them to the previous value
+          // (because reading current permission would also throw)
           await writeFileSystemNodePermissions(sourceUrl, 0o666);
           const stats = await readStat(sourcePath, {
             followLink,
             ...handleNotFoundOption,
             // could not fix the permission error, give up and throw original error
             handlePermissionDeniedError: () => {
+              console.error(`still got EPERM after stats on ${sourcePath}`);
               throw error;
             }
           });
           return stats;
         } catch (e) {
-          // failed to write permission or readState, throw original error as well
+          console.error(`error while trying to fix windows EPERM after stats on ${sourcePath}: ${e.stack}`);
           throw error;
         }
       }
@@ -797,10 +800,10 @@ const readStat = (sourcePath, {
   return new Promise((resolve, reject) => {
     nodeMethod(sourcePath, (error, statsObject) => {
       if (error) {
-        if (handlePermissionDeniedError && (error.code === "EPERM" || error.code === "EACCES")) {
-          resolve(handlePermissionDeniedError(error));
-        } else if (handleNotFoundError && error.code === "ENOENT") {
+        if (handleNotFoundError && error.code === "ENOENT") {
           resolve(handleNotFoundError(error));
+        } else if (handlePermissionDeniedError && (error.code === "EPERM" || error.code === "EACCES")) {
+          resolve(handlePermissionDeniedError(error));
         } else {
           reject(error);
         }
@@ -912,6 +915,187 @@ start`);
   const operationPromise = Promise.race([promise, cancelPromise]);
   return operationPromise;
 };
+
+const createCancelError = reason => {
+  const cancelError = new Error(`canceled because ${reason}`);
+  cancelError.name = "CANCEL_ERROR";
+  cancelError.reason = reason;
+  return cancelError;
+};
+const isCancelError = value => {
+  return value && typeof value === "object" && value.name === "CANCEL_ERROR";
+};
+
+const arrayWithout = (array, item) => {
+  const arrayWithoutItem = [];
+  let i = 0;
+
+  while (i < array.length) {
+    const value = array[i];
+    i++;
+
+    if (value === item) {
+      continue;
+    }
+
+    arrayWithoutItem.push(value);
+  }
+
+  return arrayWithoutItem;
+};
+
+// https://github.com/tc39/proposal-cancellation/tree/master/stage0
+const createCancellationSource = () => {
+  let requested = false;
+  let cancelError;
+  let registrationArray = [];
+
+  const cancel = reason => {
+    if (requested) return;
+    requested = true;
+    cancelError = createCancelError(reason);
+    const registrationArrayCopy = registrationArray.slice();
+    registrationArray.length = 0;
+    registrationArrayCopy.forEach(registration => {
+      registration.callback(cancelError); // const removedDuringCall = registrationArray.indexOf(registration) === -1
+    });
+  };
+
+  const register = callback => {
+    if (typeof callback !== "function") {
+      throw new Error(`callback must be a function, got ${callback}`);
+    }
+
+    const existingRegistration = registrationArray.find(registration => {
+      return registration.callback === callback;
+    }); // don't register twice
+
+    if (existingRegistration) {
+      return existingRegistration;
+    }
+
+    const registration = {
+      callback,
+      unregister: () => {
+        registrationArray = arrayWithout(registrationArray, registration);
+      }
+    };
+    registrationArray = [registration, ...registrationArray];
+    return registration;
+  };
+
+  const throwIfRequested = () => {
+    if (requested) {
+      throw cancelError;
+    }
+  };
+
+  return {
+    token: {
+      register,
+
+      get cancellationRequested() {
+        return requested;
+      },
+
+      throwIfRequested
+    },
+    cancel
+  };
+};
+
+const getCommandArgument = (argv, name) => {
+  let i = 0;
+
+  while (i < argv.length) {
+    const arg = argv[i];
+
+    if (arg === name) {
+      return {
+        name,
+        index: i,
+        value: ""
+      };
+    }
+
+    if (arg.startsWith(`${name}=`)) {
+      return {
+        name,
+        index: i,
+        value: arg.slice(`${name}=`.length)
+      };
+    }
+
+    i++;
+  }
+
+  return null;
+};
+
+const wrapExternalFunction = (fn, {
+  catchCancellation = false,
+  unhandledRejectionStrict = false
+} = {}) => {
+  if (catchCancellation) {
+    const previousFn = fn;
+
+    fn = async () => {
+      try {
+        const value = await previousFn();
+        return value;
+      } catch (error) {
+        if (isCancelError(error)) {
+          // it means consume of the function will resolve with a cancelError
+          // but when you cancel it means you're not interested in the result anymore
+          // thanks to this it avoid unhandledRejection
+          return error;
+        }
+
+        throw error;
+      }
+    };
+  }
+
+  if (unhandledRejectionStrict) {
+    const previousFn = fn;
+
+    fn = async () => {
+      const uninstall = installUnhandledRejectionStrict();
+
+      try {
+        const value = await previousFn();
+        uninstall();
+        return value;
+      } catch (e) {
+        // don't remove it immediatly to let nodejs emit the unhandled rejection
+        setTimeout(() => {
+          uninstall();
+        });
+        throw e;
+      }
+    };
+  }
+
+  return fn();
+};
+
+const installUnhandledRejectionStrict = () => {
+  const unhandledRejectionArg = getCommandArgument(process.execArgv, "--unhandled-rejections");
+  if (unhandledRejectionArg === "strict") return () => {};
+
+  const onUnhandledRejection = reason => {
+    throw reason;
+  };
+
+  process.once("unhandledRejection", onUnhandledRejection);
+  return () => {
+    process.removeListener("unhandledRejection", onUnhandledRejection);
+  };
+};
+
+const catchCancellation = asyncFn => wrapExternalFunction(asyncFn, {
+  catchCancellation: true
+});
 
 const readDirectory = async (url, {
   emfileMaxWait = 1000
@@ -1073,8 +1257,8 @@ const comparePathnames = (leftPathame, rightPathname) => {
   let i = 0;
 
   while (i < maxLength) {
-    const leftPartExists = i in leftPartArray;
-    const rightPartExists = i in rightPartArray; // longer comes first
+    const leftPartExists = (i in leftPartArray);
+    const rightPartExists = (i in rightPartArray); // longer comes first
 
     if (!leftPartExists) return +1;
     if (!rightPartExists) return -1;
@@ -1095,6 +1279,98 @@ const comparePathnames = (leftPathame, rightPathname) => {
   if (leftLength > rightLength) return -1;
   return 0;
 };
+
+const collectDirectoryMatchReport = async ({
+  cancellationToken = createCancellationToken(),
+  directoryUrl,
+  specifierMetaMap,
+  predicate
+}) => {
+  const matchingArray = [];
+  const ignoredArray = [];
+  const rootDirectoryUrl = assertAndNormalizeDirectoryUrl(directoryUrl);
+
+  if (typeof predicate !== "function") {
+    throw new TypeError(`predicate must be a function, got ${predicate}`);
+  }
+
+  const specifierMetaMapNormalized = normalizeSpecifierMetaMap(specifierMetaMap, rootDirectoryUrl);
+
+  const visitDirectory = async directoryUrl => {
+    const directoryItems = await createOperation({
+      cancellationToken,
+      start: () => readDirectory(directoryUrl)
+    });
+    await Promise.all(directoryItems.map(async directoryItem => {
+      const directoryChildNodeUrl = `${directoryUrl}${directoryItem}`;
+      const relativeUrl = urlToRelativeUrl(directoryChildNodeUrl, rootDirectoryUrl);
+      const directoryChildNodeStats = await createOperation({
+        cancellationToken,
+        start: () => readFileSystemNodeStat(directoryChildNodeUrl, {
+          // we ignore symlink because recursively traversed
+          // so symlinked file will be discovered.
+          // Moreover if they lead outside of directoryPath it can become a problem
+          // like infinite recursion of whatever.
+          // that we could handle using an object of pathname already seen but it will be useless
+          // because directoryPath is recursively traversed
+          followLink: false
+        })
+      });
+
+      if (directoryChildNodeStats.isDirectory()) {
+        const subDirectoryUrl = `${directoryChildNodeUrl}/`;
+
+        if (!urlCanContainsMetaMatching({
+          url: subDirectoryUrl,
+          specifierMetaMap: specifierMetaMapNormalized,
+          predicate
+        })) {
+          ignoredArray.push({
+            relativeUrl: ensureUrlTrailingSlash(relativeUrl),
+            fileStats: directoryChildNodeStats
+          });
+          return;
+        }
+
+        await visitDirectory(subDirectoryUrl);
+        return;
+      }
+
+      if (directoryChildNodeStats.isFile()) {
+        const meta = urlToMeta({
+          url: directoryChildNodeUrl,
+          specifierMetaMap: specifierMetaMapNormalized
+        });
+
+        if (!predicate(meta)) {
+          ignoredArray.push({
+            relativeUrl,
+            meta,
+            fileStats: directoryChildNodeStats
+          });
+          return;
+        }
+
+        matchingArray.push({
+          relativeUrl,
+          meta,
+          fileStats: directoryChildNodeStats
+        });
+        return;
+      }
+    }));
+  };
+
+  await visitDirectory(rootDirectoryUrl);
+  return {
+    matchingArray: sortByRelativeUrl(matchingArray),
+    ignoredArray: sortByRelativeUrl(ignoredArray)
+  };
+};
+
+const sortByRelativeUrl = array => array.sort((left, right) => {
+  return comparePathnames(left.relativeUrl, right.relativeUrl);
+});
 
 const collectFiles = async ({
   cancellationToken = createCancellationToken(),
@@ -1357,6 +1633,7 @@ const removeDirectory = async (rootDirectoryUrl, {
       // Workaround for https://github.com/joyent/node/issues/4337
       ...(process.platform === "win32" ? {
         handlePermissionError: async error => {
+          console.error(`trying to fix windows EPERM after readir on ${directoryPath}`);
           let openOrCloseError;
 
           try {
@@ -1371,7 +1648,7 @@ const removeDirectory = async (rootDirectoryUrl, {
               return;
             }
 
-            console.error(`error while trying to fix windows EPERM: ${openOrCloseError.stack}`);
+            console.error(`error while trying to fix windows EPERM after readir on ${directoryPath}: ${openOrCloseError.stack}`);
             throw error;
           }
 
@@ -1444,7 +1721,9 @@ const ensureEmptyDirectory = async source => {
 
   if (stats === null) {
     // if there is nothing, create a directory
-    return writeDirectory(source);
+    return writeDirectory(source, {
+      allowUseless: true
+    });
   }
 
   if (stats.isDirectory()) {
@@ -1459,6 +1738,16 @@ const ensureEmptyDirectory = async source => {
   const sourceType = statsToType(stats);
   const sourcePath = urlToFileSystemPath(assertAndNormalizeFileUrl(source));
   throw new Error(`ensureEmptyDirectory expect directory at ${sourcePath}, found ${sourceType} instead`);
+};
+
+const ensureParentDirectories = async destination => {
+  const destinationUrl = assertAndNormalizeFileUrl(destination);
+  const destinationPath = urlToFileSystemPath(destinationUrl);
+  const destinationParentPath = path.dirname(destinationPath);
+  return writeDirectory(destinationParentPath, {
+    recursive: true,
+    allowUseless: true
+  });
 };
 
 const isWindows$1 = process.platform === "win32";
@@ -1527,16 +1816,6 @@ const urlTargetsSameFileSystemPath = (leftUrl, rightUrl) => {
   if (leftUrl.endsWith("/")) leftUrl = leftUrl.slice(0, -1);
   if (rightUrl.endsWith("/")) rightUrl = rightUrl.slice(0, -1);
   return leftUrl === rightUrl;
-};
-
-const ensureParentDirectories = async destination => {
-  const destinationUrl = assertAndNormalizeFileUrl(destination);
-  const destinationPath = urlToFileSystemPath(destinationUrl);
-  const destinationParentPath = path.dirname(destinationPath);
-  return writeDirectory(destinationParentPath, {
-    recursive: true,
-    allowUseless: true
-  });
 };
 
 const writeFileSystemNodeModificationTime = (source, mtime) => {
@@ -1816,6 +2095,223 @@ const copyFileContentNaive = (filePath, fileDestinationPath) => {
   });
 };
 
+const addCallback = callback => {
+  const triggerHangUpOrDeath = () => callback(); // SIGHUP http://man7.org/linux/man-pages/man7/signal.7.html
+
+
+  process.once("SIGUP", triggerHangUpOrDeath);
+  return () => {
+    process.removeListener("SIGUP", triggerHangUpOrDeath);
+  };
+};
+
+const SIGUPSignal = {
+  addCallback
+};
+
+const addCallback$1 = callback => {
+  // SIGINT is CTRL+C from keyboard also refered as keyboard interruption
+  // http://man7.org/linux/man-pages/man7/signal.7.html
+  // may also be sent by vscode https://github.com/Microsoft/vscode-node-debug/issues/1#issuecomment-405185642
+  process.once("SIGINT", callback);
+  return () => {
+    process.removeListener("SIGINT", callback);
+  };
+};
+
+const SIGINTSignal = {
+  addCallback: addCallback$1
+};
+
+const addCallback$2 = callback => {
+  if (process.platform === "win32") {
+    console.warn(`SIGTERM is not supported on windows`);
+    return () => {};
+  }
+
+  const triggerTermination = () => callback(); // SIGTERM http://man7.org/linux/man-pages/man7/signal.7.html
+
+
+  process.once("SIGTERM", triggerTermination);
+  return () => {
+    process.removeListener("SIGTERM", triggerTermination);
+  };
+};
+
+const SIGTERMSignal = {
+  addCallback: addCallback$2
+};
+
+let beforeExitCallbackArray = [];
+let uninstall;
+
+const addCallback$3 = callback => {
+  if (beforeExitCallbackArray.length === 0) uninstall = install();
+  beforeExitCallbackArray = [...beforeExitCallbackArray, callback];
+  return () => {
+    if (beforeExitCallbackArray.length === 0) return;
+    beforeExitCallbackArray = beforeExitCallbackArray.filter(beforeExitCallback => beforeExitCallback !== callback);
+    if (beforeExitCallbackArray.length === 0) uninstall();
+  };
+};
+
+const install = () => {
+  const onBeforeExit = () => {
+    return beforeExitCallbackArray.reduce(async (previous, callback) => {
+      await previous;
+      return callback();
+    }, Promise.resolve());
+  };
+
+  process.once("beforeExit", onBeforeExit);
+  return () => {
+    process.removeListener("beforeExit", onBeforeExit);
+  };
+};
+
+const beforeExitSignal = {
+  addCallback: addCallback$3
+};
+
+const addCallback$4 = (callback, {
+  collectExceptions = false
+} = {}) => {
+  if (!collectExceptions) {
+    const exitCallback = () => {
+      callback();
+    };
+
+    process.on("exit", exitCallback);
+    return () => {
+      process.removeListener("exit", exitCallback);
+    };
+  }
+
+  const {
+    getExceptions,
+    stop
+  } = trackExceptions();
+
+  const exitCallback = () => {
+    process.removeListener("exit", exitCallback);
+    stop();
+    callback({
+      exceptionArray: getExceptions().map(({
+        exception,
+        origin
+      }) => {
+        return {
+          exception,
+          origin
+        };
+      })
+    });
+  };
+
+  process.on("exit", exitCallback);
+  return () => {
+    process.removeListener("exit", exitCallback);
+  };
+};
+
+const trackExceptions = () => {
+  let exceptionArray = [];
+
+  const unhandledRejectionCallback = (unhandledRejection, promise) => {
+    exceptionArray = [...exceptionArray, {
+      origin: "unhandledRejection",
+      exception: unhandledRejection,
+      promise
+    }];
+  };
+
+  const rejectionHandledCallback = promise => {
+    exceptionArray = exceptionArray.filter(exceptionArray => exceptionArray.promise !== promise);
+  };
+
+  const uncaughtExceptionCallback = (uncaughtException, origin) => {
+    // since node 12.4 https://nodejs.org/docs/latest-v12.x/api/process.html#process_event_uncaughtexception
+    if (origin === "unhandledRejection") return;
+    exceptionArray = [...exceptionArray, {
+      origin: "uncaughtException",
+      exception: uncaughtException
+    }];
+  };
+
+  process.on("unhandledRejection", unhandledRejectionCallback);
+  process.on("rejectionHandled", rejectionHandledCallback);
+  process.on("uncaughtException", uncaughtExceptionCallback);
+  return {
+    getExceptions: () => exceptionArray,
+    stop: () => {
+      process.removeListener("unhandledRejection", unhandledRejectionCallback);
+      process.removeListener("rejectionHandled", rejectionHandledCallback);
+      process.removeListener("uncaughtException", uncaughtExceptionCallback);
+    }
+  };
+};
+
+const exitSignal = {
+  addCallback: addCallback$4
+};
+
+const addCallback$5 = callback => {
+  return eventRace({
+    SIGHUP: {
+      register: SIGUPSignal.addCallback,
+      callback: () => callback("SIGHUP")
+    },
+    SIGINT: {
+      register: SIGINTSignal.addCallback,
+      callback: () => callback("SIGINT")
+    },
+    ...(process.platform === "win32" ? {} : {
+      SIGTERM: {
+        register: SIGTERMSignal.addCallback,
+        callback: () => callback("SIGTERM")
+      }
+    }),
+    beforeExit: {
+      register: beforeExitSignal.addCallback,
+      callback: () => callback("beforeExit")
+    },
+    exit: {
+      register: exitSignal.addCallback,
+      callback: () => callback("exit")
+    }
+  });
+};
+
+const eventRace = eventMap => {
+  const unregisterMap = {};
+
+  const unregisterAll = reason => {
+    return Object.keys(unregisterMap).map(name => unregisterMap[name](reason));
+  };
+
+  Object.keys(eventMap).forEach(name => {
+    const {
+      register,
+      callback
+    } = eventMap[name];
+    unregisterMap[name] = register((...args) => {
+      unregisterAll();
+      callback(...args);
+    });
+  });
+  return unregisterAll;
+};
+
+const teardownSignal = {
+  addCallback: addCallback$5
+};
+
+const createCancellationTokenForProcess = () => {
+  const teardownCancelSource = createCancellationSource();
+  teardownSignal.addCallback(reason => teardownCancelSource.cancel(`process ${reason}`));
+  return teardownCancelSource.token;
+};
+
 const {
   stat
 } = fs.promises;
@@ -1855,6 +2351,32 @@ const grantPermissionsOnFileSystemNode = async (source, {
   return async () => {
     await writeFileSystemNodePermissions(sourceUrl, filePermissions);
   };
+};
+
+const memoize = compute => {
+  let memoized = false;
+  let memoizedValue;
+
+  const fnWithMemoization = (...args) => {
+    if (memoized) {
+      return memoizedValue;
+    } // if compute is recursive wait for it to be fully done before storing the value
+    // so set memoized boolean after the call
+
+
+    memoizedValue = compute(...args);
+    memoized = true;
+    return memoizedValue;
+  };
+
+  fnWithMemoization.forget = () => {
+    const value = memoizedValue;
+    memoized = false;
+    memoizedValue = undefined;
+    return value;
+  };
+
+  return fnWithMemoization;
 };
 
 /* eslint-disable import/max-dependencies */
@@ -1951,11 +2473,26 @@ const moveNaive = (sourcePath, destinationPath, {
 };
 
 const readFilePromisified = util.promisify(fs.readFile);
-const readFile = async value => {
+const readFile = async (value, {
+  as = "string"
+} = {}) => {
   const fileUrl = assertAndNormalizeFileUrl(value);
   const filePath = urlToFileSystemPath(fileUrl);
   const buffer = await readFilePromisified(filePath);
-  return buffer.toString();
+
+  if (as === "buffer") {
+    return buffer;
+  }
+
+  if (as === "string") {
+    return buffer.toString();
+  }
+
+  if (as === "json") {
+    return JSON.parse(buffer.toString());
+  }
+
+  throw new Error(`as must be one of buffer,string,json, received ${as}.`);
 };
 
 const readFileSystemNodeModificationTime = async source => {
@@ -2088,7 +2625,7 @@ const registerDirectoryLifecycle = (source, {
   };
 
   const tracker = trackRessources();
-  const contentMap = {};
+  const contentMap = new Map();
 
   const handleDirectoryEvent = ({
     directoryRelativeUrl,
@@ -2104,7 +2641,7 @@ const registerDirectoryLifecycle = (source, {
     } else if ((removed || added) && eventType === "rename") {
       // we might receive `rename` without filename
       // in that case we try to find ourselves which file was removed.
-      let relativeUrlCandidateArray = Object.keys(contentMap);
+      let relativeUrlCandidateArray = Array.from(contentMap.keys());
 
       if (recursive && !fsWatchSupportsRecursive) {
         relativeUrlCandidateArray = relativeUrlCandidateArray.filter(relativeUrlCandidate => {
@@ -2132,7 +2669,7 @@ const registerDirectoryLifecycle = (source, {
       if (removedEntryRelativeUrl) {
         handleEntryLost({
           relativeUrl: removedEntryRelativeUrl,
-          type: contentMap[removedEntryRelativeUrl]
+          type: contentMap.get(removedEntryRelativeUrl)
         });
       }
     }
@@ -2140,7 +2677,7 @@ const registerDirectoryLifecycle = (source, {
 
   const handleChange = relativeUrl => {
     const entryUrl = resolveUrl(relativeUrl, sourceUrl);
-    const previousType = contentMap[relativeUrl];
+    const previousType = contentMap.get(relativeUrl);
     const type = fileSystemNodeToTypeOrNull(entryUrl);
 
     if (!entryShouldBeWatched({
@@ -2217,7 +2754,7 @@ const registerDirectoryLifecycle = (source, {
       return;
     }
 
-    contentMap[relativeUrl] = type;
+    contentMap.set(relativeUrl, type);
     const entryUrl = resolveUrl(relativeUrl, sourceUrl);
 
     if (type === "directory") {
@@ -2272,7 +2809,7 @@ const registerDirectoryLifecycle = (source, {
     relativeUrl,
     type
   }) => {
-    delete contentMap[relativeUrl];
+    contentMap.delete(relativeUrl);
 
     if (removed) {
       removed({
@@ -2542,6 +3079,111 @@ const testFileSystemNodePermissions = async (source, {
   }
 };
 
+const urlToScheme = urlString => {
+  const colonIndex = urlString.indexOf(":");
+
+  if (colonIndex === -1) {
+    return "";
+  }
+
+  const scheme = urlString.slice(0, colonIndex);
+  return scheme;
+};
+
+const urlToRessource = urlString => {
+  const scheme = urlToScheme(urlString);
+
+  if (scheme === "file") {
+    return urlString.slice("file://".length);
+  }
+
+  if (scheme === "https" || scheme === "http") {
+    // remove origin
+    const afterProtocol = urlString.slice(scheme.length + "://".length);
+    const pathnameSlashIndex = afterProtocol.indexOf("/", "://".length);
+    return afterProtocol.slice(pathnameSlashIndex);
+  }
+
+  return urlString.slice(scheme.length + 1);
+};
+
+const urlToPathname = urlString => {
+  const ressource = urlToRessource(urlString);
+  const pathname = ressourceToPathname(ressource);
+  return pathname;
+};
+
+const ressourceToPathname = ressource => {
+  const searchSeparatorIndex = ressource.indexOf("?");
+  return searchSeparatorIndex === -1 ? ressource : ressource.slice(0, searchSeparatorIndex);
+};
+
+const urlToFilename = url => {
+  const pathname = urlToPathname(url);
+  const slashLastIndex = pathname.lastIndexOf("/");
+  const filename = slashLastIndex === -1 ? pathname : pathname.slice(slashLastIndex + 1);
+  return filename;
+};
+
+const urlToBasename = pathname => {
+  const filename = urlToFilename(pathname);
+  const dotLastIndex = filename.lastIndexOf(".");
+  const basename = dotLastIndex === -1 ? filename : filename.slice(0, dotLastIndex);
+  return basename;
+};
+
+const urlToExtension = url => {
+  const pathname = urlToPathname(url);
+  return pathnameToExtension(pathname);
+};
+
+const pathnameToExtension = pathname => {
+  const slashLastIndex = pathname.lastIndexOf("/");
+
+  if (slashLastIndex !== -1) {
+    pathname = pathname.slice(slashLastIndex + 1);
+  }
+
+  const dotLastIndex = pathname.lastIndexOf(".");
+  if (dotLastIndex === -1) return ""; // if (dotLastIndex === pathname.length - 1) return ""
+
+  const extension = pathname.slice(dotLastIndex);
+  return extension;
+};
+
+const urlToOrigin = url => {
+  if (url.startsWith("file://")) {
+    return `file://`;
+  }
+
+  return new URL(url).origin;
+};
+
+const urlToParentUrl = url => {
+  const ressource = urlToRessource(url);
+  const slashLastIndex = ressource.lastIndexOf("/");
+
+  if (slashLastIndex === -1) {
+    return url;
+  }
+
+  const lastCharacterIndex = ressource.length - 1;
+
+  if (slashLastIndex === lastCharacterIndex) {
+    const slashPreviousIndex = ressource.lastIndexOf("/", lastCharacterIndex - 1);
+
+    if (slashPreviousIndex === -1) {
+      return url;
+    }
+
+    const origin = urlToOrigin(url);
+    return `${origin}${ressource.slice(0, slashPreviousIndex + 1)}`;
+  }
+
+  const origin = urlToOrigin(url);
+  return `${origin}${ressource.slice(0, slashLastIndex + 1)}`;
+};
+
 const {
   writeFile: writeFileNode
 } = fs.promises;
@@ -2568,15 +3210,19 @@ exports.assertAndNormalizeFileUrl = assertAndNormalizeFileUrl;
 exports.assertDirectoryPresence = assertDirectoryPresence;
 exports.assertFilePresence = assertFilePresence;
 exports.bufferToEtag = bufferToEtag;
+exports.catchCancellation = catchCancellation;
+exports.collectDirectoryMatchReport = collectDirectoryMatchReport;
 exports.collectFiles = collectFiles;
 exports.comparePathnames = comparePathnames;
 exports.copyFileSystemNode = copyFileSystemNode;
+exports.createCancellationTokenForProcess = createCancellationTokenForProcess;
 exports.ensureEmptyDirectory = ensureEmptyDirectory;
 exports.ensureParentDirectories = ensureParentDirectories;
 exports.ensureWindowsDriveLetter = ensureWindowsDriveLetter;
 exports.fileSystemPathToUrl = fileSystemPathToUrl;
 exports.grantPermissionsOnFileSystemNode = grantPermissionsOnFileSystemNode;
 exports.isFileSystemPath = isFileSystemPath;
+exports.memoize = memoize;
 exports.metaMapToSpecifierMetaMap = metaMapToSpecifierMetaMap;
 exports.moveFileSystemNode = moveFileSystemNode;
 exports.normalizeSpecifierMetaMap = normalizeSpecifierMetaMap;
@@ -2594,12 +3240,20 @@ exports.resolveUrl = resolveUrl;
 exports.testFileSystemNodePermissions = testFileSystemNodePermissions;
 exports.urlCanContainsMetaMatching = urlCanContainsMetaMatching;
 exports.urlIsInsideOf = urlIsInsideOf;
+exports.urlToBasename = urlToBasename;
+exports.urlToExtension = urlToExtension;
 exports.urlToFileSystemPath = urlToFileSystemPath;
+exports.urlToFilename = urlToFilename;
 exports.urlToMeta = urlToMeta;
+exports.urlToParentUrl = urlToParentUrl;
+exports.urlToPathname = urlToPathname;
 exports.urlToRelativeUrl = urlToRelativeUrl;
+exports.urlToScheme = urlToScheme;
+exports.wrapExternalFunction = wrapExternalFunction;
 exports.writeDirectory = writeDirectory;
 exports.writeFile = writeFile;
 exports.writeFileSystemNodeModificationTime = writeFileSystemNodeModificationTime;
 exports.writeFileSystemNodePermissions = writeFileSystemNodePermissions;
 exports.writeSymbolicLink = writeSymbolicLink;
+
 //# sourceMappingURL=main.cjs.map
