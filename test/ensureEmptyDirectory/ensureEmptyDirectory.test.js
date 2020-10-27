@@ -116,11 +116,11 @@ if (!isWindows) {
   const mtimeAfter = await readFileSystemNodeModificationTime(sourceUrl)
   const actual = {
     permissions: permissionsAfter,
-    mtime,
+    mtimeModified: mtimeAfter !== mtime,
   }
   const expected = {
     permissions,
-    mtimeAfter,
+    mtimeModified: true,
   }
   assert({ actual, expected })
 }
