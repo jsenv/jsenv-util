@@ -12,12 +12,12 @@ Set of functions often needed when using Node.js.
 - [Presentation](#Presentation)
 - [Installation](#Installation)
 - [Url preference](#Url-preference)
+- [File permissions and Windows](#file-permissions-and-windows)
 - [assertAndNormalizeDirectoryUrl](#assertAndNormalizeDirectoryUrl)
 - [assertAndNormalizeFileUrl](#assertAndNormalizeFileUrl)
 - [assertDirectoryPresence](#assertDirectoryPresence)
 - [assertFilePresence](#assertFilePresence)
 - [bufferToEtag](#bufferToEtag)
-- [callCancellable](#catchCancellation)
 - [collectFiles](#collectFiles)
 - [comparePathnames](#comparePathnames)
 - [copyFileSystemNode](#copyFileSystemNode)
@@ -85,12 +85,24 @@ const filesystemPath = "/directory/file.js"
 
 This allows function to manipulate a value that is the same across operating systems. Because on windows a filesystem path looks like `C:\\directory\\file.js` while linux/mac equivalent looks like `/directory/file.js`. Also url are standard. A standard is more robust and knowledge acquired on a standard is reusable.
 
-You might also notice a slight preference for url string over url object in the documentation or codebase. This is a deliberate choice because over time it appeared that an url string are easier to work with. Certainly because a string is a well known primitive while an url object is a more complex structure.
+You might also notice a slight preference for url string over url object in the documentation or codebase. This is a deliberate choice because over time it appeared that an url string is easier to work with. Certainly because a string is a well known primitive while an url object is a more complex structure.
 
 ```js
 const urlString = "file:///directory/file.js"
 const urlObject = new URL("file:///directory/file.js")
 ```
+
+# File permissions and Windows
+
+Three functions are using file permissions. This concept comes from linux and works only on operating system using this approach. (To my knowledge linux and MacOS). It means you cannot use [grantPermissionsOnFileSystemNode](#grantPermissionsOnFileSystemNode), [readFileSystemNodePermissions](#readFileSystemNodePermissions) and [writeFileSystemNodePermissions](#writeFileSystemNodePermissions).
+
+This limitation is directly inherited from Node.js. The following is quoted from Node.js documentation
+
+> Caveats: on Windows only the write permission can be changed, and the distinction among the permissions of group, owner or others is not implemented.
+
+In other words it's unusable.
+
+— See [File modes documentation on Node.js](https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_fs_chmodsync_path_mode)<br />
 
 # assertAndNormalizeDirectoryUrl
 
@@ -111,7 +123,7 @@ assertAndNormalizeDirectoryUrl("/directory") // file:///directory/
 ```js
 import { assertAndNormalizeFileUrl } from "@jsenv/util"
 
-assertAndNormalizeFileUrl("/directory/file.js")
+assertAndNormalizeFileUrl("/directory/file.js") // file:///directory/file.js
 ```
 
 — source code at [src/assertAndNormalizeFileUrl.js](./src/assertAndNormalizeFileUrl.js).
@@ -155,48 +167,6 @@ eTag === otherEtag
 — see [Buffer documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/buffer.html)<br />
 — see [eTag documentation on MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag)<br />
 — source code at [src/bufferToEtag.js](./src/bufferToEtag.js).
-
-# catchCancellation
-
-`catchCancellation` is a function receiving an async function and immediatly calling it and catching cancelError to avoid unhandled rejection.
-
-Considering that cancelling a function rejects it rejected with a cancel error.
-
-```js
-import { createCancellationSource, isCancelError } from "@jsenv/cancellation"
-
-const fn = async ({ cancellationToken }) => {
-  cancellationToken.throwIfRequested()
-}
-
-const cancelSource = createCancellationSource()
-cancelSource.cancel()
-
-try {
-  await fn({ cancellationToken: cancelSource.token })
-} catch (e) {
-  isCancelError(e) // true
-}
-```
-
-You have to catch the cancel errors to avoid unhandled rejection inside Node.js. `catchCancellation` resolves with the cancel error instead of rejecting with it to avoid the unhandledRejection. You can still detect the cancellation using isCancelError(result) but cancellation means you're no longer interested in the result so you shoud not need this at all.
-
-```js
-import { catchCancellation } from "@jsenv/util"
-import { createCancellationSource, isCancelError } from "@jsenv/cancellation"
-
-const fn = async ({ cancellationToken }) => {
-  cancellationToken.throwIfRequested()
-}
-
-const cancelSource = createCancellationSource()
-cancelSource.cancel()
-
-const result = await catchCancellation(() => fn({ cancellationToken: cancelSource.token }))
-isCancelError(result) // true
-```
-
-— source code at [src/catchCancellation.js](./src/catchCancellation.js).
 
 # collectFiles
 
@@ -304,6 +274,8 @@ await writeDirectory(`file:///directory`)
 
 `grantPermissionsOnFileSystemNode` is an async function granting permission on a given file system node. It returns an async function restoring the previous permissions.
 
+> Do not use on Windows because of [file permissions caveat](#file-permissions-and-windows)
+
 ```js
 import { grantPermissionsOnFileSystemNode } from "@jsenv/util"
 
@@ -407,6 +379,8 @@ const mtimeMs = await readFileSystemNodeModificationTime("file:///directory/file
 # readFileSystemNodePermissions
 
 `readFileSystemNodePermissions` is an async function returning an object representing the permissions of a given filesystem node.
+
+> Do not use on Windows because of [file permissions caveat](#file-permissions-and-windows)
 
 ```js
 import { readFileSystemNodePermissions } from "@jsenv/util"
@@ -632,6 +606,8 @@ await writeFileSystemNodeModificationTime("file:///directory/file.js", Date.now(
 # writeFileSystemNodePermissions
 
 `writeFileSystemNodePermissions` is an async function setting the permissions of a filesystem node.
+
+> Do not use on Windows because of [file permissions caveat](#file-permissions-and-windows)
 
 ```js
 import { writeFileSystemNodePermissions } from "@jsenv/util"
