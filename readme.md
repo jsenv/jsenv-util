@@ -66,12 +66,12 @@ const packageFilePath = urlToFileSystemPath(packageFileUrl)
 const packageFileBuffer = readFileSync(packageFilePath)
 ```
 
-With times more functions were added, all util are documented in the [Documentation](#Documentation) part.
+With times more functions were added, all util are documented below.
 
 # Installation
 
 ```console
-npm install @jsenv/util@3.5.0
+npm install @jsenv/util
 ```
 
 # Url preference
@@ -419,12 +419,14 @@ const permissions = await readFileSystemNodePermissions("file:///directory/file.
 
 # readFile
 
-`readFile` is an async function returning the content of a file as string.
+`readFile` is an async function returning the content of a file as string, buffer, or json.
 
 ```js
 import { readFile } from "@jsenv/util"
 
-const content = await readFile("file:///directory/file.js")
+const fileContentAsString = await readFile("file:///directory/file.json")
+const fileContentAsBuffer = await readFile("file:///directory/file.json", { as: "buffer" })
+const fileContentAsJSON = await readFile("file:///directory/file.json", { as: "json" })
 ```
 
 — source code at [src/readFile.js](./src/readFile.js).
@@ -535,7 +537,8 @@ urlB.href // file:///file.js
 ```js
 import { resolveDirectoryUrl } from "@jsenv/util"
 
-resolveDirectoryUrl("src", "file:///directory")
+const directoryUrl = resolveDirectoryUrl("src", "file:///directory")
+directoryUrl // file:///directory/src/
 ```
 
 — source code at [src/resolveDirectoryUrl.js](./src/resolveDirectoryUrl.js).
