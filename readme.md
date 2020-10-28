@@ -106,12 +106,12 @@ This documentation and source code uses a naming taken from url standard specifi
       │                       authority                                                                    │
       │           ┌───────────────┴───────────────────────────┐                                            │
       │           │                                         host                                        ressource
-      │           │                                ┌──────────┴────────────────┐             ┌──────────────┴────────┬──────┐
-      │           │                             hostname                       │          pathname                   │      │
-      │           │                 ┌──────────────┴────────────┐              │      ┌──────┴──────┐                │      │
-  protocol     userinfo         subdomain                    domain            │      │          filename            │      │
-   ┌─┴──┐     ┌───┴────┐            │                  ┌────────┴───────┐      │      │         ┌───┴─────┐          │      │
-scheme  │username password lowerleveldomains secondleveldomain topleveldomain port dirname   basename extension   search   hash
+      │           │                                ┌──────────┴────────────────┐             ┌──────────────┴────────┬────────┐
+      │           │                             hostname                       │          pathname                   │        │
+      │           │                 ┌──────────────┴────────────┐              │      ┌──────┴──────┐                │        │
+  protocol     userinfo         subdomain                    domain            │      │          filename            │        │
+   ┌─┴──┐     ┌───┴────┐            │                  ┌────────┴───────┐      │      │         ┌───┴─────┐          │        │
+scheme  │username password lowerleveldomains secondleveldomain topleveldomain port dirname   basename extension   search     hash
 ┌──┴───┐│┌──┴───┐ ┌──┴───┐ ┌──┬─┬─┴─────┬───┐┌───────┴───────┐ ┌──────┴──────┐┌┴┐┌────┴─────┐ ┌──┴───┐ ┌───┴───┐ ┌────┴────┐ ┌┴┐
 │      │││      │ │      │ │  │ │       │   ││               │ │             ││ ││          │ │      │ │       │ │         │ │ │
 scheme://username:password@test.abcdedgh.www.secondleveldomain.topleveldomain:123/hello/world/basename.extension?name=ferret#hash
