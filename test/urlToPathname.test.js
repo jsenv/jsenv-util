@@ -8,6 +8,18 @@ import { urlToPathname } from "../index.js"
 }
 
 {
+  const actual = urlToPathname("http://example.com/dir/")
+  const expected = "/dir/"
+  assert({ actual, expected })
+}
+
+{
+  const actual = urlToPathname("http://example.com/")
+  const expected = "/"
+  assert({ actual, expected })
+}
+
+{
   const actual = urlToPathname("file:///dir/file.js?page=1")
   const expected = "/dir/file.js"
   assert({ actual, expected })

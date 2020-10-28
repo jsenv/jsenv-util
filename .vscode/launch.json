@@ -15,7 +15,6 @@
         // force-array-multiline
         // "node_modules/**",
         "node_modules/@babel/template/**",
-        "node_modules/@dmail/cancellation/**",
         "node_modules/prettier/**",
         "<node_internals>/**"
       ]
@@ -42,7 +41,6 @@
         // force-array-multiline
         // "node_modules/**",
         "node_modules/@babel/template/**",
-        "node_modules/@dmail/cancellation/**",
         "node_modules/@rollup/**",
         "node_modules/playwright/**",
         "node_modules/playwright-core/**",

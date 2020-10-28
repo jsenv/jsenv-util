@@ -2,8 +2,6 @@ An hidden documentation for exported function that are for advanced use case.
 
 # Table of contents
 
-- [catchCancellation](#catchCancellation)
-- [createCancellationTokenForProcess](#createCancellationTokenForProcess)
 - [grantPermissionsOnFileSystemNode](#grantPermissionsOnFileSystemNode)
 - [readFileSystemNodePermissions](#readFileSystemNodePermissions)
 - [testFileSystemNodePermissions](#testFileSystemNodePermissions)
@@ -25,65 +23,6 @@ This limitation is inherited from Node.js. The following paragraph is quoted fro
 In other words it's unusable on Windows. In the end working with file permission is not common, you certainly don't need them.
 
 — See [File modes documentation on Node.js](https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_fs_chmodsync_path_mode)<br />
-
-# catchCancellation
-
-`catchCancellation` is a function receiving an async function and immediatly calling it and catching cancelError to avoid unhandled rejection.
-
-Considering that cancelling a function rejects it rejected with a cancel error.
-
-```js
-import { createCancellationSource, isCancelError } from "@jsenv/cancellation"
-
-const fn = async ({ cancellationToken }) => {
-  cancellationToken.throwIfRequested()
-}
-
-const cancelSource = createCancellationSource()
-cancelSource.cancel()
-
-try {
-  await fn({ cancellationToken: cancelSource.token })
-} catch (e) {
-  isCancelError(e) // true
-}
-```
-
-You have to catch the cancel errors to avoid unhandled rejection inside Node.js. `catchCancellation` resolves with the cancel error instead of rejecting with it to avoid the unhandledRejection. You can still detect the cancellation using isCancelError(result) but cancellation means you're no longer interested in the result so you shoud not need this at all.
-
-```js
-import { catchCancellation } from "@jsenv/util"
-import { createCancellationSource, isCancelError } from "@jsenv/cancellation"
-
-const fn = async ({ cancellationToken }) => {
-  cancellationToken.throwIfRequested()
-}
-
-const cancelSource = createCancellationSource()
-cancelSource.cancel()
-
-const result = await catchCancellation(() => fn({ cancellationToken: cancelSource.token }))
-isCancelError(result) // true
-```
-
-— source code at [src/catchCancellation.js](../src/catchCancellation.js).
-
-# createCancellationTokenForProcess
-
-`createCancellationTokenForProcess` is a function returning a cancellation token cancelled just before process exits. Can be used to close a server before a process exists for instance.
-
-```js
-import { createCancellationTokenForProcess } from "@jsenv/util"
-import { startServer } from "somewhere"
-
-const cancellationToken = createCancellationTokenForProcess()
-const server = await startServer()
-cancellationToken.register(() => {
-  server.stop()
-})
-```
-
-— source code at [src/createCancellationTokenForProcess.js](../src/createCancellationTokenForProcess.js).
 
 # grantPermissionsOnFileSystemNode
 

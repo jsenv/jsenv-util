@@ -12,6 +12,7 @@ Set of functions often needed when using Node.js.
 - [Presentation](#Presentation)
 - [Installation](#Installation)
 - [Url preference](#Url-preference)
+- [Url parts naming](#Url-parts-naming)
 - [assertAndNormalizeDirectoryUrl](#assertAndNormalizeDirectoryUrl)
 - [assertAndNormalizeFileUrl](#assertAndNormalizeFileUrl)
 - [assertDirectoryPresence](#assertDirectoryPresence)
@@ -37,8 +38,16 @@ Set of functions often needed when using Node.js.
 - [resolveDirectoryUrl](#resolveDirectoryUrl)
 - [resolveUrl](#resolveUrl)
 - [urlIsInsideOf](#urlIsInsideOf)
+- [urlToBasename](#urlToBasename)
+- [urlToExtension](#urlToExtension)
+- [urlToFilename](#urlToFilename)
 - [urlToFileSystemPath](#urlToFileSystemPath)
+- [urlToOrigin](#urlToOrigin)
+- [urlToParentUrl](#urlToParentUrl)
+- [urlToPathname](#urlToPathname)
 - [urlToRelativeUrl](#urlToRelativeUrl)
+- [urlToRessource](#urlToRessource)
+- [urlToScheme](#urlToScheme)
 - [writeDirectory](#writeDirectory)
 - [writeFile](#writeFile)
 - [writeFileSystemNodeModificationTime](#writeFileSystemNodeModificationTime)
@@ -84,6 +93,29 @@ You might also notice a slight preference for url string over url object in the 
 const urlString = "file:///directory/file.js"
 const urlObject = new URL("file:///directory/file.js")
 ```
+
+# Url parts naming
+
+This documentation and source code uses a naming taken from url standard specifications with minor differences. The following graph links each term with the corresponding part in an url.
+
+<pre>
+                                                           href
+                   ┌────────────────────────────────────────┴──────────────────────────────────────────────┐
+                origin                                                                                     │
+      ┌────────────┴──────────────┐                                                                        │
+      │                       authority                                                                    │
+      │           ┌───────────────┴───────────────────────────┐                                            │
+      │           │                                         host                                        ressource
+      │           │                                ┌──────────┴────────────────┐             ┌──────────────┴────────┬──────┐
+      │           │                             hostname                       │          pathname                   │      │
+      │           │                 ┌──────────────┴────────────┐              │      ┌──────┴──────┐                │      │
+  protocol     userinfo         subdomain                    domain            │      │          filename            │      │
+   ┌─┴──┐     ┌───┴────┐            │                  ┌────────┴───────┐      │      │         ┌───┴─────┐          │      │
+scheme  │username password lowerleveldomains secondleveldomain topleveldomain port dirname   basename extension   search   hash
+┌──┴───┐│┌──┴───┐ ┌──┴───┐ ┌──┬─┬─┴─────┬───┐┌───────┴───────┐ ┌──────┴──────┐┌┴┐┌────┴─────┐ ┌──┴───┐ ┌───┴───┐ ┌────┴────┐ ┌┴┐
+│      │││      │ │      │ │  │ │       │   ││               │ │             ││ ││          │ │      │ │       │ │         │ │ │
+scheme://username:password@test.abcdedgh.www.secondleveldomain.topleveldomain:123/hello/world/basename.extension?name=ferret#hash
+</pre>
 
 # assertAndNormalizeDirectoryUrl
 
@@ -474,6 +506,48 @@ urlIsInsideOf("file:///file.js", "file:///directory/") // false
 
 — source code at [src/urlIsInsideOf.js](./src/urlIsInsideOf.js).
 
+# urlToBasename
+
+`urlToBasename` is receiving an url and returning its basename.
+
+```js
+import { urlToBasename } from "@jsenv/util"
+
+urlToBasename("file:///directory/file.js") // "file"
+urlToBasename("file:///directory/") // "directory"
+urlToBasename("http://example.com") // ""
+```
+
+— source code at [src/urlToBasename.js](./src/urlToBasename.js).
+
+# urlToExtension
+
+`urlToExtension` is receiving an url and returning its extension.
+
+```js
+import { urlToExtension } from "@jsenv/util"
+
+urlToExtension("file:///directory/file.js") // ".js"
+urlToExtension("file:///directory/file.") // "."
+urlToExtension("http://example.com/file") // ""
+```
+
+— source code at [src/urlToExtension.js](./src/urlToExtension.js).
+
+# urlToFilename
+
+`urlToFilename` is receiving an url and returning its filename.
+
+```js
+import { urlToFilename } from "@jsenv/util"
+
+urlToFilename("file:///directory/file.js") // "file.js"
+urlToFilename("file:///directory/file.") // "file."
+urlToFilename("http://example.com/file") // "file"
+```
+
+— source code at [src/urlToFilename.js](./src/urlToFilename.js).
+
 # urlToFileSystemPath
 
 `urlToFileSystemPath` is a function returning a filesystem path from an url. `urlToFileSystemPath` is equivalent to [pathToFileURL from Node.js](https://nodejs.org/docs/latest-v13.x/api/url.html#url_url_pathtofileurl_path) but returns string instead of url objects.
@@ -485,6 +559,47 @@ urlToFileSystemPath("file:///directory/file.js")
 ```
 
 — source code at [src/urlToFileSystemPath.js](./src/urlToFileSystemPath.js).
+
+# urlToOrigin
+
+`urlToOrigin` is a function receiving an url and returning its origin.
+
+```js
+import { urlToOrigin } from "@jsenv/util"
+
+urlToOrigin("file:///directory/file.js") // "file://"
+urlToOrigin("http://example.com/file.js") // "http://example.com"
+```
+
+— source code at [src/urlToOrigin.js](./src/urlToOrigin.js).
+
+# urlToParentUrl
+
+`urlToParentUrl` is a function receiving an url and returning its parent url if any or the url itself.
+
+```js
+import { urlToParentUrl } from "@jsenv/util"
+
+urlToParentUrl("http://example.com/dir/file.js") // "http://example.com/dir/"
+urlToParentUrl("http://example.com/dir/") // "http://example.com/"
+urlToParentUrl("http://example.com/") // "http://example.com/"
+```
+
+— source code at [src/urlToParentUrl.js](./src/urlToParentUrl.js).
+
+# urlToPathname
+
+`urlToPathname` is a function receiving an url and returning its pathname.
+
+```js
+import { urlToPathname } from "@jsenv/util"
+
+urlToPathname("http://example.com/dir/file.js") // "/dir/file.js"
+urlToPathname("http://example.com/dir/") // "/dir/"
+urlToPathname("http://example.com/") // "/"
+```
+
+— source code at [src/urlToPathname.js](./src/urlToPathname.js).
 
 # urlToRelativeUrl
 
@@ -498,6 +613,28 @@ urlToRelativeUrl("http://example.com/directory/file.js", "http://example.com/dir
 ```
 
 — source code at [src/urlToRelativeUrl.js](./src/urlToRelativeUrl.js).
+
+# urlToRessource
+
+`urlToRessource` is a function receiving an url and returning its ressource.
+
+```js
+import { urlToRessource } from "@jsenv/util"
+
+urlToRessource("http://example.com/dir/file.js?foo=bar#10") // "/dir/file.js?foo=bar#10"
+```
+
+# urlToScheme
+
+`urlToScheme` is a function receiving an url and returning its scheme.
+
+```js
+import { urlToScheme } from "@jsenv/util"
+
+urlToScheme("http://example.com") // "http"
+urlToScheme("file:///dir/file.js") // "file"
+urlToScheme("about:blank") // "about"
+```
 
 # writeFile
 
