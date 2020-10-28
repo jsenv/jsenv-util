@@ -44,7 +44,7 @@
     "postpublish": "node ./script/transform-package/restore-postinstall.js"
   },
   "dependencies": {
-    "@jsenv/cancellation": "2.0.0",
+    "@jsenv/cancellation": "2.0.1",
     "@jsenv/url-meta": "5.2.3"
   },
   "devDependencies": {
