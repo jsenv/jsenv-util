@@ -94,6 +94,16 @@ const urlString = "file:///directory/file.js"
 const urlObject = new URL("file:///directory/file.js")
 ```
 
+This preference mostly comes from the debugging experience inside VSCode.
+
+#### url object value while debugging
+
+![screenshot of url object while debugging in vscode](./docs/debug-url-object.png)
+
+#### url string value while debugging
+
+![screenshot of url string while debugging in vscode](./docs/debug-url-string.png)
+
 # Url parts naming
 
 This documentation and source code uses a naming taken from url standard specifications with minor differences. The following graph links each term with the corresponding part in an url.
