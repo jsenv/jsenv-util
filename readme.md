@@ -20,7 +20,6 @@ Set of functions often needed when using Node.js.
 - [collectFiles](#collectFiles)
 - [comparePathnames](#comparePathnames)
 - [copyFileSystemNode](#copyFileSystemNode)
-- [createCancellationTokenForProcess](#createCancellationTokenForProcess)
 - [ensureEmptyDirectory](#ensureEmptyDirectory)
 - [ensureParentDirectories](#ensureParentDirectories)
 - [fileSystemPathToUrl](#fileSystemPathToUrl)
@@ -47,8 +46,6 @@ Set of functions often needed when using Node.js.
 - [Advanced api](#Advanced-api)
 
 # Presentation
-
-Many jsenv packages needs the same helper functions. This package exports and document them.
 
 This repository exists mostly to work with files relative to a directory with an approach that works on windows and linux filesystems as shown in the code example below.
 
@@ -199,23 +196,6 @@ await copyFileSystemNode(`file:///directory`, "file:///destination/directory")
 ```
 
 — source code at [src/copyFileSystemNode.js](./src/copyFileSystemNode.js).
-
-# createCancellationTokenForProcess
-
-`createCancellationTokenForProcess` is a function returning a cancellation token cancelled just before process exits. Can be used to close a server before a process exists for instance.
-
-```js
-import { createCancellationTokenForProcess } from "@jsenv/util"
-import { startServer } from "somewhere"
-
-const cancellationToken = createCancellationTokenForProcess()
-const server = await startServer()
-cancellationToken.register(() => {
-  server.stop()
-})
-```
-
-— source code at [src/createCancellationTokenForProcess.js](./src/createCancellationTokenForProcess.js).
 
 # ensureEmptyDirectory
 

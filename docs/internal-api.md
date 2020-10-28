@@ -3,6 +3,7 @@ An hidden documentation for exported function that are for advanced use case.
 # Table of contents
 
 - [catchCancellation](#catchCancellation)
+- [createCancellationTokenForProcess](#createCancellationTokenForProcess)
 - [grantPermissionsOnFileSystemNode](#grantPermissionsOnFileSystemNode)
 - [readFileSystemNodePermissions](#readFileSystemNodePermissions)
 - [testFileSystemNodePermissions](#testFileSystemNodePermissions)
@@ -65,7 +66,24 @@ const result = await catchCancellation(() => fn({ cancellationToken: cancelSourc
 isCancelError(result) // true
 ```
 
-— source code at [src/catchCancellation.js](./src/catchCancellation.js).
+— source code at [src/catchCancellation.js](../src/catchCancellation.js).
+
+# createCancellationTokenForProcess
+
+`createCancellationTokenForProcess` is a function returning a cancellation token cancelled just before process exits. Can be used to close a server before a process exists for instance.
+
+```js
+import { createCancellationTokenForProcess } from "@jsenv/util"
+import { startServer } from "somewhere"
+
+const cancellationToken = createCancellationTokenForProcess()
+const server = await startServer()
+cancellationToken.register(() => {
+  server.stop()
+})
+```
+
+— source code at [src/createCancellationTokenForProcess.js](../src/createCancellationTokenForProcess.js).
 
 # grantPermissionsOnFileSystemNode
 
@@ -82,7 +100,7 @@ const restorePermissions = await grantPermissionsOnFileSystemNode("file:///file.
 await restorePermissions()
 ```
 
-— source code at [src/grantPermissionsOnFileSystemNode.js](./src/grantPermissionsOnFileSystemNode.js).
+— source code at [src/grantPermissionsOnFileSystemNode.js](../src/grantPermissionsOnFileSystemNode.js).
 
 # readFileSystemNodePermissions
 
@@ -97,7 +115,7 @@ const permissions = await readFileSystemNodePermissions("file:///directory/file.
 ```
 
 — see also [file modes documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_file_modes)<br />
-— source code at [src/readFileSystemNodePermissions.js](./src/readFileSystemNodePermissions.js).
+— source code at [src/readFileSystemNodePermissions.js](../src/readFileSystemNodePermissions.js).
 
 # testFileSystemNodePermissions
 
@@ -111,7 +129,7 @@ import { testFileSystemNodePermissions } from "@jsenv/util"
 const allowed = await testFileSystemNodePermissions("file:///file.js", { execute: true })
 ```
 
-— source code at [src/testFileSystemNodePermissions.js](./src/testFileSystemNodePermissions.js).
+— source code at [src/testFileSystemNodePermissions.js](../src/testFileSystemNodePermissions.js).
 
 # writeFileSystemNodePermissions
 
@@ -130,4 +148,4 @@ await writeFileSystemNodePermissions("file:///directory/file.js", {
 ```
 
 — see also [file modes documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_file_modes)<br />
-— source code at [src/writeFileSystemNodePermissions.js](./src/writeFileSystemNodePermissions.js).
+— source code at [src/writeFileSystemNodePermissions.js](../src/writeFileSystemNodePermissions.js).
