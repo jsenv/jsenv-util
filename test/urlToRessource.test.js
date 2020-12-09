@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { urlToRessource } from "../index.js"
+import { urlToRessource } from "@jsenv/util"
 
 {
   const actual = urlToRessource("http://example.com/dir/file.js?page=1")
@@ -22,5 +22,17 @@ import { urlToRessource } from "../index.js"
 {
   const actual = urlToRessource("blob:d3958f5c-0777-0845-9dcf-2cb28783acaf")
   const expected = "d3958f5c-0777-0845-9dcf-2cb28783acaf"
+  assert({ actual, expected })
+}
+
+{
+  const actual = urlToRessource("blob:d3958f5c-0777-0845-9dcf-2cb28783acaf")
+  const expected = "d3958f5c-0777-0845-9dcf-2cb28783acaf"
+  assert({ actual, expected })
+}
+
+{
+  const actual = urlToRessource("file://C:\\dir\\file")
+  const expected = "C:\\dir\\file"
   assert({ actual, expected })
 }
