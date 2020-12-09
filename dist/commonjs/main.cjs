@@ -916,187 +916,6 @@ start`);
   return operationPromise;
 };
 
-const createCancelError = reason => {
-  const cancelError = new Error(`canceled because ${reason}`);
-  cancelError.name = "CANCEL_ERROR";
-  cancelError.reason = reason;
-  return cancelError;
-};
-const isCancelError = value => {
-  return value && typeof value === "object" && value.name === "CANCEL_ERROR";
-};
-
-const arrayWithout = (array, item) => {
-  const arrayWithoutItem = [];
-  let i = 0;
-
-  while (i < array.length) {
-    const value = array[i];
-    i++;
-
-    if (value === item) {
-      continue;
-    }
-
-    arrayWithoutItem.push(value);
-  }
-
-  return arrayWithoutItem;
-};
-
-// https://github.com/tc39/proposal-cancellation/tree/master/stage0
-const createCancellationSource = () => {
-  let requested = false;
-  let cancelError;
-  let registrationArray = [];
-
-  const cancel = reason => {
-    if (requested) return;
-    requested = true;
-    cancelError = createCancelError(reason);
-    const registrationArrayCopy = registrationArray.slice();
-    registrationArray.length = 0;
-    registrationArrayCopy.forEach(registration => {
-      registration.callback(cancelError); // const removedDuringCall = registrationArray.indexOf(registration) === -1
-    });
-  };
-
-  const register = callback => {
-    if (typeof callback !== "function") {
-      throw new Error(`callback must be a function, got ${callback}`);
-    }
-
-    const existingRegistration = registrationArray.find(registration => {
-      return registration.callback === callback;
-    }); // don't register twice
-
-    if (existingRegistration) {
-      return existingRegistration;
-    }
-
-    const registration = {
-      callback,
-      unregister: () => {
-        registrationArray = arrayWithout(registrationArray, registration);
-      }
-    };
-    registrationArray = [registration, ...registrationArray];
-    return registration;
-  };
-
-  const throwIfRequested = () => {
-    if (requested) {
-      throw cancelError;
-    }
-  };
-
-  return {
-    token: {
-      register,
-
-      get cancellationRequested() {
-        return requested;
-      },
-
-      throwIfRequested
-    },
-    cancel
-  };
-};
-
-const getCommandArgument = (argv, name) => {
-  let i = 0;
-
-  while (i < argv.length) {
-    const arg = argv[i];
-
-    if (arg === name) {
-      return {
-        name,
-        index: i,
-        value: ""
-      };
-    }
-
-    if (arg.startsWith(`${name}=`)) {
-      return {
-        name,
-        index: i,
-        value: arg.slice(`${name}=`.length)
-      };
-    }
-
-    i++;
-  }
-
-  return null;
-};
-
-const wrapExternalFunction = (fn, {
-  catchCancellation = false,
-  unhandledRejectionStrict = false
-} = {}) => {
-  if (catchCancellation) {
-    const previousFn = fn;
-
-    fn = async () => {
-      try {
-        const value = await previousFn();
-        return value;
-      } catch (error) {
-        if (isCancelError(error)) {
-          // it means consume of the function will resolve with a cancelError
-          // but when you cancel it means you're not interested in the result anymore
-          // thanks to this it avoid unhandledRejection
-          return error;
-        }
-
-        throw error;
-      }
-    };
-  }
-
-  if (unhandledRejectionStrict) {
-    const previousFn = fn;
-
-    fn = async () => {
-      const uninstall = installUnhandledRejectionStrict();
-
-      try {
-        const value = await previousFn();
-        uninstall();
-        return value;
-      } catch (e) {
-        // don't remove it immediatly to let nodejs emit the unhandled rejection
-        setTimeout(() => {
-          uninstall();
-        });
-        throw e;
-      }
-    };
-  }
-
-  return fn();
-};
-
-const installUnhandledRejectionStrict = () => {
-  const unhandledRejectionArg = getCommandArgument(process.execArgv, "--unhandled-rejections");
-  if (unhandledRejectionArg === "strict") return () => {};
-
-  const onUnhandledRejection = reason => {
-    throw reason;
-  };
-
-  process.once("unhandledRejection", onUnhandledRejection);
-  return () => {
-    process.removeListener("unhandledRejection", onUnhandledRejection);
-  };
-};
-
-const catchCancellation = asyncFn => wrapExternalFunction(asyncFn, {
-  catchCancellation: true
-});
-
 const readDirectory = async (url, {
   emfileMaxWait = 1000
 } = {}) => {
@@ -1191,15 +1010,11 @@ const findFirstDifferentCharacterIndex = (string, otherString) => {
   return maxCommonLength;
 };
 
-const pathnameToDirectoryPathname = pathname => {
-  if (pathname.endsWith("/")) {
-    return pathname;
-  }
-
+const pathnameToParentPathname = pathname => {
   const slashLastIndex = pathname.lastIndexOf("/");
 
   if (slashLastIndex === -1) {
-    return "";
+    return "/";
   }
 
   return pathname.slice(0, slashLastIndex + 1);
@@ -1242,10 +1057,14 @@ const urlToRelativeUrl = (urlArg, baseUrlArg) => {
 
   const specificPathname = pathname.slice(commonPathname.length);
   const baseSpecificPathname = basePathname.slice(commonPathname.length);
-  const baseSpecificDirectoryPathname = pathnameToDirectoryPathname(baseSpecificPathname);
-  const relativeDirectoriesNotation = baseSpecificDirectoryPathname.replace(/.*?\//g, "../");
-  const relativePathname = `${relativeDirectoriesNotation}${specificPathname}`;
-  return `${relativePathname}${search}${hash}`;
+
+  if (baseSpecificPathname.includes("/")) {
+    const baseSpecificParentPathname = pathnameToParentPathname(baseSpecificPathname);
+    const relativeDirectoriesNotation = baseSpecificParentPathname.replace(/.*?\//g, "../");
+    return `${relativeDirectoriesNotation}${specificPathname}${search}${hash}`;
+  }
+
+  return `${specificPathname}${search}${hash}`;
 };
 
 const comparePathnames = (leftPathame, rightPathname) => {
@@ -2095,223 +1914,6 @@ const copyFileContentNaive = (filePath, fileDestinationPath) => {
   });
 };
 
-const addCallback = callback => {
-  const triggerHangUpOrDeath = () => callback(); // SIGHUP http://man7.org/linux/man-pages/man7/signal.7.html
-
-
-  process.once("SIGUP", triggerHangUpOrDeath);
-  return () => {
-    process.removeListener("SIGUP", triggerHangUpOrDeath);
-  };
-};
-
-const SIGUPSignal = {
-  addCallback
-};
-
-const addCallback$1 = callback => {
-  // SIGINT is CTRL+C from keyboard also refered as keyboard interruption
-  // http://man7.org/linux/man-pages/man7/signal.7.html
-  // may also be sent by vscode https://github.com/Microsoft/vscode-node-debug/issues/1#issuecomment-405185642
-  process.once("SIGINT", callback);
-  return () => {
-    process.removeListener("SIGINT", callback);
-  };
-};
-
-const SIGINTSignal = {
-  addCallback: addCallback$1
-};
-
-const addCallback$2 = callback => {
-  if (process.platform === "win32") {
-    console.warn(`SIGTERM is not supported on windows`);
-    return () => {};
-  }
-
-  const triggerTermination = () => callback(); // SIGTERM http://man7.org/linux/man-pages/man7/signal.7.html
-
-
-  process.once("SIGTERM", triggerTermination);
-  return () => {
-    process.removeListener("SIGTERM", triggerTermination);
-  };
-};
-
-const SIGTERMSignal = {
-  addCallback: addCallback$2
-};
-
-let beforeExitCallbackArray = [];
-let uninstall;
-
-const addCallback$3 = callback => {
-  if (beforeExitCallbackArray.length === 0) uninstall = install();
-  beforeExitCallbackArray = [...beforeExitCallbackArray, callback];
-  return () => {
-    if (beforeExitCallbackArray.length === 0) return;
-    beforeExitCallbackArray = beforeExitCallbackArray.filter(beforeExitCallback => beforeExitCallback !== callback);
-    if (beforeExitCallbackArray.length === 0) uninstall();
-  };
-};
-
-const install = () => {
-  const onBeforeExit = () => {
-    return beforeExitCallbackArray.reduce(async (previous, callback) => {
-      await previous;
-      return callback();
-    }, Promise.resolve());
-  };
-
-  process.once("beforeExit", onBeforeExit);
-  return () => {
-    process.removeListener("beforeExit", onBeforeExit);
-  };
-};
-
-const beforeExitSignal = {
-  addCallback: addCallback$3
-};
-
-const addCallback$4 = (callback, {
-  collectExceptions = false
-} = {}) => {
-  if (!collectExceptions) {
-    const exitCallback = () => {
-      callback();
-    };
-
-    process.on("exit", exitCallback);
-    return () => {
-      process.removeListener("exit", exitCallback);
-    };
-  }
-
-  const {
-    getExceptions,
-    stop
-  } = trackExceptions();
-
-  const exitCallback = () => {
-    process.removeListener("exit", exitCallback);
-    stop();
-    callback({
-      exceptionArray: getExceptions().map(({
-        exception,
-        origin
-      }) => {
-        return {
-          exception,
-          origin
-        };
-      })
-    });
-  };
-
-  process.on("exit", exitCallback);
-  return () => {
-    process.removeListener("exit", exitCallback);
-  };
-};
-
-const trackExceptions = () => {
-  let exceptionArray = [];
-
-  const unhandledRejectionCallback = (unhandledRejection, promise) => {
-    exceptionArray = [...exceptionArray, {
-      origin: "unhandledRejection",
-      exception: unhandledRejection,
-      promise
-    }];
-  };
-
-  const rejectionHandledCallback = promise => {
-    exceptionArray = exceptionArray.filter(exceptionArray => exceptionArray.promise !== promise);
-  };
-
-  const uncaughtExceptionCallback = (uncaughtException, origin) => {
-    // since node 12.4 https://nodejs.org/docs/latest-v12.x/api/process.html#process_event_uncaughtexception
-    if (origin === "unhandledRejection") return;
-    exceptionArray = [...exceptionArray, {
-      origin: "uncaughtException",
-      exception: uncaughtException
-    }];
-  };
-
-  process.on("unhandledRejection", unhandledRejectionCallback);
-  process.on("rejectionHandled", rejectionHandledCallback);
-  process.on("uncaughtException", uncaughtExceptionCallback);
-  return {
-    getExceptions: () => exceptionArray,
-    stop: () => {
-      process.removeListener("unhandledRejection", unhandledRejectionCallback);
-      process.removeListener("rejectionHandled", rejectionHandledCallback);
-      process.removeListener("uncaughtException", uncaughtExceptionCallback);
-    }
-  };
-};
-
-const exitSignal = {
-  addCallback: addCallback$4
-};
-
-const addCallback$5 = callback => {
-  return eventRace({
-    SIGHUP: {
-      register: SIGUPSignal.addCallback,
-      callback: () => callback("SIGHUP")
-    },
-    SIGINT: {
-      register: SIGINTSignal.addCallback,
-      callback: () => callback("SIGINT")
-    },
-    ...(process.platform === "win32" ? {} : {
-      SIGTERM: {
-        register: SIGTERMSignal.addCallback,
-        callback: () => callback("SIGTERM")
-      }
-    }),
-    beforeExit: {
-      register: beforeExitSignal.addCallback,
-      callback: () => callback("beforeExit")
-    },
-    exit: {
-      register: exitSignal.addCallback,
-      callback: () => callback("exit")
-    }
-  });
-};
-
-const eventRace = eventMap => {
-  const unregisterMap = {};
-
-  const unregisterAll = reason => {
-    return Object.keys(unregisterMap).map(name => unregisterMap[name](reason));
-  };
-
-  Object.keys(eventMap).forEach(name => {
-    const {
-      register,
-      callback
-    } = eventMap[name];
-    unregisterMap[name] = register((...args) => {
-      unregisterAll();
-      callback(...args);
-    });
-  });
-  return unregisterAll;
-};
-
-const teardownSignal = {
-  addCallback: addCallback$5
-};
-
-const createCancellationTokenForProcess = () => {
-  const teardownCancelSource = createCancellationSource();
-  teardownSignal.addCallback(reason => teardownCancelSource.cancel(`process ${reason}`));
-  return teardownCancelSource.token;
-};
-
 const {
   stat
 } = fs.promises;
@@ -2707,8 +2309,9 @@ const registerDirectoryLifecycle = (source, {
         type: previousType
       });
       return;
-    } // it existed but was replaced by something else
-    // it's not really an update
+    } // it existed and was replaced by something else
+    // we don't handle this as an update. We rather say the ressource
+    // is lost and something else is found (call removed() then added())
 
 
     if (previousType !== type) {
@@ -2729,9 +2332,16 @@ const registerDirectoryLifecycle = (source, {
 
     if (type === "directory") {
       return;
-    } // right same type, and the file existed and was not deleted
-    // it's likely an update ?
-    // but are we sure it's an update ?
+    } // something has changed at this relativeUrl (the file existed and was not deleted)
+    // it's possible to get there and there is no real update
+    // (file content is the same and file mtime is the same).
+    // In short filesystem is sometimes "lying"
+    // Not trying to guard against that because:
+    // - hurt perfs a lot
+    // - it happens very rarely
+    // - it's not really a concern in practice
+    // - filesystem did not send an event out of nowhere:
+    // something occured but we don't know what with the information we have.
 
 
     if (updated) {
@@ -3210,12 +2820,10 @@ exports.assertAndNormalizeFileUrl = assertAndNormalizeFileUrl;
 exports.assertDirectoryPresence = assertDirectoryPresence;
 exports.assertFilePresence = assertFilePresence;
 exports.bufferToEtag = bufferToEtag;
-exports.catchCancellation = catchCancellation;
 exports.collectDirectoryMatchReport = collectDirectoryMatchReport;
 exports.collectFiles = collectFiles;
 exports.comparePathnames = comparePathnames;
 exports.copyFileSystemNode = copyFileSystemNode;
-exports.createCancellationTokenForProcess = createCancellationTokenForProcess;
 exports.ensureEmptyDirectory = ensureEmptyDirectory;
 exports.ensureParentDirectories = ensureParentDirectories;
 exports.ensureWindowsDriveLetter = ensureWindowsDriveLetter;
@@ -3245,11 +2853,12 @@ exports.urlToExtension = urlToExtension;
 exports.urlToFileSystemPath = urlToFileSystemPath;
 exports.urlToFilename = urlToFilename;
 exports.urlToMeta = urlToMeta;
+exports.urlToOrigin = urlToOrigin;
 exports.urlToParentUrl = urlToParentUrl;
 exports.urlToPathname = urlToPathname;
 exports.urlToRelativeUrl = urlToRelativeUrl;
+exports.urlToRessource = urlToRessource;
 exports.urlToScheme = urlToScheme;
-exports.wrapExternalFunction = wrapExternalFunction;
 exports.writeDirectory = writeDirectory;
 exports.writeFile = writeFile;
 exports.writeFileSystemNodeModificationTime = writeFileSystemNodeModificationTime;
