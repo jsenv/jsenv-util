@@ -200,9 +200,9 @@ import { collectFiles } from "@jsenv/util"
 
 const files = await collectFiles({
   directoryUrl: "file:///Users/you/directory",
-  specifierMetaMap: {
-    "./**/*.js": {
-      whatever: 42,
+  structuredMetaMap: {
+    whatever: {
+      "./**/*.js": 42,
     },
   },
   predicate: (meta) => {

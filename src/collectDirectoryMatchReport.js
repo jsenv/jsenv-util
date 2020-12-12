@@ -1,5 +1,5 @@
 import { createCancellationToken, createOperation } from "@jsenv/cancellation"
-import { normalizeSpecifierMetaMap, urlCanContainsMetaMatching, urlToMeta } from "@jsenv/url-meta"
+import { normalizeStructuredMetaMap, urlCanContainsMetaMatching, urlToMeta } from "@jsenv/url-meta"
 import { ensureUrlTrailingSlash } from "./internal/ensureUrlTrailingSlash.js"
 import { assertAndNormalizeDirectoryUrl } from "./assertAndNormalizeDirectoryUrl.js"
 import { readDirectory } from "./readDirectory.js"
@@ -10,7 +10,7 @@ import { comparePathnames } from "./comparePathnames.js"
 export const collectDirectoryMatchReport = async ({
   cancellationToken = createCancellationToken(),
   directoryUrl,
-  specifierMetaMap,
+  structuredMetaMap,
   predicate,
 }) => {
   const matchingArray = []
@@ -20,7 +20,10 @@ export const collectDirectoryMatchReport = async ({
   if (typeof predicate !== "function") {
     throw new TypeError(`predicate must be a function, got ${predicate}`)
   }
-  const specifierMetaMapNormalized = normalizeSpecifierMetaMap(specifierMetaMap, rootDirectoryUrl)
+  const structuredMetaMapNormalized = normalizeStructuredMetaMap(
+    structuredMetaMap,
+    rootDirectoryUrl,
+  )
 
   const visitDirectory = async (directoryUrl) => {
     const directoryItems = await createOperation({
@@ -53,7 +56,7 @@ export const collectDirectoryMatchReport = async ({
           if (
             !urlCanContainsMetaMatching({
               url: subDirectoryUrl,
-              specifierMetaMap: specifierMetaMapNormalized,
+              structuredMetaMap: structuredMetaMapNormalized,
               predicate,
             })
           ) {
@@ -72,7 +75,7 @@ export const collectDirectoryMatchReport = async ({
         if (directoryChildNodeStats.isFile()) {
           const meta = urlToMeta({
             url: directoryChildNodeUrl,
-            specifierMetaMap: specifierMetaMapNormalized,
+            structuredMetaMap: structuredMetaMapNormalized,
           })
           if (!predicate(meta)) {
             ignoredArray.push({ relativeUrl, meta, fileStats: directoryChildNodeStats })

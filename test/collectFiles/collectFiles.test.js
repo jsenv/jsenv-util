@@ -10,9 +10,9 @@ const tempDirectoryUrl = import.meta.resolve("./temp/")
   const cUrl = resolveUrl("b/c.js", tempDirectoryUrl)
   const aUrl = resolveUrl("a.js", tempDirectoryUrl)
   const bUrl = resolveUrl("b.js", tempDirectoryUrl)
-  const specifierMetaMap = {
-    "./**/*.js": {
-      source: true,
+  const structuredMetaMap = {
+    source: {
+      "./**/*.js": true,
     },
   }
   await writeFile(eUrl)
@@ -23,7 +23,7 @@ const tempDirectoryUrl = import.meta.resolve("./temp/")
 
   const matchingFileResultArray = await collectFiles({
     directoryUrl: tempDirectoryUrl,
-    specifierMetaMap,
+    structuredMetaMap,
     predicate: ({ source }) => source,
   })
   const actual = matchingFileResultArray.map(({ relativeUrl }) => relativeUrl)

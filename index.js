@@ -2,9 +2,8 @@
 // so that @jsenv/url-meta does not becomes nodejs specific
 // but these functions could be inside this repository
 export {
-  applySpecifierPatternMatching,
-  metaMapToSpecifierMetaMap,
-  normalizeSpecifierMetaMap,
+  applyPatternMatching,
+  normalizeStructuredMetaMap,
   urlCanContainsMetaMatching,
   urlToMeta,
 } from "@jsenv/url-meta"

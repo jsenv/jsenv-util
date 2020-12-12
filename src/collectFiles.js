@@ -1,5 +1,5 @@
 import { createCancellationToken, createOperation } from "@jsenv/cancellation"
-import { normalizeSpecifierMetaMap, urlCanContainsMetaMatching, urlToMeta } from "@jsenv/url-meta"
+import { normalizeStructuredMetaMap, urlCanContainsMetaMatching, urlToMeta } from "@jsenv/url-meta"
 import { assertAndNormalizeDirectoryUrl } from "./assertAndNormalizeDirectoryUrl.js"
 import { readDirectory } from "./readDirectory.js"
 import { readFileSystemNodeStat } from "./readFileSystemNodeStat.js"
@@ -9,7 +9,7 @@ import { comparePathnames } from "./comparePathnames.js"
 export const collectFiles = async ({
   cancellationToken = createCancellationToken(),
   directoryUrl,
-  specifierMetaMap,
+  structuredMetaMap,
   predicate,
   matchingFileOperation = () => null,
 }) => {
@@ -20,7 +20,10 @@ export const collectFiles = async ({
   if (typeof matchingFileOperation !== "function") {
     throw new TypeError(`matchingFileOperation must be a function, got ${matchingFileOperation}`)
   }
-  const specifierMetaMapNormalized = normalizeSpecifierMetaMap(specifierMetaMap, rootDirectoryUrl)
+  const structuredMetaMapNormalized = normalizeStructuredMetaMap(
+    structuredMetaMap,
+    rootDirectoryUrl,
+  )
 
   const matchingFileResultArray = []
   const visitDirectory = async (directoryUrl) => {
@@ -53,7 +56,7 @@ export const collectFiles = async ({
           if (
             !urlCanContainsMetaMatching({
               url: subDirectoryUrl,
-              specifierMetaMap: specifierMetaMapNormalized,
+              structuredMetaMap: structuredMetaMapNormalized,
               predicate,
             })
           ) {
@@ -67,7 +70,7 @@ export const collectFiles = async ({
         if (directoryChildNodeStats.isFile()) {
           const meta = urlToMeta({
             url: directoryChildNodeUrl,
-            specifierMetaMap: specifierMetaMapNormalized,
+            structuredMetaMap: structuredMetaMapNormalized,
           })
           if (!predicate(meta)) return
 

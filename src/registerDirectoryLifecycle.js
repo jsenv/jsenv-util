@@ -1,11 +1,6 @@
 /* eslint-disable import/max-dependencies */
 import { readdirSync } from "fs"
-import {
-  metaMapToSpecifierMetaMap,
-  normalizeSpecifierMetaMap,
-  urlCanContainsMetaMatching,
-  urlToMeta,
-} from "@jsenv/url-meta"
+import { normalizeStructuredMetaMap, urlCanContainsMetaMatching, urlToMeta } from "@jsenv/url-meta"
 import { replaceBackSlashesWithSlashes } from "./internal/replaceBackSlashesWithSlashes.js"
 import { fileSystemNodeToTypeOrNull } from "./internal/fileSystemNodeToTypeOrNull.js"
 import { createWatcher } from "./internal/createWatcher.js"
@@ -45,19 +40,14 @@ export const registerDirectoryLifecycle = (
     throw new TypeError(`removed must be a function or undefined, got ${removed}`)
   }
 
-  const specifierMetaMap = normalizeSpecifierMetaMap(
-    metaMapToSpecifierMetaMap({
-      watch: watchDescription,
-    }),
-    sourceUrl,
-  )
+  const structuredMetaMap = normalizeStructuredMetaMap({ watch: watchDescription }, sourceUrl)
   const entryShouldBeWatched = ({ relativeUrl, type }) => {
     const entryUrl = resolveUrl(relativeUrl, sourceUrl)
 
     if (type === "directory") {
       const canContainEntryToWatch = urlCanContainsMetaMatching({
         url: `${entryUrl}/`,
-        specifierMetaMap,
+        structuredMetaMap,
         predicate: ({ watch }) => watch,
       })
       return canContainEntryToWatch
@@ -65,7 +55,7 @@ export const registerDirectoryLifecycle = (
 
     const entryMeta = urlToMeta({
       url: entryUrl,
-      specifierMetaMap,
+      structuredMetaMap,
     })
 
     return entryMeta.watch
