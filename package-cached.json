@@ -39,6 +39,7 @@
     "generate-import-map": "node ./script/generate-import-map/generate-import-map.js",
     "install-git-hooks": "node ./script/install-git-hooks/install-git-hooks.js",
     "dist": "npm run generate-commonjs-bundle",
+    "postinstall": "npm run generate-import-map",
     "prepublishOnly": "node ./script/transform-package/remove-postinstall.js && npm run dist",
     "postpublish": "node ./script/transform-package/restore-postinstall.js"
   },
