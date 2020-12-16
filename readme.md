@@ -62,8 +62,7 @@ This repository exists mostly to work with files relative to a directory with an
 import { readFileSync } from "fs"
 import { resolveUrl, urlToFileSystemPath, assertAndNormalizeDirectoryUrl } from "@jsenv/util"
 
-const directoryUrl = assertAndNormalizeDirectoryUrl(__dirname)
-const packageFileUrl = resolveUrl("package.json", directoryUrl)
+const packageFileUrl = resolveUrl("package.json", import.meta.url)
 const packageFilePath = urlToFileSystemPath(packageFileUrl)
 const packageFileBuffer = readFileSync(packageFilePath)
 ```

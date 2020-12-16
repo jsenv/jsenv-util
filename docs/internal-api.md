@@ -9,7 +9,7 @@ An hidden documentation for exported function that are for advanced use case.
 
 # File permissions and Windows
 
-File permissions, read/write/execute, is a concept from Linux also implemented in MacOS. For this reason you cannot use the following functions on Windows:
+File permissions, read/write/execute, is a concept from Linux also available on MacOS. For this reason you cannot use the following functions on Windows:
 
 - [grantPermissionsOnFileSystemNode](#grantPermissionsOnFileSystemNode)
 - [readFileSystemNodePermissions](#readFileSystemNodePermissions)
