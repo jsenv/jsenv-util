@@ -55,9 +55,7 @@ Set of functions often needed when using Node.js.
 
 # Presentation
 
-This repository provides all the functions needed to work with files with zero external dependency. It can become your single library to work with files.
-
-It has several preferences:
+This repository provides utils functions needed to work with files. It has no external dependency and two preferences:
 
 <details>
   <summary>prefer url over filesystem path</summary>
