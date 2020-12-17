@@ -56,11 +56,46 @@ Set of functions often needed when using Node.js.
 
 # Presentation
 
-This repository exists mostly to work with files relative to a directory with an approach that works on windows and linux filesystems as shown in the code example below.
+This repository exists to prefer url over path when interacting with the filesystem apis.
+
+Node.js lacks utils around urls. For example there is no [path.relative](#https://nodejs.org/dist/latest-v15.x/docs/api/path.html#path_path_relative_from_to) for urls. `@jsenv/util` provide [urlToRelativeUrl](#urlToRelativeUrl) for that purpose, and more of these missing utils.
+
+Node.js also consider a string as a filesystem path for performances reasons. It won't try to recognize urls.
+
+<details>
+  <summary>Code example throwing on url string</summary>
 
 ```js
 import { readFileSync } from "fs"
-import { resolveUrl, urlToFileSystemPath, assertAndNormalizeDirectoryUrl } from "@jsenv/util"
+
+readFileSync(import.meta.url) // throw ENOENT
+```
+
+```js
+const { readFileSync } = require("fs")
+
+readFileSync(`file://${__dirname}`) // throw ENOENT
+```
+
+</details>
+
+## Why url instead of filesystem path ?
+
+- Urls can be used to target a filesystem path using the file protocol.
+
+  > `file:///directory/file.js`
+
+- File urls don't care about the underlying filesystem format.
+
+  > Windows and Linux avec a different filesystem path format. Windows uses `C:\\directory\\file.js` and Linux uses `/Users/directory/file.js`
+
+- Node.js added support for url into their filesystem apis since version 7.6.
+
+This repository exists mostly to prefer url over paths when interacting with the filesystem apis. This approach makes your code compatible with Windows for allows to write code that works on Windows and Linux Using urls means code files with an approach that works on windows and linux filesystems as shown in the code example below.
+
+```js
+import { readFileSync } from "fs"
+import { resolveUrl, urlToFileSystemPath } from "@jsenv/util"
 
 const packageFileUrl = resolveUrl("package.json", import.meta.url)
 const packageFilePath = urlToFileSystemPath(packageFileUrl)
