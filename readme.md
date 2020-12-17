@@ -138,7 +138,7 @@ const packageFilePath = urlToFileSystemPath(packageFileUrl)
 const packageFileBuffer = readFileSync(packageFilePath)
 ```
 
-With times more functions were added, all util are documented below.
+With times more functions were added, all util are documented a bit further.
 
 # Installation
 
@@ -148,7 +148,11 @@ npm install @jsenv/util
 
 # Terminology
 
-This documentation and source code uses some wording explained in this part. You can refer to figure below to see how each part of an url is named.
+This documentation and source code uses some wording explained in this part.
+
+## Urls parts
+
+You can refer to figure below to see how each part of an url is named.
 
 <pre>
                                                            href
@@ -169,7 +173,9 @@ scheme  │username password lowerleveldomains secondleveldomain topleveldomain 
 scheme://username:password@test.abcdedgh.www.secondleveldomain.topleveldomain:123/hello/world/basename.extension?name=ferret#hash
 </pre>
 
-Some functions use the word `fileSystemNode`. `fileSystemNode` is used when the function does not assume what is going to interact with: file, directory, or something else. For example [copyFileSystemNode(fromUrl, toUrl, options)](#copyFileSystemNode) will take whatever is at `fromUrl` and copy it at `toUrl`.
+## fileSystemNode
+
+`fileSystemNode` word is used when a function does not assume what it is going to interact with: file, directory, or something else. For example [copyFileSystemNode(fromUrl, toUrl, options)](#copyFileSystemNode) will take whatever is at `fromUrl` and copy it at `toUrl`.
 
 # assertAndNormalizeDirectoryUrl
 
