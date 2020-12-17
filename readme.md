@@ -80,15 +80,17 @@ const urlObject = new URL("file:///directory/file.js")
 
 A string is a simpler primitive than an url object and it becomes important while debugging.
 
-- url object while debugging
+<details>
+  <summary>Screenshot of an url object while debugging</summary>
 
 ![screenshot of url object while debugging in vscode](./docs/debug-url-object.png)
 
-- url string while debugging
+</details>
+
+<details>
+  <summary>Screenshot of an url string while debugging</summary>
 
 ![screenshot of url string while debugging in vscode](./docs/debug-url-string.png)
-
-This preference mostly comes from the debugging experience inside VSCode.
 
 </details>
 
