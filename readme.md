@@ -71,16 +71,21 @@ An url is better than a filesystem path because it does not care about the under
 <details>
   <summary>prefer url string over url object</summary>
 
-There is a deliberate preference for url string over url object in the documentation and codebase. There is an url string and url object example in the code below.
+There is a deliberate preference for url string over url object in the documentation and codebase.
+
+<details>
+  <summary>Url string and url object code example</summary>
 
 ```js
 const urlString = "file:///directory/file.js"
 const urlObject = new URL("file:///directory/file.js")
 ```
 
+</details>
+
 A string is a simpler primitive than an url object and it becomes important while debugging.
 
-  <details>
+<details>
   <summary>Screenshot of an url object while debugging</summary>
 
 ![screenshot of url object while debugging in vscode](./docs/debug-url-object.png)
@@ -96,7 +101,7 @@ A string is a simpler primitive than an url object and it becomes important whil
 
 </details>
 
-This repository also provides some utils around urls not provided by Node.js. For instance it exports [urlToRelativeUrl](#urlToRelativeUrl) which can be seen as [path.relative](#https://nodejs.org/dist/latest-v15.x/docs/api/path.html#path_path_relative_from_to) of urls.
+This repository also provides some utils around urls not provided by Node.js. For instance it exports [urlToRelativeUrl](#urlToRelativeUrl) which can be seen as the equivalent of [path.relative](https://nodejs.org/dist/latest-v15.x/docs/api/path.html#path_path_relative_from_to) for urls.
 
 Finally functions are fully compatible with urls where Node.js url support is incomplete. `fs` module accepts url object since version 7.6 but not url string. Passing an url string to a function from `fs` will always throw [ENOENT](https://nodejs.org/api/errors.html#errors_common_system_errors) error.
 
