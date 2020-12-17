@@ -73,15 +73,10 @@ An url is better than a filesystem path because it does not care about the under
 
 There is a deliberate preference for url string over url object in the documentation and codebase.
 
-<details>
-  <summary>Url string and url object code example</summary>
-
 ```js
 const urlString = "file:///directory/file.js"
 const urlObject = new URL("file:///directory/file.js")
 ```
-
-</details>
 
 A string is a simpler primitive than an url object and it becomes important while debugging.
 
@@ -103,10 +98,16 @@ A string is a simpler primitive than an url object and it becomes important whil
 
 This repository also provides some utils around urls not provided by Node.js. For instance it exports [urlToRelativeUrl](#urlToRelativeUrl) which can be seen as the equivalent of [path.relative](https://nodejs.org/dist/latest-v15.x/docs/api/path.html#path_path_relative_from_to) for urls.
 
-Finally functions are fully compatible with urls where Node.js url support is incomplete. `fs` module accepts url object since version 7.6 but not url string. Passing an url string to a function from `fs` will always throw [ENOENT](https://nodejs.org/api/errors.html#errors_common_system_errors) error.
+Finally exported functions fully support url, even url string while native `fs` module does not.
 
 <details>
-  <summary>ENOENT code example</summary>
+  <summary>fs lack support for url string</summary>
+
+`fs` module accepts url object since version 7.6 but not url string.
+
+![screenshot of readFile documentation changelog](./docs/screenshot-node-doc-url.png)
+
+Passing an url string to a function from `fs` will always throw [ENOENT](https://nodejs.org/api/errors.html#errors_common_system_errors) error.
 
 ```js
 import { readFileSync } from "fs"
