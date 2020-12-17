@@ -80,7 +80,7 @@ const urlObject = new URL("file:///directory/file.js")
 
 A string is a simpler primitive than an url object and it becomes important while debugging.
 
-<details>
+  <details>
   <summary>Screenshot of an url object while debugging</summary>
 
 ![screenshot of url object while debugging in vscode](./docs/debug-url-object.png)
@@ -91,6 +91,8 @@ A string is a simpler primitive than an url object and it becomes important whil
   <summary>Screenshot of an url string while debugging</summary>
 
 ![screenshot of url string while debugging in vscode](./docs/debug-url-string.png)
+
+</details>
 
 </details>
 
