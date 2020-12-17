@@ -10,9 +10,9 @@ Set of functions often needed when using Node.js.
 # Table of contents
 
 - [Presentation](#Presentation)
+- [Example](#Example)
 - [Installation](#Installation)
-- [Url preference](#Url-preference)
-- [Url parts naming](#Url-parts-naming)
+- [Terminology](#Terminology)
 - [assertAndNormalizeDirectoryUrl](#assertAndNormalizeDirectoryUrl)
 - [assertAndNormalizeFileUrl](#assertAndNormalizeFileUrl)
 - [assertDirectoryPresence](#assertDirectoryPresence)
@@ -25,7 +25,6 @@ Set of functions often needed when using Node.js.
 - [ensureParentDirectories](#ensureParentDirectories)
 - [fileSystemPathToUrl](#fileSystemPathToUrl)
 - [isFileSystemPath](#isFileSystemPath)
-- [memoize](#memoize)
 - [moveFileSystemNode](#moveFileSystemNode)
 - [readDirectory](#readDirectory)
 - [readFile](#readFile)
@@ -56,14 +55,51 @@ Set of functions often needed when using Node.js.
 
 # Presentation
 
-This repository exists to prefer url over path when interacting with the filesystem apis.
+This repository provides all the functions needed to work with files with zero external dependency. It can become your single library to work with files.
 
-Node.js lacks utils around urls. For example there is no [path.relative](#https://nodejs.org/dist/latest-v15.x/docs/api/path.html#path_path_relative_from_to) for urls. `@jsenv/util` provide [urlToRelativeUrl](#urlToRelativeUrl) for that purpose, and more of these missing utils.
-
-Node.js also consider a string as a filesystem path for performances reasons. It won't try to recognize urls.
+It has several preferences:
 
 <details>
-  <summary>Code example throwing on url string</summary>
+  <summary>prefer url over filesystem path</summary>
+
+An url is better than a filesystem path because it does not care about the underlying filesystem format.
+
+- A file url: `file:///directory/file.js`
+- A Windows file path: `C:\\directory\\file.js`
+- A Linux file path: `/directory/file.js`
+
+</details>
+
+<details>
+  <summary>prefer url string over url object</summary>
+
+There is a deliberate preference for url string over url object in the documentation and codebase. There is an url string and url object example in the code below.
+
+```js
+const urlString = "file:///directory/file.js"
+const urlObject = new URL("file:///directory/file.js")
+```
+
+A string is a simpler primitive than an url object and it becomes important while debugging.
+
+- url object while debugging
+
+![screenshot of url object while debugging in vscode](./docs/debug-url-object.png)
+
+- url string while debugging
+
+![screenshot of url string while debugging in vscode](./docs/debug-url-string.png)
+
+This preference mostly comes from the debugging experience inside VSCode.
+
+</details>
+
+This repository also provides some utils around urls not provided by Node.js. For instance it exports [urlToRelativeUrl](#urlToRelativeUrl) which can be seen as [path.relative](#https://nodejs.org/dist/latest-v15.x/docs/api/path.html#path_path_relative_from_to) of urls.
+
+Finally functions are fully compatible with urls where Node.js url support is incomplete. `fs` module accepts url object since version 7.6 but not url string. Passing an url string to a function from `fs` will always throw [ENOENT](https://nodejs.org/api/errors.html#errors_common_system_errors) error.
+
+<details>
+  <summary>ENOENT code example</summary>
 
 ```js
 import { readFileSync } from "fs"
@@ -74,24 +110,16 @@ readFileSync(import.meta.url) // throw ENOENT
 ```js
 const { readFileSync } = require("fs")
 
-readFileSync(`file://${__dirname}`) // throw ENOENT
+readFileSync(`file://${__filename}`) // throw ENOENT
 ```
+
+> Node.js made this choice for performance reasons but it hurts my productivity.
 
 </details>
 
-## Why url instead of filesystem path ?
+# Example
 
-- Urls can be used to target a filesystem path using the file protocol.
-
-  > `file:///directory/file.js`
-
-- File urls don't care about the underlying filesystem format.
-
-  > Windows and Linux avec a different filesystem path format. Windows uses `C:\\directory\\file.js` and Linux uses `/Users/directory/file.js`
-
-- Node.js added support for url into their filesystem apis since version 7.6.
-
-This repository exists mostly to prefer url over paths when interacting with the filesystem apis. This approach makes your code compatible with Windows for allows to write code that works on Windows and Linux Using urls means code files with an approach that works on windows and linux filesystems as shown in the code example below.
+The code below is a basic example reading package.json file as buffer.
 
 ```js
 import { readFileSync } from "fs"
@@ -110,37 +138,9 @@ With times more functions were added, all util are documented below.
 npm install @jsenv/util
 ```
 
-# Url preference
+# Terminology
 
-In this package functions related to filesystem work with url string instead of a filesystem path.
-
-```js
-const url = "file:///directory/file.js"
-const filesystemPath = "/directory/file.js"
-```
-
-This allows function to manipulate a value that is the same across operating systems. Because on windows a filesystem path looks like `C:\\directory\\file.js` while linux/mac equivalent looks like `/directory/file.js`. Also url are standard. A standard is more robust and knowledge acquired on a standard is reusable.
-
-You might also notice a slight preference for url string over url object in the documentation or codebase. This is a deliberate choice because over time it appeared that an url string is easier to work with. Certainly because a string is a well known primitive while an url object is a more complex structure.
-
-```js
-const urlString = "file:///directory/file.js"
-const urlObject = new URL("file:///directory/file.js")
-```
-
-This preference mostly comes from the debugging experience inside VSCode.
-
-#### url object value while debugging
-
-![screenshot of url object while debugging in vscode](./docs/debug-url-object.png)
-
-#### url string value while debugging
-
-![screenshot of url string while debugging in vscode](./docs/debug-url-string.png)
-
-# Url parts naming
-
-This documentation and source code uses a naming taken from url standard specifications with minor differences. The following graph links each term with the corresponding part in an url.
+This documentation and source code uses some wording explained in this part. You can refer to figure below to see how each part of an url is named.
 
 <pre>
                                                            href
@@ -160,6 +160,8 @@ scheme  │username password lowerleveldomains secondleveldomain topleveldomain 
 │      │││      │ │      │ │  │ │       │   ││               │ │             ││ ││          │ │      │ │       │ │         │ │ │
 scheme://username:password@test.abcdedgh.www.secondleveldomain.topleveldomain:123/hello/world/basename.extension?name=ferret#hash
 </pre>
+
+Some functions use the word `fileSystemNode`. `fileSystemNode` is used when the function does not assume what is going to interact with: file, directory, or something else. For example [copyFileSystemNode(fromUrl, toUrl, options)](#copyFileSystemNode) will take whatever is at `fromUrl` and copy it at `toUrl`.
 
 # assertAndNormalizeDirectoryUrl
 
@@ -336,31 +338,6 @@ isFileSystemPath("file:///directory/file.js") // false
 ```
 
 — source code at [src/isFileSystemPath.js](./src/isFileSystemPath.js).
-
-# memoize
-
-`memoize` is a function wrapping an other function to ensure it is called once.
-
-```js
-import { memoize } from "@jsenv/util"
-
-let callCount = 0
-
-const fn = memoize(async () => {
-  callCount++
-  const value = await Promise.resolve("hello")
-  return value
-})
-
-const firstCallValue = await fn()
-const secondCallValue = await fn()
-
-firstCallValue // "hello"
-secondCallValue // "hello"
-callCount // 1
-```
-
-— source code at [src/memoize.js](./src/memoize.js).
 
 # moveFileSystemNode
 
