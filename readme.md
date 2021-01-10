@@ -518,7 +518,7 @@ import { readSymbolicLink } from "@jsenv/util"
 const targetUrlOrRelativeUrl = await readSymbolicLink("file:///directory/link")
 ```
 
-[unit test](./test/readSymbolicLink/readSymbolicLink.test.js) &bullet; [implementation](./src/readSymbolicLink.js) &bullet; [symlink documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fs_symlink_target_path_type_callback)
+[implementation](./src/readSymbolicLink.js) &bullet; [symlink documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fs_symlink_target_path_type_callback)
 
 </details>
 
@@ -839,7 +839,7 @@ import { urlToRessource } from "@jsenv/util"
 urlToRessource("http://example.com/dir/file.js?foo=bar#10") // "/dir/file.js?foo=bar#10"
 ```
 
-[unit test](./test/urlToRelativeUrl/urlToRelativeUrl.test.js) &bullet; [implementation](./src/urlToRelativeUrl.js)
+[unit test](./test/urlToRessource/urlToRessource.test.js) &bullet; [implementation](./src/urlToRessource.js)
 
 </details>
 
@@ -892,7 +892,7 @@ import { writeFileSystemNodeModificationTime } from "@jsenv/util"
 await writeFileSystemNodeModificationTime("file:///directory/file.js", Date.now())
 ```
 
-[unit test](./test/writeFileSystemNodeModificationTime.test.js) &bullet; [implementation](./src/writeFileSystemNodeModificationTime.js)
+[unit test](./test/writeFileSystemNodeModificationTime/writeFileSystemNodeModificationTime.test.js) &bullet; [implementation](./src/writeFileSystemNodeModificationTime.js)
 
 </details>
 
@@ -909,7 +909,7 @@ import { writeSymbolicLink } from "@jsenv/util"
 await writeSymbolicLink("file:///foo.js", "./bar.js")
 ```
 
-[unit test](./test/writeFileSystemNodeModificationTime.test.js) &bullet; [implementation](./src/writeFileSystemNodeModificationTime.js) &bullet; [symlink documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fs_symlink_target_path_type_callback)
+[implementation](./src/writeFileSystemNodeModificationTime.js) &bullet; [symlink documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/fs.html#fs_fs_symlink_target_path_type_callback)
 
 </details>
 
