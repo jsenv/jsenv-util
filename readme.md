@@ -190,7 +190,7 @@ assertAndNormalizeDirectoryUrl("/directory") // file:///directory/
 assertAndNormalizeDirectoryUrl("C:\\directory") // file://C:/directory/
 ```
 
-[unit test](./test/assertAndNormalizeDirectoryUrl.test.js) &bullet; [implementation](./src/assertAndNormalizeDirectoryUrl.js)
+[unit test](./test/assertAndNormalizeDirectoryUrl/assertAndNormalizeDirectoryUrl.test.js) &bullet; [implementation](./src/assertAndNormalizeDirectoryUrl.js)
 
 </details>
 
@@ -208,7 +208,7 @@ assertAndNormalizeFileUrl("/directory/file.js") // file:///directory/file.js
 assertAndNormalizeFileUrl("C:\\directory\\file.js") // file:///C:/directory/file.js
 ```
 
-[unit test](./test/assertAndNormalizeFileUrl.test.js) &bullet; [implementation](./src/assertAndNormalizeFileUrl.js)
+[unit test](./test/assertAndNormalizeFileUrl/assertAndNormalizeFileUrl.test.js) &bullet; [implementation](./src/assertAndNormalizeFileUrl.js)
 
 </details>
 
@@ -261,7 +261,7 @@ const otherEtag = bufferToEtag(Buffer.from("Hello world"))
 eTag === otherEtag // true
 ```
 
-[unit test](./test/bufferToEtag.test.js) &bullet; [implementation](./src/bufferToEtag.js) &bullet; [Buffer documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/buffer.html) &bullet; [eTag documentation on MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag)
+[unit test](./test/bufferToEtag/bufferToEtag.test.js) &bullet; [implementation](./src/bufferToEtag.js) &bullet; [Buffer documentation on Node.js](https://nodejs.org/docs/latest-v13.x/api/buffer.html) &bullet; [eTag documentation on MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag)
 
 </details>
 
@@ -393,7 +393,7 @@ import { fileSystemPathToUrl } from "@jsenv/util"
 fileSystemPathToUrl("/directory/file.js")
 ```
 
-[unit test](./test/fileSystemPathToUrl.test.js) &bullet; [implementation](./src/fileSystemPathToUrl.js)
+[unit test](./test/fileSystemPathToUrl/fileSystemPathToUrl.test.js) &bullet; [implementation](./src/fileSystemPathToUrl.js)
 
 </details>
 
@@ -413,7 +413,7 @@ isFileSystemPath("directory/file.js") // false
 isFileSystemPath("file:///directory/file.js") // false
 ```
 
-[unit test](./test/isFileSystemPath.test.js) &bullet; [implementation](./src/isFileSystemPath.js)
+[unit test](./test/isFileSystemPath/isFileSystemPath.test.js) &bullet; [implementation](./src/isFileSystemPath.js)
 
 </details>
 
@@ -674,7 +674,7 @@ urlIsInsideOf("file:///directory/file.js", "file:///directory/") // true
 urlIsInsideOf("file:///file.js", "file:///directory/") // false
 ```
 
-[unit test](./test/urlIsInsideOf.test.js) &bullet; [implementation](./src/urlIsInsideOf.js)
+[unit test](./test/urlIsInsideOf/urlIsInsideOf.test.js) &bullet; [implementation](./src/urlIsInsideOf.js)
 
 </details>
 
@@ -693,7 +693,7 @@ urlToBasename("file:///directory/") // "directory"
 urlToBasename("http://example.com") // ""
 ```
 
-[unit test](./test/urlToBasename.test.js) &bullet; [implementation](./src/urlToBasename.js)
+[unit test](./test/urlToBasename/urlToBasename.test.js) &bullet; [implementation](./src/urlToBasename.js)
 
 </details>
 
@@ -712,7 +712,7 @@ urlToExtension("file:///directory/file.") // "."
 urlToExtension("http://example.com/file") // ""
 ```
 
-[unit test](./test/urlToExtension.test.js) &bullet; [implementation](./src/urlToExtension.js)
+[unit test](./test/urlToExtension/urlToExtension.test.js) &bullet; [implementation](./src/urlToExtension.js)
 
 </details>
 
@@ -731,7 +731,7 @@ urlToFilename("file:///directory/file.") // "file."
 urlToFilename("http://example.com/file") // "file"
 ```
 
-[unit test](./test/urlToFilename.test.js) &bullet; [implementation](./src/urlToFilename.js)
+[unit test](./test/urlToFilename/urlToFilename.test.js) &bullet; [implementation](./src/urlToFilename.js)
 
 </details>
 
@@ -748,7 +748,7 @@ import { urlToFileSystemPath } from "@jsenv/util"
 urlToFileSystemPath("file:///directory/file.js")
 ```
 
-[unit test](./test/urlToFileSystemPath.test.js) &bullet; [implementation](./src/urlToFileSystemPath.js)
+[unit test](./test/urlToFileSystemPath/urlToFileSystemPath.test.js) &bullet; [implementation](./src/urlToFileSystemPath.js)
 
 </details>
 
@@ -766,7 +766,7 @@ urlToOrigin("file:///directory/file.js") // "file://"
 urlToOrigin("http://example.com/file.js") // "http://example.com"
 ```
 
-[unit test](./test/urlToOrigin.test.js) &bullet; [implementation](./src/urlToOrigin.js)
+[unit test](./test/urlToOrigin/urlToOrigin.test.js) &bullet; [implementation](./src/urlToOrigin.js)
 
 </details>
 
@@ -785,7 +785,7 @@ urlToParentUrl("http://example.com/dir/") // "http://example.com/"
 urlToParentUrl("http://example.com/") // "http://example.com/"
 ```
 
-[unit test](./test/urlToParentUrl.test.js) &bullet; [implementation](./src/urlToParentUrl.js)
+[unit test](./test/urlToParentUrl/urlToParentUrl.test.js) &bullet; [implementation](./src/urlToParentUrl.js)
 
 </details>
 
@@ -804,7 +804,7 @@ urlToPathname("http://example.com/dir/") // "/dir/"
 urlToPathname("http://example.com/") // "/"
 ```
 
-[unit test](./test/urlToPathname.test.js) &bullet; [implementation](./src/urlToPathname.js)
+[unit test](./test/urlToPathname/urlToPathname.test.js) &bullet; [implementation](./src/urlToPathname.js)
 
 </details>
 
@@ -822,7 +822,7 @@ urlToRelativeUrl("file:///directory/file.js", "file:///directory/")
 urlToRelativeUrl("http://example.com/directory/file.js", "http://example.com/directory/")
 ```
 
-[unit test](./test/urlToRelativeUrl.test.js) &bullet; [implementation](./src/urlToRelativeUrl.js)
+[unit test](./test/urlToRelativeUrl/urlToRelativeUrl.test.js) &bullet; [implementation](./src/urlToRelativeUrl.js)
 
 </details>
 
@@ -839,7 +839,7 @@ import { urlToRessource } from "@jsenv/util"
 urlToRessource("http://example.com/dir/file.js?foo=bar#10") // "/dir/file.js?foo=bar#10"
 ```
 
-[unit test](./test/urlToRelativeUrl.test.js) &bullet; [implementation](./src/urlToRelativeUrl.js)
+[unit test](./test/urlToRelativeUrl/urlToRelativeUrl.test.js) &bullet; [implementation](./src/urlToRelativeUrl.js)
 
 </details>
 
@@ -858,7 +858,7 @@ urlToScheme("file:///dir/file.js") // "file"
 urlToScheme("about:blank") // "about"
 ```
 
-[unit test](./test/urlToScheme.test.js) &bullet; [implementation](./src/urlToScheme.js)
+[unit test](./test/urlToScheme/urlToScheme.test.js) &bullet; [implementation](./src/urlToScheme.js)
 
 </details>
 
@@ -875,7 +875,7 @@ import { writeFile } from "@jsenv/util"
 await writeFile("file:///directory/file.txt", "Hello world")
 ```
 
-[unit test](./test/writeFile.test.js) &bullet; [implementation](./src/writeFile.js)
+[unit test](./test/writeFile/writeFile.test.js) &bullet; [implementation](./src/writeFile.js)
 
 </details>
 
