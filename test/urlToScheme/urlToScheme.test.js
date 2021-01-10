@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { urlToScheme } from "../index.js"
+import { urlToScheme } from "@jsenv/util"
 
 {
   const actual = urlToScheme("http://example.com/dir/file.js")

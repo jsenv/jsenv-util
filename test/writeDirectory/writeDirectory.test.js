@@ -7,10 +7,10 @@ import {
   writeFile,
   writeSymbolicLink,
   resolveUrl,
-} from "../../index.js"
+} from "@jsenv/util"
 
 const isWindows = process.platform === "win32"
-const tempDirectoryUrl = import.meta.resolve("./temp/")
+const tempDirectoryUrl = resolveUrl("./temp/", import.meta.url)
 await ensureEmptyDirectory(tempDirectoryUrl)
 
 // destination inside parent directory without write permission

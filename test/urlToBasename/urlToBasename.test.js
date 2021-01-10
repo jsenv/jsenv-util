@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { urlToBasename } from "../index.js"
+import { urlToBasename } from "@jsenv/util"
 
 {
   const actual = urlToBasename("http://example.com/dir/file.js?page=1")

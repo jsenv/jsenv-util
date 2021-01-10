@@ -8,9 +8,9 @@ import {
   writeDirectory,
   writeSymbolicLink,
   writeFileSystemNodePermissions,
-} from "../../index.js"
+} from "@jsenv/util"
 
-const tempDirectoryUrl = import.meta.resolve("./temp/")
+const tempDirectoryUrl = resolveUrl("./temp/", import.meta.url)
 await ensureEmptyDirectory(tempDirectoryUrl)
 await writeFileSystemNodePermissions(tempDirectoryUrl, {
   owner: { read: true, write: true, execute: true },

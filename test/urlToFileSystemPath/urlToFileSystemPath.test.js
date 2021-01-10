@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { urlToFileSystemPath } from "../index.js"
+import { urlToFileSystemPath } from "@jsenv/util"
 
 const isWindows = process.platform === "win32"
 

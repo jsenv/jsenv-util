@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { urlToParentUrl } from "../index.js"
+import { urlToParentUrl } from "@jsenv/util"
 
 {
   const actual = urlToParentUrl("http://example.com/dir/file.js?page=1")

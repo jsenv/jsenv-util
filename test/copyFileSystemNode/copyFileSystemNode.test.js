@@ -1,5 +1,4 @@
 import { assert } from "@jsenv/assert"
-import { ensureUrlTrailingSlash } from "../../src/internal/ensureUrlTrailingSlash.js"
 import {
   writeDirectory,
   resolveUrl,
@@ -14,11 +13,16 @@ import {
   urlToFileSystemPath,
   writeSymbolicLink,
   readSymbolicLink,
-} from "../../index.js"
-import { testDirectoryPresence, testFilePresence, toSecondsPrecision } from "../testHelpers.js"
+} from "@jsenv/util"
+import { ensureUrlTrailingSlash } from "@jsenv/util/src/internal/ensureUrlTrailingSlash.js"
+import {
+  testDirectoryPresence,
+  testFilePresence,
+  toSecondsPrecision,
+} from "@jsenv/util/test/testHelpers.js"
 
 const isWindows = process.platform === "win32"
-const tempDirectoryUrl = import.meta.resolve("./temp/")
+const tempDirectoryUrl = resolveUrl("./temp/", import.meta.url)
 await ensureEmptyDirectory(tempDirectoryUrl)
 
 // copy nothing into nothing

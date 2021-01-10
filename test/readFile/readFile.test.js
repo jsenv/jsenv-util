@@ -1,8 +1,9 @@
 import { assert } from "@jsenv/assert"
-import { readFile } from "../../index.js"
+import { readFile, resolveUrl } from "@jsenv/util"
 
 {
-  const actual = await readFile(import.meta.resolve("./file.txt"))
+  const txtFileUrl = resolveUrl("./file.txt", import.meta.url)
+  const actual = await readFile(txtFileUrl)
   const expected = "hello world"
   assert({ actual, expected })
 }

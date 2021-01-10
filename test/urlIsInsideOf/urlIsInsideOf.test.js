@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { urlIsInsideOf } from "../index.js"
+import { urlIsInsideOf } from "@jsenv/util"
 
 // different origins
 {

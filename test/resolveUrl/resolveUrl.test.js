@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { resolveUrl } from "../index.js"
+import { resolveUrl } from "@jsenv/util"
 
 {
   const actual = resolveUrl("./file.js", "file:///directory/")
