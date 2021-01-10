@@ -7,8 +7,8 @@ import {
   registerFileLifecycle,
   writeFileSystemNodeModificationTime,
   moveFileSystemNode,
-} from "../../index.js"
-import { wait } from "../testHelpers.js"
+} from "@jsenv/util"
+import { wait } from "@jsenv/util/test/testHelpers.js"
 
 const tempDirectoryUrl = resolveUrl("./temp/", import.meta.url)
 await ensureEmptyDirectory(tempDirectoryUrl)

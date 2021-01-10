@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { urlToBasename } from "../index.js"
+import { urlToBasename } from "@jsenv/util"
 
 {
   const actual = urlToBasename("http://example.com/dir/file.js?page=1")
@@ -21,7 +21,7 @@ import { urlToBasename } from "../index.js"
 
 {
   const actual = urlToBasename("http://example.com/dir/")
-  const expected = ""
+  const expected = "dir"
   assert({ actual, expected })
 }
 
@@ -39,7 +39,7 @@ import { urlToBasename } from "../index.js"
 
 {
   const actual = urlToBasename("file:///dir/?page=1")
-  const expected = ""
+  const expected = "dir"
   assert({ actual, expected })
 }
 

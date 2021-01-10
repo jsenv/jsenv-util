@@ -7,9 +7,9 @@ import {
   writeFile,
   writeDirectory,
   writeSymbolicLink,
-} from "../../index.js"
+} from "@jsenv/util"
 
-const tempDirectoryUrl = import.meta.resolve("./temp/")
+const tempDirectoryUrl = resolveUrl("./temp/", import.meta.url)
 await ensureEmptyDirectory(tempDirectoryUrl)
 
 // on nothing

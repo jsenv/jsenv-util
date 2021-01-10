@@ -8,11 +8,11 @@ import {
   writeFileSystemNodePermissions,
   writeSymbolicLink,
   urlToFileSystemPath,
-} from "../../index.js"
-import { makeBusyFile } from "../testHelpers.js"
+} from "@jsenv/util"
+import { makeBusyFile } from "@jsenv/util/test/testHelpers.js"
 
 const isWindows = process.platform === "win32"
-const tempDirectoryUrl = import.meta.resolve("./temp/")
+const tempDirectoryUrl = resolveUrl("./temp/", import.meta.url)
 await ensureEmptyDirectory(tempDirectoryUrl)
 
 // nothing

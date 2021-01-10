@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { isFileSystemPath } from "../index.js"
+import { isFileSystemPath } from "@jsenv/util"
 
 {
   const actual = isFileSystemPath("file:///directory/file.js")

@@ -9,7 +9,7 @@ import {
   writeSymbolicLink,
   writeFileSystemNodePermissions,
   readFileSystemNodePermissions,
-} from "../../index.js"
+} from "@jsenv/util"
 
 const isWindows = process.platform === "win32"
 const tempDirectoryUrl = resolveUrl("./temp/", import.meta.url)

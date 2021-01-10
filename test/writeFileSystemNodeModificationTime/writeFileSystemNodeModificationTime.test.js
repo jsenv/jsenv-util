@@ -5,10 +5,10 @@ import {
   readFileSystemNodeModificationTime,
   resolveUrl,
   writeFile,
-} from "../../index.js"
-import { toSecondsPrecision } from "../testHelpers.js"
+} from "@jsenv/util"
+import { toSecondsPrecision } from "@jsenv/util/test/testHelpers.js"
 
-const tempDirectoryUrl = import.meta.resolve("./temp/")
+const tempDirectoryUrl = resolveUrl("./temp/", import.meta.url)
 await ensureEmptyDirectory(tempDirectoryUrl)
 
 {

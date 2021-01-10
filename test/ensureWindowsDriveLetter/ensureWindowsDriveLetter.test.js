@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { ensureWindowsDriveLetter } from "../index.js"
+import { ensureWindowsDriveLetter } from "@jsenv/util"
 
 if (process.platform === "win32") {
   // url http, basUrl file

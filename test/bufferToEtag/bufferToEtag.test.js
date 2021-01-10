@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { bufferToEtag } from "../index.js"
+import { bufferToEtag } from "@jsenv/util"
 
 try {
   bufferToEtag("foo")

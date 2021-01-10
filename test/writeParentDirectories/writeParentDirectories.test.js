@@ -4,10 +4,10 @@ import {
   writeDirectory,
   ensureEmptyDirectory,
   ensureParentDirectories,
-} from "../../index.js"
-import { testDirectoryPresence } from "../testHelpers.js"
+} from "@jsenv/util"
+import { testDirectoryPresence } from "@jsenv/util/test/testHelpers.js"
 
-const tempDirectoryUrl = import.meta.resolve("./temp/")
+const tempDirectoryUrl = resolveUrl("./temp/", import.meta.url)
 await ensureEmptyDirectory(tempDirectoryUrl)
 
 // destination parent does not exists

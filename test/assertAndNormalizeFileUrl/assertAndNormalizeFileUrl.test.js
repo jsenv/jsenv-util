@@ -1,5 +1,5 @@
 import { assert } from "@jsenv/assert"
-import { assertAndNormalizeFileUrl } from "../index.js"
+import { assertAndNormalizeFileUrl } from "@jsenv/util"
 
 const isWindows = process.platform === "win32"
 

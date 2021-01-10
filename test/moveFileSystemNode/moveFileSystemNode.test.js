@@ -9,14 +9,14 @@ import {
   readSymbolicLink,
   urlToFileSystemPath,
   writeSymbolicLink,
-} from "../../index.js"
+} from "@jsenv/util"
 import {
   testFilePresence,
   testSymbolicLinkPresence,
   testDirectoryPresence,
-} from "../testHelpers.js"
+} from "@jsenv/util/test/testHelpers.js"
 
-const tempDirectoryUrl = import.meta.resolve("./temp/")
+const tempDirectoryUrl = resolveUrl("./temp/", import.meta.url)
 await ensureEmptyDirectory(tempDirectoryUrl)
 
 // move nothing into nothing

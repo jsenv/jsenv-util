@@ -8,16 +8,16 @@ import {
   writeFileSystemNodePermissions,
   urlToFileSystemPath,
   writeSymbolicLink,
-} from "../../index.js"
+} from "@jsenv/util"
 import {
   makeBusyFile,
   testFilePresence,
   testDirectoryPresence,
   testSymbolicLinkPresence,
-} from "../testHelpers.js"
+} from "@jsenv/util/test/testHelpers.js"
 
 const isWindows = process.platform === "win32"
-const tempDirectoryUrl = import.meta.resolve("./temp/")
+const tempDirectoryUrl = resolveUrl("./temp/", import.meta.url)
 await ensureEmptyDirectory(tempDirectoryUrl)
 
 // remove nothing
