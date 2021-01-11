@@ -88,8 +88,8 @@ import { urlToRelativeUrl } from "@jsenv/util"
 }
 
 {
-  const actual = urlToRelativeUrl("file:///directory/file.js", "file:///directory/foo/file.js")
-  const expected = "../file.js"
+  const actual = urlToRelativeUrl("file:///directory/index.js", "file:///directory/foo/file.js")
+  const expected = "../index.js"
   assert({ actual, expected })
 }
 

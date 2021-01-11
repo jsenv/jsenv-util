@@ -34,7 +34,7 @@ export const writeSymbolicLink = async (destination, target, { type } = {}) => {
     throw new TypeError(`symbolic link target must be a string or an url, received ${target}`)
   }
 
-  if (isWindows && typeof type !== "string") {
+  if (isWindows && typeof type === "undefined") {
     // without this if you write a symbolic link without specifying the type on windows
     // you later get EPERM when doing stat on the symlink
     const targetUrl = resolveUrl(targetValue, destinationUrl)

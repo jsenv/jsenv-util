@@ -745,7 +745,11 @@ urlToFilename("http://example.com/file") // "file"
 ```js
 import { urlToFileSystemPath } from "@jsenv/util"
 
-urlToFileSystemPath("file:///directory/file.js")
+// on mac or linux
+urlToFileSystemPath("file:///directory/file.js") // /directory/file.js
+
+// on windows
+urlToFileSystemPath("file://C:/directory/file.js") // C:\\directory\\file.js
 ```
 
 [unit test](./test/urlToFileSystemPath/urlToFileSystemPath.test.js) &bullet; [implementation](./src/urlToFileSystemPath.js)
@@ -818,8 +822,8 @@ urlToPathname("http://example.com/") // "/"
 ```js
 import { urlToRelativeUrl } from "@jsenv/util"
 
-urlToRelativeUrl("file:///directory/file.js", "file:///directory/")
-urlToRelativeUrl("http://example.com/directory/file.js", "http://example.com/directory/")
+urlToRelativeUrl("file:///directory/file.js", "file:///directory/") // file.js
+urlToRelativeUrl("file:///directory/index.js", "file:///directory/foo/file.js") // ../index.js
 ```
 
 [unit test](./test/urlToRelativeUrl/urlToRelativeUrl.test.js) &bullet; [implementation](./src/urlToRelativeUrl.js)
