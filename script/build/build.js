@@ -3,9 +3,11 @@ import * as jsenvConfig from "../../jsenv.config.js"
 
 buildProject({
   ...jsenvConfig,
-  format: "commonjs",
+  buildDirectoryRelativeUrl: "./dist/commonjs/",
   entryPointMap: {
-    "./index.js": "./main.cjs",
+    "./index.js": "./jsenv_util.cjs",
   },
+  format: "commonjs",
   babelPluginMap: getBabelPluginMapForNode(),
+  buildDirectoryClean: true,
 })

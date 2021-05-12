@@ -285,7 +285,7 @@ const getPermissionOrComputeDefault = (action, subject, permissions) => {
   return false;
 };
 
-const isWindows = process.platform === "win32";
+const isWindows$3 = process.platform === "win32";
 const readFileSystemNodeStat = async (source, {
   nullIfNotFound = false,
   followLink = true
@@ -299,7 +299,7 @@ const readFileSystemNodeStat = async (source, {
   return readStat(sourcePath, {
     followLink,
     ...handleNotFoundOption,
-    ...(isWindows ? {
+    ...(isWindows$3 ? {
       // Windows can EPERM on stat
       handlePermissionDeniedError: async error => {
         console.error(`trying to fix windows EPERM after stats on ${sourcePath}`);
@@ -564,23 +564,44 @@ const comparePathnames = (leftPathame, rightPathname) => {
     const leftPartExists = (i in leftPartArray);
     const rightPartExists = (i in rightPartArray); // longer comes first
 
-    if (!leftPartExists) return +1;
-    if (!rightPartExists) return -1;
+    if (!leftPartExists) {
+      return +1;
+    }
+
+    if (!rightPartExists) {
+      return -1;
+    }
+
     const leftPartIsLast = i === leftPartArray.length - 1;
     const rightPartIsLast = i === rightPartArray.length - 1; // folder comes first
 
-    if (leftPartIsLast && !rightPartIsLast) return +1;
-    if (!leftPartIsLast && rightPartIsLast) return -1;
+    if (leftPartIsLast && !rightPartIsLast) {
+      return +1;
+    }
+
+    if (!leftPartIsLast && rightPartIsLast) {
+      return -1;
+    }
+
     const leftPart = leftPartArray[i];
     const rightPart = rightPartArray[i];
     i++; // local comparison comes first
 
     const comparison = leftPart.localeCompare(rightPart);
-    if (comparison !== 0) return comparison;
+
+    if (comparison !== 0) {
+      return comparison;
+    }
   }
 
-  if (leftLength < rightLength) return +1;
-  if (leftLength > rightLength) return -1;
+  if (leftLength < rightLength) {
+    return +1;
+  }
+
+  if (leftLength > rightLength) {
+    return -1;
+  }
+
   return 0;
 };
 
@@ -1054,7 +1075,7 @@ const ensureParentDirectories = async destination => {
   });
 };
 
-const isWindows$1 = process.platform === "win32";
+const isWindows$2 = process.platform === "win32";
 const baseUrlFallback = fileSystemPathToUrl(process.cwd());
 /**
  * Some url might be resolved or remapped to url without the windows drive letter.
@@ -1076,7 +1097,7 @@ const ensureWindowsDriveLetter = (url, baseUrl) => {
     throw new Error(`absolute url expected but got ${url}`);
   }
 
-  if (!isWindows$1) {
+  if (!isWindows$2) {
     return url;
   }
 
@@ -1159,7 +1180,7 @@ const readSymbolicLink = url => {
 const {
   symlink
 } = fs.promises;
-const isWindows$2 = process.platform === "win32";
+const isWindows$1 = process.platform === "win32";
 const writeSymbolicLink = async (destination, target, {
   type
 } = {}) => {
@@ -1184,7 +1205,7 @@ const writeSymbolicLink = async (destination, target, {
     throw new TypeError(`symbolic link target must be a string or an url, received ${target}`);
   }
 
-  if (isWindows$2 && typeof type !== "string") {
+  if (isWindows$1 && typeof type === "undefined") {
     // without this if you write a symbolic link without specifying the type on windows
     // you later get EPERM when doing stat on the symlink
     const targetUrl = resolveUrl(targetValue, destinationUrl);
@@ -1559,6 +1580,68 @@ const moveNaive = (sourcePath, destinationPath, {
   });
 };
 
+const moveDirectoryContent = async (source, destination, {
+  overwrite,
+  followLink = true
+} = {}) => {
+  const sourceUrl = assertAndNormalizeDirectoryUrl(source);
+  let destinationUrl = assertAndNormalizeDirectoryUrl(destination);
+  const sourcePath = urlToFileSystemPath(sourceUrl);
+  const sourceStats = await readFileSystemNodeStat(sourceUrl, {
+    nullIfNotFound: true,
+    followLink: false
+  });
+
+  if (!sourceStats) {
+    throw new Error(`no directory to move content from at ${sourcePath}`);
+  }
+
+  if (!sourceStats.isDirectory()) {
+    const sourceType = statsToType(sourceStats);
+    throw new Error(`found a ${sourceType} instead of a directory at ${sourcePath}`);
+  }
+
+  let destinationStats = await readFileSystemNodeStat(destinationUrl, {
+    nullIfNotFound: true,
+    // we force false here but in fact we will follow the destination link
+    // to know where we will actually move and detect useless move overrite etc..
+    followLink: false
+  });
+
+  if (followLink && destinationStats && destinationStats.isSymbolicLink()) {
+    const target = await readSymbolicLink(destinationUrl);
+    destinationUrl = resolveUrl(target, destinationUrl);
+    destinationStats = await readFileSystemNodeStat(destinationUrl, {
+      nullIfNotFound: true
+    });
+  }
+
+  const destinationPath = urlToFileSystemPath(destinationUrl);
+
+  if (destinationStats === null) {
+    throw new Error(`no directory to move content into at ${destinationPath}`);
+  }
+
+  if (!destinationStats.isDirectory()) {
+    const destinationType = statsToType(destinationStats);
+    throw new Error(`destination leads to a ${destinationType} instead of a directory at ${destinationPath}`);
+  }
+
+  if (urlTargetsSameFileSystemPath(sourceUrl, destinationUrl)) {
+    throw new Error(`cannot move directory content, source and destination are the same (${sourcePath})`);
+  }
+
+  const directoryEntries = await readDirectory(sourceUrl);
+  await Promise.all(directoryEntries.map(async directoryEntry => {
+    const from = resolveUrl(directoryEntry, sourceUrl);
+    const to = resolveUrl(directoryEntry, destinationUrl);
+    await moveFileSystemNode(from, to, {
+      overwrite,
+      followLink
+    });
+  }));
+};
+
 const readFilePromisified = util.promisify(fs.readFile);
 const readFile = async (value, {
   as = "string"
@@ -1602,11 +1685,11 @@ const fileSystemNodeToTypeOrNull = url => {
   }
 };
 
-const isWindows$3 = process.platform === "win32";
+const isWindows = process.platform === "win32";
 const createWatcher = (sourcePath, options) => {
   const watcher = fs.watch(sourcePath, options);
 
-  if (isWindows$3) {
+  if (isWindows) {
     watcher.on("error", async error => {
       // https://github.com/joyent/node/issues/4337
       if (error.code === "EPERM") {
@@ -1671,15 +1754,15 @@ const registerDirectoryLifecycle = (source, {
 }) => {
   const sourceUrl = ensureUrlTrailingSlash(assertAndNormalizeFileUrl(source));
 
-  if (!undefinedOrFunction(added)) {
+  if (!undefinedOrFunction$1(added)) {
     throw new TypeError(`added must be a function or undefined, got ${added}`);
   }
 
-  if (!undefinedOrFunction(updated)) {
+  if (!undefinedOrFunction$1(updated)) {
     throw new TypeError(`updated must be a function or undefined, got ${updated}`);
   }
 
-  if (!undefinedOrFunction(removed)) {
+  if (!undefinedOrFunction$1(removed)) {
     throw new TypeError(`removed must be a function or undefined, got ${removed}`);
   }
 
@@ -1942,7 +2025,7 @@ const registerDirectoryLifecycle = (source, {
   return tracker.cleanup;
 };
 
-const undefinedOrFunction = value => typeof value === "undefined" || typeof value === "function";
+const undefinedOrFunction$1 = value => typeof value === "undefined" || typeof value === "function";
 
 const visitDirectory = ({
   directoryUrl,
@@ -2000,15 +2083,15 @@ const registerFileLifecycle = (source, {
 }) => {
   const sourceUrl = assertAndNormalizeFileUrl(source);
 
-  if (!undefinedOrFunction$1(added)) {
+  if (!undefinedOrFunction(added)) {
     throw new TypeError(`added must be a function or undefined, got ${added}`);
   }
 
-  if (!undefinedOrFunction$1(updated)) {
+  if (!undefinedOrFunction(updated)) {
     throw new TypeError(`updated must be a function or undefined, got ${updated}`);
   }
 
-  if (!undefinedOrFunction$1(removed)) {
+  if (!undefinedOrFunction(removed)) {
     throw new TypeError(`removed must be a function or undefined, got ${removed}`);
   }
 
@@ -2073,7 +2156,7 @@ const registerFileLifecycle = (source, {
   return tracker.cleanup;
 };
 
-const undefinedOrFunction$1 = value => typeof value === "undefined" || typeof value === "function";
+const undefinedOrFunction = value => typeof value === "undefined" || typeof value === "function";
 
 const watchFileCreation = (source, callback, keepProcessAlive) => {
   const sourcePath = urlToFileSystemPath(source);
@@ -2215,13 +2298,14 @@ const ressourceToPathname = ressource => {
 
 const urlToFilename = url => {
   const pathname = urlToPathname(url);
-  const slashLastIndex = pathname.lastIndexOf("/");
-  const filename = slashLastIndex === -1 ? pathname : pathname.slice(slashLastIndex + 1);
+  const pathnameBeforeLastSlash = pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+  const slashLastIndex = pathnameBeforeLastSlash.lastIndexOf("/");
+  const filename = slashLastIndex === -1 ? pathnameBeforeLastSlash : pathnameBeforeLastSlash.slice(slashLastIndex + 1);
   return filename;
 };
 
-const urlToBasename = pathname => {
-  const filename = urlToFilename(pathname);
+const urlToBasename = url => {
+  const filename = urlToFilename(url);
   const dotLastIndex = filename.lastIndexOf(".");
   const basename = dotLastIndex === -1 ? filename : filename.slice(0, dotLastIndex);
   return basename;
@@ -2339,6 +2423,7 @@ exports.fileSystemPathToUrl = fileSystemPathToUrl;
 exports.grantPermissionsOnFileSystemNode = grantPermissionsOnFileSystemNode;
 exports.isFileSystemPath = isFileSystemPath;
 exports.memoize = memoize;
+exports.moveDirectoryContent = moveDirectoryContent;
 exports.moveFileSystemNode = moveFileSystemNode;
 exports.readDirectory = readDirectory;
 exports.readFile = readFile;
@@ -2369,4 +2454,4 @@ exports.writeFileSystemNodeModificationTime = writeFileSystemNodeModificationTim
 exports.writeFileSystemNodePermissions = writeFileSystemNodePermissions;
 exports.writeSymbolicLink = writeSymbolicLink;
 
-//# sourceMappingURL=main.cjs.map
+//# sourceMappingURL=jsenv_util.cjs.map
