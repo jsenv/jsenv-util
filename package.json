@@ -37,7 +37,7 @@
     "upload-coverage": "node ./script/upload-coverage/upload-coverage.js",
     "build": "node --experimental-import-meta-resolve ./script/build/build.js",
     "generate-import-map": "node ./script/generate-import-map/generate-import-map.js",
-    "dist": "npm run generate-commonjs-bundle",
+    "dist": "npm run build",
     "postinstall": "npm run generate-import-map",
     "prepublishOnly": "node ./script/transform-package/remove-postinstall.js && npm run dist",
     "postpublish": "node ./script/transform-package/restore-postinstall.js"
