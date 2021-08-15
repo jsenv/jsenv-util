@@ -1,3 +1,5 @@
+> This repository is replaced by https://github.com/jsenv/filesystem
+
 # util
 
 Set of functions often needed when using Node.js.
